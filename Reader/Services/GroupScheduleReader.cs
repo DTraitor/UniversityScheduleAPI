@@ -18,11 +18,16 @@ public class GroupScheduleReader : IGroupScheduleReader
     };
 
     //TODO: Parallel all of this
-    public IEnumerable<ScheduleLesson> ReadLessons(HtmlDocument document, int groupId)
+    public IEnumerable<ScheduleLesson> ReadLessons(HtmlDocument document, int groupId, CancellationToken stoppingToken)
     {
         var scheduleLessons = new List<ScheduleLesson>();
 
         var weeks = document.DocumentNode.SelectNodes("//table[@class='schedule']");
+
+        if (weeks == null)
+        {
+            //TODO: log it
+        }
 
         for (int i = 0; i < 2; i++)
         {
@@ -41,7 +46,7 @@ public class GroupScheduleReader : IGroupScheduleReader
                     string name = lesson.SelectSingleNode(".//div[@class='subject']")?.InnerText;
                     string activity =  lesson.SelectSingleNode(".//div[@class='activity-tag']")?.InnerText;
                     string room =  lesson.SelectSingleNode(".//div[@class='room']")?.InnerText;
-                    string teacher =  lesson.SelectSingleNode(".//a[@class='teacher']")?.InnerText;
+                    string teacher =  lesson.SelectSingleNode(".//div[@class='teacher']/a")?.InnerText;
 
                     scheduleLessons.Add(new ScheduleLesson
                     {

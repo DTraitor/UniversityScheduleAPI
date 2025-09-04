@@ -5,5 +5,5 @@ namespace Reader.Services.Interfaces;
 
 public interface IGroupScheduleReader
 {
-    IEnumerable<ScheduleLesson> ReadLessons(HtmlDocument document, int groupId);
+    IEnumerable<ScheduleLesson> ReadLessons(HtmlDocument document, int groupId, CancellationToken stoppingToken);
 }

@@ -2,10 +2,10 @@
 
 namespace DataAccess.Repositories.Interfaces;
 
-public interface IGroupRepository
+public interface IRemoveGroupRepository
 {
     Task<List<Group>> GetAllAsync(CancellationToken cancellationToken);
+    void AddRange(IEnumerable<Group> toRemove);
     void RemoveRange(IEnumerable<Group> toRemove);
-    void Update(IEnumerable<Group> toUpdate);
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

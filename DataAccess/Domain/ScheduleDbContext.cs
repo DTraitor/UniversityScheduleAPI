@@ -8,4 +8,5 @@ public class ScheduleDbContext(DbContextOptions<ScheduleDbContext> options) : Db
     public DbSet<ScheduleLesson> ScheduleLessons { get; set; }
     public DbSet<ElectiveLesson> ElectiveLessons { get; set; }
     public DbSet<Group> Groups { get; set; }
+    public DbSet<Group> RemovedGroups { get; set; }
 }
