@@ -18,9 +18,11 @@ builder.Services.AddSingleton<IGroupsListReader, GroupsListReader>();
 builder.Services.AddSingleton<IGroupScheduleReader, GroupScheduleReader>();
 builder.Services.AddSingleton<IElectiveScheduleReader, ElectiveScheduleReader>();
 
+
 builder.Services.AddScoped<IScheduleService, ScheduleService> ();
 builder.Services.AddScoped<IUserService, UserService> ();
 
+builder.Services.AddScoped<IPersistentDataRepository, PersistentDataRepository>();
 builder.Services.AddScoped<IGroupRepository, GroupRepository>();
 builder.Services.AddScoped<IElectiveLessonRepository, ElectiveLessonRepository>();
 builder.Services.AddScoped<IScheduleLessonRepository, ScheduleLessonRepository>();
@@ -30,6 +32,7 @@ builder.Services.AddScoped<IUserLessonOccurenceRepository, UserLessonOccurenceRe
 
 builder.Services.AddHttpClient();
 builder.Services.AddHostedService<DailyScheduleUpdateService>();
+builder.Services.AddHostedService<OccurrencesUpdaterService>();
 
 builder.Services.AddDbContext<ScheduleDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("ScheduleDBConnection")));

@@ -10,7 +10,7 @@ using BusinessLogic.Services.Readers.Interfaces;
 
 namespace BusinessLogic.Services;
 
-public class DailyScheduleUpdateService : BackgroundService
+public class DailyScheduleUpdateService : IHostedService, IDisposable, IAsyncDisposable
 {
     private const string SCHEDULE_API = "https://portal.nau.edu.ua";
     private const string PERSONAL_API = "https://localhost:5001";
@@ -28,6 +28,9 @@ public class DailyScheduleUpdateService : BackgroundService
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<DailyScheduleUpdateService> _logger;
 
+    private Timer _timer;
+    private CancellationTokenSource _cancellationTokenSource;
+
     public DailyScheduleUpdateService(
         IGroupsListReader  groupsListReader,
         IElectiveScheduleReader electiveScheduleReader,
@@ -44,39 +47,54 @@ public class DailyScheduleUpdateService : BackgroundService
         _logger = logger;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    public Task StartAsync(CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("DailyScheduleUpdateService starting...");
+
+        _timer = new Timer(
+            ExecuteTimer,
+            null,
+            TimeSpan.Zero,
+            TimeSpan.FromHours(24));
+
+        return Task.CompletedTask;
+    }
+
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("DailyScheduleUpdateService stopping...");
+
+        _cancellationTokenSource.Cancel();
+        _timer?.Change(Timeout.Infinite, 0);
+        return Task.CompletedTask;
+    }
+
+    private void ExecuteTimer(object? state)
+    {
+        ParseSchedule().Wait();
+    }
+
+    private async Task ParseSchedule()
     {
         _logger.LogInformation("DailyScheduleUpdateService started.");
 
-        while (!stoppingToken.IsCancellationRequested)
+        int hourSpan = 24 - DateTime.Now.Hour;
+        int numberOfHours = hourSpan;
+
+        if (hourSpan == 24)
         {
-            int hourSpan = 24 - DateTime.Now.Hour;
-            int numberOfHours = hourSpan;
+            _logger.LogInformation("Beginning daily parsing of the schedule at {Time}", DateTime.Now);
+            var (modifiedGroups, removedGroups, modifiedUsers) = await UpdateAllSchedules(_cancellationTokenSource.Token);
+            _logger.LogInformation("Finished parsing schedule at {Time}", DateTime.Now);
 
-            if (hourSpan == 24)
-            {
-                _logger.LogInformation("Beginning daily parsing of the schedule at {Time}", DateTime.Now);
-                var (modifiedGroups, removedGroups, modifiedUsers) = await UpdateAllSchedules(stoppingToken);
-                _logger.LogInformation("Finished parsing schedule at {Time}", DateTime.Now);
+            _logger.LogInformation("Beginning to upload schedule changes at {Time}", DateTime.Now);
+            await UploadChangesToPersonalSchedules(modifiedGroups, removedGroups, modifiedUsers, _cancellationTokenSource.Token);
+            _logger.LogInformation("Finished uploading schedule at {Time}", DateTime.Now);
 
-                _logger.LogInformation("Beginning to upload schedule changes at {Time}", DateTime.Now);
-                await UploadChangesToPersonalSchedules(modifiedGroups, removedGroups, modifiedUsers, stoppingToken);
-                _logger.LogInformation("Finished uploading schedule at {Time}", DateTime.Now);
-
-                numberOfHours = 24;
-            }
-
-            _logger.LogInformation("Next run scheduled after {NumberOfHours} hours.", numberOfHours);
-
-            try
-            {
-                await Task.Delay(TimeSpan.FromHours(numberOfHours), stoppingToken);
-            }
-            catch (TaskCanceledException)
-            {
-                // service stopping
-            }
+            numberOfHours = 24;
         }
+
+        _logger.LogInformation("Next run scheduled after {NumberOfHours} hours.", numberOfHours);
     }
 
     /// <summary>
@@ -249,5 +267,18 @@ public class DailyScheduleUpdateService : BackgroundService
             _logger.LogError(ex, "Error encountered when processing group HREF: {Href}", href);
             throw;
         }
+    }
+
+    public void Dispose()
+    {
+        _cancellationTokenSource.Cancel();
+        _cancellationTokenSource.Dispose();
+        _timer.Dispose();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _cancellationTokenSource.Dispose();
+        await _timer.DisposeAsync();
     }
 }

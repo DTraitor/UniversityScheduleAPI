@@ -17,14 +17,19 @@ public class UserLessonOccurenceRepository : IUserLessonOccurenceRepository
         _logger = logger;
     }
 
-    public async Task AddRangeAsync(IEnumerable<UserLessonOccurrence> lessonOccurences)
+    public void AddRange(IEnumerable<UserLessonOccurrence> lessonOccurrences)
     {
-        await _context.UserLessonOccurrences.AddRangeAsync(lessonOccurences);
+        _context.UserLessonOccurrences.AddRange(lessonOccurrences);
     }
 
     public void ClearByUserId(int userId)
     {
         _context.UserLessonOccurrences.RemoveRange(_context.UserLessonOccurrences.Where(x => x.UserId == userId));
+    }
+
+    public int SaveChanges()
+    {
+        return _context.SaveChanges();
     }
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
@@ -35,5 +40,13 @@ public class UserLessonOccurenceRepository : IUserLessonOccurenceRepository
     public async Task<IEnumerable<UserLessonOccurrence>> GetByUserIdAsync(int userId)
     {
         return await _context.UserLessonOccurrences.Where(x => x.UserId == userId).ToListAsync();
+    }
+
+    public UserLessonOccurrence? GetLatestOccurrence(int lessonId)
+    {
+        return _context.UserLessonOccurrences
+            .Where(x => x.LessonId == lessonId)
+            .OrderByDescending(x => x.StartTime)
+            .FirstOrDefault();
     }
 }

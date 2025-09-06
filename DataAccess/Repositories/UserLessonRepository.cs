@@ -36,4 +36,9 @@ public class UserLessonRepository : IUserLessonRepository
     {
         return await _context.UserLessons.Where(ul => ids.Contains(ul.Id)).ToListAsync();
     }
+
+    public IEnumerable<UserLesson> GetWithOccurrencesCalculatedDateLessThan(DateTimeOffset dateTime)
+    {
+        return _context.UserLessons.Where(l => l.OccurrencesCalculatedTill < dateTime);
+    }
 }
