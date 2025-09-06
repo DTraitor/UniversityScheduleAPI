@@ -46,4 +46,9 @@ public class GroupRepository : IGroupRepository
     {
         _context.Groups.Remove(group);
     }
+
+    public async Task<Group?> GetByNameAsync(string groupName)
+    {
+        return await _context.Groups.FirstOrDefaultAsync(g => g.GroupName == groupName);
+    }
 }

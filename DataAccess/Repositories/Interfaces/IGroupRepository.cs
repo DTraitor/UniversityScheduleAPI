@@ -10,4 +10,5 @@ public interface IGroupRepository
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
     Task AddAsync(Group group);
     void Remove(Group group);
+    Task<Group?> GetByNameAsync(string groupName);
 }

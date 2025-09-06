@@ -59,8 +59,6 @@ public class DailyScheduleUpdateService : BackgroundService
                 var (modifiedGroups, removedGroups, modifiedUsers) = await UpdateAllSchedules(stoppingToken);
                 _logger.LogInformation("Finished parsing schedule at {Time}", DateTime.Now);
 
-                //TODO: Implement some hashing to prevent unnecessary updates
-
                 _logger.LogInformation("Beginning to upload schedule changes at {Time}", DateTime.Now);
                 await UploadChangesToPersonalSchedules(modifiedGroups, removedGroups, modifiedUsers, stoppingToken);
                 _logger.LogInformation("Finished uploading schedule at {Time}", DateTime.Now);

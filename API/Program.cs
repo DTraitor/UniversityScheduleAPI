@@ -1,4 +1,5 @@
 using BusinessLogic.Services;
+using BusinessLogic.Services.Interfaces;
 using DataAccess.Domain;
 using DataAccess.Repositories;
 using DataAccess.Repositories.Interfaces;
@@ -16,6 +17,9 @@ builder.Services.Configure<HostOptions>(opts =>
 builder.Services.AddSingleton<IGroupsListReader, GroupsListReader>();
 builder.Services.AddSingleton<IGroupScheduleReader, GroupScheduleReader>();
 builder.Services.AddSingleton<IElectiveScheduleReader, ElectiveScheduleReader>();
+
+builder.Services.AddScoped<IScheduleService, ScheduleService> ();
+builder.Services.AddScoped<IUserService, UserService> ();
 
 builder.Services.AddScoped<IGroupRepository, GroupRepository>();
 builder.Services.AddScoped<IElectiveLessonRepository, ElectiveLessonRepository>();

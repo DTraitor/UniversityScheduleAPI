@@ -1,6 +1,7 @@
 ﻿using DataAccess.Domain;
 using DataAccess.Models.Internal;
 using DataAccess.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace DataAccess.Repositories;
@@ -29,5 +30,10 @@ public class UserLessonRepository : IUserLessonRepository
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
         return await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<UserLesson>> GetByIdsAsync(IEnumerable<int> ids)
+    {
+        return await _context.UserLessons.Where(ul => ids.Contains(ul.Id)).ToListAsync();
     }
 }
