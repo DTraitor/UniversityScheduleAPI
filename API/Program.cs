@@ -9,8 +9,12 @@ using Reader.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.Configure<HostOptions>(opts =>
+    opts.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore);
+
 // Add services to the container.
 
+builder.Services.AddSingleton<IGroupsListReader, GroupsListReader>();
 builder.Services.AddSingleton<IGroupScheduleReader, GroupScheduleReader>();
 builder.Services.AddSingleton<IElectiveScheduleReader, ElectiveScheduleReader>();
 
@@ -20,8 +24,8 @@ builder.Services.AddScoped<IScheduleLessonRepository, ScheduleLessonRepository>(
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRemoveGroupRepository, RemoveGroupRepository>();
 
+builder.Services.AddHttpClient();
 builder.Services.AddHostedService<DailyScheduleUpdateService>();
-builder.Services.AddHttpClient<DailyScheduleUpdateService>(c => c.BaseAddress = new Uri("https://portal.nau.edu.ua"));
 
 builder.Services.AddDbContext<ScheduleDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("ScheduleDBConnection")));

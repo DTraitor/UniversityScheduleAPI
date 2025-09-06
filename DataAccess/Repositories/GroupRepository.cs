@@ -27,9 +27,9 @@ public class GroupRepository : IGroupRepository
         _context.Groups.RemoveRange(toRemove);
     }
 
-    public void Update(IEnumerable<Group> toUpdate)
+    public async Task AddRangeAsync(IEnumerable<Group> toUpdate)
     {
-        _context.Groups.UpdateRange(toUpdate);
+        await _context.Groups.AddRangeAsync(toUpdate);
     }
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken)

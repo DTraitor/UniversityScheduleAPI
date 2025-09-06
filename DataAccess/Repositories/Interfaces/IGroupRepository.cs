@@ -6,6 +6,6 @@ public interface IGroupRepository
 {
     Task<List<Group>> GetAllAsync(CancellationToken cancellationToken);
     void RemoveRange(IEnumerable<Group> toRemove);
-    void Update(IEnumerable<Group> toUpdate);
+    Task AddRangeAsync(IEnumerable<Group> toUpdate);
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

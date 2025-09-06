@@ -3,6 +3,7 @@ using DataAcc_ess.Repositories.Interfaces;
 using DataAccess.Models;
 using DataAccess.Repositories.Interfaces;
 using HtmlAgilityPack;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Reader.Services.Interfaces;
@@ -11,37 +12,31 @@ namespace BusinessLogic.Services;
 
 public class DailyScheduleUpdateService : BackgroundService
 {
+    private const string SCHEDULE_API = "https://portal.nau.edu.ua";
+
     //readers
+    private readonly IGroupsListReader  _groupsListReader;
     private readonly IElectiveScheduleReader _electiveScheduleReader;
     private readonly IGroupScheduleReader _groupScheduleReader;
 
-    // repositories
-    private readonly IGroupRepository _groupRepository;
-    private readonly IScheduleLessonRepository _scheduleLessonRepository;
-    private readonly IElectiveLessonRepository _electiveLessonRepository;
-    private readonly IRemoveGroupRepository _removeGroupRepository;
-
     // etc
+    private IServiceProvider _services;
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<DailyScheduleUpdateService> _logger;
-    private readonly HttpClient _httpClient;
 
     public DailyScheduleUpdateService(
+        IGroupsListReader  groupsListReader,
         IElectiveScheduleReader electiveScheduleReader,
         IGroupScheduleReader groupScheduleReader,
-        IGroupRepository groupRepository,
-        IScheduleLessonRepository scheduleLessonRepository,
-        IElectiveLessonRepository electiveLessonRepository,
-        IRemoveGroupRepository removeGroupRepository,
-        HttpClient httpClient,
+        IServiceProvider services,
+        IHttpClientFactory httpClientFactory,
         ILogger<DailyScheduleUpdateService> logger)
     {
+        _groupsListReader = groupsListReader;
         _electiveScheduleReader = electiveScheduleReader;
         _groupScheduleReader = groupScheduleReader;
-        _groupRepository = groupRepository;
-        _scheduleLessonRepository = scheduleLessonRepository;
-        _electiveLessonRepository = electiveLessonRepository;
-        _removeGroupRepository = removeGroupRepository;
-        _httpClient = httpClient;
+        _services = services;
+        _httpClientFactory = httpClientFactory;
         _logger = logger;
     }
 
@@ -56,9 +51,15 @@ public class DailyScheduleUpdateService : BackgroundService
 
             if (hourSpan == 24)
             {
-                _logger.LogInformation("Running daily tasks at {Time}", DateTime.Now);
-
+                _logger.LogInformation("Beginning daily parsing of the schedule at {Time}", DateTime.Now);
                 await UpdateAllSchedules(stoppingToken);
+                _logger.LogInformation("Finished parsing schedule at {Time}", DateTime.Now);
+
+                //TODO: Implement some hashing to prevent unnecessary updates
+
+                _logger.LogInformation("Beginning to upload schedule changes at {Time}", DateTime.Now);
+                await UploadChangesToPersonalAPI(stoppingToken);
+                _logger.LogInformation("Finished uploading schedule at {Time}", DateTime.Now);
 
                 numberOfHours = 24;
             }
@@ -74,6 +75,11 @@ public class DailyScheduleUpdateService : BackgroundService
                 // service stopping
             }
         }
+    }
+
+    private async Task UploadChangesToPersonalAPI(CancellationToken stoppingToken)
+    {
+
     }
 
     private async Task UpdateAllSchedules(CancellationToken stoppingToken)
@@ -94,57 +100,49 @@ public class DailyScheduleUpdateService : BackgroundService
     /// </summary>
     private async Task UpdateScheduleGroup(CancellationToken stoppingToken)
     {
-        var html = await _httpClient.GetStringAsync("/schedule/group/list", stoppingToken);
+        var httpClient = _httpClientFactory.CreateClient();
+        httpClient.BaseAddress = new Uri(SCHEDULE_API);
+        var html = await httpClient.GetStringAsync("/schedule/group/list", stoppingToken);
 
         var doc = new HtmlDocument();
         doc.LoadHtml(html);
 
-        var newGroups = new ConcurrentBag<Group>();
-        var newLessons = new ConcurrentBag<ScheduleLesson>();
-        int groupId = 0; // atomic counter
+        using var scope = _services.CreateScope();
 
-        var accordion = doc.DocumentNode.SelectSingleNode("//div[@class='accordion-item']");
+        var groupRepository = scope.ServiceProvider.GetRequiredService<IGroupRepository>();
+        var lessonRepository = scope.ServiceProvider.GetRequiredService<IScheduleLessonRepository>();
 
-        while (accordion != null)
+        var existingGroups = await groupRepository.GetAllAsync(stoppingToken);
+
+        ConcurrentDictionary<string, int> groups = new ConcurrentDictionary<string, int>(existingGroups.Select(g => new KeyValuePair<string, int>(g.GroupName, g.Id)));
+        int highestId = groups.Values.Max();
+
+        await Parallel.ForEachAsync(_groupsListReader.ReadGroupsList(doc), stoppingToken, async (group, ct) =>
         {
-            string facultyName = accordion
-                .SelectSingleNode(".//button[contains(@class, 'accordion-button')]")
-                ?.InnerText;
-
-            var groupsAccordion = accordion.SelectSingleNode(".//div[contains(@class, 'accordion-collapse')]");
-            var groups = groupsAccordion?.SelectNodes(".//div[@class='groups-list']/div/a");
-
-            if (groups != null)
+            if (groups.TryGetValue(group.Item1.GroupName, out var id))
             {
-                // Parallelize group processing
-                await Parallel.ForEachAsync(groups, stoppingToken, async (groupNode, ct) =>
+                group.Item1.Id = id;
+            }
+            else
+            {
+                Interlocked.Increment(ref highestId);
+                group.Item1.Id = highestId;
+                if (!groups.TryAdd(group.Item1.GroupName, highestId))
                 {
-                    int id = Interlocked.Increment(ref groupId);
-
-                    var newGroup = new Group
-                    {
-                        Id = id,
-                        GroupName = groupNode.InnerText,
-                        FacultyName = facultyName,
-                    };
-                    newGroups.Add(newGroup);
-
-                    var lessons = await ExtractLessons(groupNode.GetAttributeValue("href", ""), id, ct);
-                    foreach (var lesson in lessons)
-                    {
-                        newLessons.Add(lesson);
-                    }
-                });
+                    _logger.LogError("Couldn't add group {GroupName} to dictionary. Id {GroupId}", group.Item1.GroupName, group.Item1.Id);
+                }
             }
 
-            accordion = accordion.SelectSingleNode(".//div[@class='accordion-item']");
-        }
+            var lessons = await ExtractLessons(group.Item2, group.Item1, ct);
+        });
+
 
         // Optionally materialize thread-safe collections into lists
         var finalGroups = newGroups.ToList();
         var finalLessons = newLessons.ToList();
 
-        var currentLessons = await _groupRepository.GetAllAsync(stoppingToken);
+
+        var currentLessons = await groupRepository.GetAllAsync(stoppingToken);
 
         var (changed, removed) = SyncGroups(currentLessons, finalGroups);
 
@@ -156,10 +154,13 @@ public class DailyScheduleUpdateService : BackgroundService
             }
         }
 
-        _groupRepository.RemoveRange(removed);
-        _groupRepository.Update(currentLessons);
+        groupRepository.RemoveRange(removed);
+        await groupRepository.AddRangeAsync(currentLessons);
+        await groupRepository.SaveChangesAsync(stoppingToken);
 
-        await _groupRepository.SaveChangesAsync(stoppingToken);
+        lessonRepository.RemoveAll();
+        await lessonRepository.AddRangeAsync(finalLessons, stoppingToken);
+        await lessonRepository.SaveChangesAsync(stoppingToken);
     }
 
 
@@ -168,17 +169,20 @@ public class DailyScheduleUpdateService : BackgroundService
     /// </summary>
     /// <param name="href">Relative url to the schedule</param>
     /// <param name="groupId">ID of the group the lessons belongs to</param>
+    /// <param name="stoppingToken">Cancellation token</param>
     /// <returns></returns>
-    private async Task<IEnumerable<ScheduleLesson>> ExtractLessons(string href, int groupId, CancellationToken stoppingToken)
+    private async Task<IEnumerable<ScheduleLesson>?> ExtractLessons(string href, Group group, CancellationToken stoppingToken)
     {
         try
         {
-            var scheduleString = await _httpClient.GetStringAsync(href, stoppingToken);
+            var httpClient = _httpClientFactory.CreateClient();
+            httpClient.BaseAddress = new Uri(SCHEDULE_API);
+            var scheduleString = await httpClient.GetStringAsync(href, stoppingToken);
 
             var scheduleDoc = new HtmlDocument();
             scheduleDoc.LoadHtml(scheduleString);
 
-            return _groupScheduleReader.ReadLessons(scheduleDoc, groupId, stoppingToken);
+            return _groupScheduleReader.ReadLessons(scheduleDoc, group, stoppingToken);
         }
         catch (Exception ex)
         {
@@ -211,7 +215,7 @@ public class DailyScheduleUpdateService : BackgroundService
             {
                 if (g.Id != existing.Id)
                 {
-                    if (g.Id != 0) // only track if second had an Id before
+                    if (g.Id != 0) // only track if second had an ID before
                         changedIds[g.Id] = existing.Id;
 
                     g.Id = existing.Id;
