@@ -36,4 +36,14 @@ public class GroupRepository : IGroupRepository
     {
         return _context.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task AddAsync(Group group)
+    {
+        await _context.Groups.AddAsync(group);
+    }
+
+    public void Remove(Group group)
+    {
+        _context.Groups.Remove(group);
+    }
 }

@@ -26,6 +26,11 @@ public class ScheduleLessonRepository : IScheduleLessonRepository
         _context.ScheduleLessons.RemoveRange(_context.ScheduleLessons);
     }
 
+    public void RemoveByGroupId(int groupId)
+    {
+        _context.ScheduleLessons.RemoveRange(_context.ScheduleLessons.Where(sl  => sl.GroupId == groupId));
+    }
+
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
         return await _context.SaveChangesAsync(cancellationToken);

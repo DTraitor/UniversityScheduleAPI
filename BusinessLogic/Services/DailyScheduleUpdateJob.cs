@@ -52,13 +52,13 @@ public class DailyScheduleUpdateService : BackgroundService
             if (hourSpan == 24)
             {
                 _logger.LogInformation("Beginning daily parsing of the schedule at {Time}", DateTime.Now);
-                await UpdateAllSchedules(stoppingToken);
+                var (modifiedGroups, removedGroups, modifiedUsers) = await UpdateAllSchedules(stoppingToken);
                 _logger.LogInformation("Finished parsing schedule at {Time}", DateTime.Now);
 
                 //TODO: Implement some hashing to prevent unnecessary updates
 
                 _logger.LogInformation("Beginning to upload schedule changes at {Time}", DateTime.Now);
-                await UploadChangesToPersonalAPI(stoppingToken);
+                await UploadChangesToPersonalAPI(modifiedGroups, removedGroups, modifiedUsers, stoppingToken);
                 _logger.LogInformation("Finished uploading schedule at {Time}", DateTime.Now);
 
                 numberOfHours = 24;
@@ -77,28 +77,34 @@ public class DailyScheduleUpdateService : BackgroundService
         }
     }
 
-    private async Task UploadChangesToPersonalAPI(CancellationToken stoppingToken)
+    private async Task UploadChangesToPersonalAPI(
+        IEnumerable<int> modifiedGroups,
+        IEnumerable<int> removedGroups,
+        IEnumerable<int> modifiedUsers,
+        CancellationToken stoppingToken)
     {
 
     }
 
-    private async Task UpdateAllSchedules(CancellationToken stoppingToken)
+    private async Task<(IEnumerable<int>, IEnumerable<int>, IEnumerable<int>)> UpdateAllSchedules(CancellationToken stoppingToken)
     {
         var scheduleGroup = UpdateScheduleGroup(stoppingToken);
         var scheduleElective = UpdateScheduleElective(stoppingToken);
 
         await Task.WhenAll(scheduleGroup, scheduleElective);
+
+        return (scheduleGroup.Result.Item1, scheduleGroup.Result.Item2, scheduleElective.Result);
     }
 
-    private async Task UpdateScheduleElective(CancellationToken stoppingToken)
+    private async Task<IEnumerable<int>> UpdateScheduleElective(CancellationToken stoppingToken)
     {
-
+        return [];
     }
 
     /// <summary>
     /// Reads out the page with all groups and begins parsing each of them
     /// </summary>
-    private async Task UpdateScheduleGroup(CancellationToken stoppingToken)
+    private async Task<(IEnumerable<int>, IEnumerable<int>)> UpdateScheduleGroup(CancellationToken stoppingToken)
     {
         var httpClient = _httpClientFactory.CreateClient();
         httpClient.BaseAddress = new Uri(SCHEDULE_API);
@@ -115,7 +121,9 @@ public class DailyScheduleUpdateService : BackgroundService
         var existingGroups = await groupRepository.GetAllAsync(stoppingToken);
 
         ConcurrentDictionary<string, int> groups = new ConcurrentDictionary<string, int>(existingGroups.Select(g => new KeyValuePair<string, int>(g.GroupName, g.Id)));
+        ConcurrentBag<Group> parsedGroups = new ConcurrentBag<Group>();
         int highestId = groups.Values.Max();
+        ConcurrentBag<int> modifiedGroupsIds = new ConcurrentBag<int>();
 
         await Parallel.ForEachAsync(_groupsListReader.ReadGroupsList(doc), stoppingToken, async (group, ct) =>
         {
@@ -133,34 +141,37 @@ public class DailyScheduleUpdateService : BackgroundService
                 }
             }
 
+            parsedGroups.Add(group.Item1);
+
             var lessons = await ExtractLessons(group.Item2, group.Item1, ct);
+            if (lessons == null)
+            {
+                return;
+            }
+
+            modifiedGroupsIds.Add(group.Item1.Id);
+
+            lessonRepository.RemoveByGroupId(group.Item1.Id);
+            await lessonRepository.AddRangeAsync(lessons, ct);
         });
 
+        var parsedGroupsIds = parsedGroups.Select(g => g.Id);
+        var removedGroups = existingGroups.Where(g => !parsedGroupsIds.Contains(g.Id));
 
-        // Optionally materialize thread-safe collections into lists
-        var finalGroups = newGroups.ToList();
-        var finalLessons = newLessons.ToList();
-
-
-        var currentLessons = await groupRepository.GetAllAsync(stoppingToken);
-
-        var (changed, removed) = SyncGroups(currentLessons, finalGroups);
-
-        foreach (var obj in finalLessons)
+        foreach (int groupId in modifiedGroupsIds)
         {
-            if (changed.TryGetValue(obj.Id, out var value))
-            {
-                obj.Id = value;
-            }
+            await groupRepository.AddAsync(parsedGroups.First(g => g.Id == groupId));
         }
 
-        groupRepository.RemoveRange(removed);
-        await groupRepository.AddRangeAsync(currentLessons);
-        await groupRepository.SaveChangesAsync(stoppingToken);
+        foreach (Group group in removedGroups)
+        {
+            groupRepository.Remove(group);
+        }
 
-        lessonRepository.RemoveAll();
-        await lessonRepository.AddRangeAsync(finalLessons, stoppingToken);
+        await groupRepository.SaveChangesAsync(stoppingToken);
         await lessonRepository.SaveChangesAsync(stoppingToken);
+
+        return (modifiedGroupsIds, removedGroups.Select(g => g.Id));
     }
 
 
@@ -189,65 +200,5 @@ public class DailyScheduleUpdateService : BackgroundService
             _logger.LogError(ex, "Error encountered when processing group HREF: {Href}", href);
             throw;
         }
-    }
-
-    /// <summary>
-    /// Updates current list of groups with those that were found during parsing while keeping IDs the same
-    /// </summary>
-    /// <param name="first">Current groups list</param>
-    /// <param name="second">New groups list</param>
-    /// <returns>Removed groups</returns>
-    public static (Dictionary<int, int> ChangedIds, List<Group> RemovedGroups)
-        SyncGroups(List<Group> first, List<Group> second)
-    {
-        var firstLookup = first.ToDictionary(
-            g => (g.GroupName, g.FacultyName),
-            g => g);
-
-        int nextId = first.Any() ? first.Max(g => g.Id) + 1 : 1;
-
-        var changedIds = new Dictionary<int, int>();
-
-        // Step 1: Match or Add new ones from second list
-        foreach (var g in second)
-        {
-            if (firstLookup.TryGetValue((g.GroupName, g.FacultyName), out var existing))
-            {
-                if (g.Id != existing.Id)
-                {
-                    if (g.Id != 0) // only track if second had an ID before
-                        changedIds[g.Id] = existing.Id;
-
-                    g.Id = existing.Id;
-                }
-            }
-            else
-            {
-                int oldId = g.Id;
-                g.Id = nextId++;
-
-                if (oldId != 0) // track old → new mapping
-                    changedIds[oldId] = g.Id;
-
-                first.Add(new Group
-                {
-                    Id = g.Id,
-                    GroupName = g.GroupName,
-                    FacultyName = g.FacultyName
-                });
-            }
-        }
-
-        // Step 2: Find and remove groups not in second
-        var secondKeys = new HashSet<(string GroupName, string FacultyName)>(
-            second.Select(g => (g.GroupName, g.FacultyName)));
-
-        var removed = first
-            .Where(g => !secondKeys.Contains((g.GroupName, g.FacultyName)))
-            .ToList();
-
-        first.RemoveAll(g => removed.Contains(g));
-
-        return (changedIds, removed);
     }
 }
