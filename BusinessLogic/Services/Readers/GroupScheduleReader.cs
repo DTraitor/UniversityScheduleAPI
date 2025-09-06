@@ -4,9 +4,9 @@ using System.Text;
 using DataAccess.Models;
 using HtmlAgilityPack;
 using Microsoft.Extensions.Logging;
-using Reader.Services.Interfaces;
+using BusinessLogic.Services.Readers.Interfaces;
 
-namespace Reader.Services;
+namespace BusinessLogic.Services.Readers;
 
 public class GroupScheduleReader : IGroupScheduleReader
 {

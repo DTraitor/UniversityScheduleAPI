@@ -1,6 +1,4 @@
-using HtmlAgilityPack;
 using Microsoft.AspNetCore.Mvc;
-using Reader.Services.Interfaces;
 
 namespace API.Controllers;
 

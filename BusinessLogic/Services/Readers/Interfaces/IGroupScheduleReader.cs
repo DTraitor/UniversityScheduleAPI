@@ -1,7 +1,7 @@
 ﻿using DataAccess.Models;
 using HtmlAgilityPack;
 
-namespace Reader.Services.Interfaces;
+namespace BusinessLogic.Services.Readers.Interfaces;
 
 public interface IGroupScheduleReader
 {

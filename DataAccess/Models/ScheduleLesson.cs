@@ -13,6 +13,8 @@ public class ScheduleLesson
     public TimeOnly StartTime { get; set; }
     public TimeSpan Length { get; set; }
 
+    // false - first week
+    // true - second week
     public bool Week { get; set; }
     public DayOfWeek DayOfWeek { get; set; }
 }

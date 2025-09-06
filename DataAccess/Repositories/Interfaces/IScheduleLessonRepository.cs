@@ -8,4 +8,5 @@ public interface IScheduleLessonRepository
     void RemoveAll();
     void RemoveByGroupId(int groupId);
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
+    Task<IEnumerable<ScheduleLesson>> GetByGroupIdAsync(int groupId, CancellationToken stoppingToken);
 }

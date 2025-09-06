@@ -1,11 +1,10 @@
 using BusinessLogic.Services;
-using DataAcc_ess.Repositories.Interfaces;
 using DataAccess.Domain;
 using DataAccess.Repositories;
 using DataAccess.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Reader.Services;
-using Reader.Services.Interfaces;
+using BusinessLogic.Services.Readers;
+using BusinessLogic.Services.Readers.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,7 +21,8 @@ builder.Services.AddScoped<IGroupRepository, GroupRepository>();
 builder.Services.AddScoped<IElectiveLessonRepository, ElectiveLessonRepository>();
 builder.Services.AddScoped<IScheduleLessonRepository, ScheduleLessonRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IRemoveGroupRepository, RemoveGroupRepository>();
+builder.Services.AddScoped<IUserLessonRepository, UserLessonRepository>();
+builder.Services.AddScoped<IUserLessonOccurenceRepository, UserLessonOccurenceRepository>();
 
 builder.Services.AddHttpClient();
 builder.Services.AddHostedService<DailyScheduleUpdateService>();

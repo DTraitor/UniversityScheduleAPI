@@ -16,7 +16,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\BusinessLogic\BusinessLogic.csproj" />
-      <ProjectReference Include="..\Reader\Reader.csproj" />
     </ItemGroup>
 
 </Project>

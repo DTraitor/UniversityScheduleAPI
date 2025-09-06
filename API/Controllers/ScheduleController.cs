@@ -2,7 +2,7 @@
 
 namespace API.Controllers;
 
-public class UserController : ControllerBase
+public class ScheduleController : ControllerBase
 {
     
 }

@@ -1,8 +1,8 @@
 ﻿using DataAccess.Models;
 using HtmlAgilityPack;
-using Reader.Services.Interfaces;
+using BusinessLogic.Services.Readers.Interfaces;
 
-namespace Reader.Services;
+namespace BusinessLogic.Services.Readers;
 
 public class GroupsListReader : IGroupsListReader
 {

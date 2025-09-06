@@ -1,18 +1,22 @@
 ﻿using System.Collections.Concurrent;
-using DataAcc_ess.Repositories.Interfaces;
+using BusinessLogic.Mappers;
 using DataAccess.Models;
 using DataAccess.Repositories.Interfaces;
 using HtmlAgilityPack;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Reader.Services.Interfaces;
+using BusinessLogic.Services.Readers.Interfaces;
 
 namespace BusinessLogic.Services;
 
 public class DailyScheduleUpdateService : BackgroundService
 {
     private const string SCHEDULE_API = "https://portal.nau.edu.ua";
+    private const string PERSONAL_API = "https://localhost:5001";
+
+    private readonly DateTimeOffset BEGIN_UNIVERSITY_DATE = DateTimeOffset.Parse("01-09-2025");
+    private readonly DateTimeOffset END_UNIVERSITY_DATE = DateTimeOffset.Parse("31-12-2025");
 
     //readers
     private readonly IGroupsListReader  _groupsListReader;
@@ -58,7 +62,7 @@ public class DailyScheduleUpdateService : BackgroundService
                 //TODO: Implement some hashing to prevent unnecessary updates
 
                 _logger.LogInformation("Beginning to upload schedule changes at {Time}", DateTime.Now);
-                await UploadChangesToPersonalAPI(modifiedGroups, removedGroups, modifiedUsers, stoppingToken);
+                await UploadChangesToPersonalSchedules(modifiedGroups, removedGroups, modifiedUsers, stoppingToken);
                 _logger.LogInformation("Finished uploading schedule at {Time}", DateTime.Now);
 
                 numberOfHours = 24;
@@ -77,13 +81,60 @@ public class DailyScheduleUpdateService : BackgroundService
         }
     }
 
-    private async Task UploadChangesToPersonalAPI(
+    /// <summary>
+    /// Populates User specific lessons with latests information
+    /// </summary>
+    /// <param name="modifiedGroups"></param>
+    /// <param name="removedGroups"></param>
+    /// <param name="modifiedUsers"></param>
+    /// <param name="stoppingToken"></param>
+    private async Task UploadChangesToPersonalSchedules(
         IEnumerable<int> modifiedGroups,
         IEnumerable<int> removedGroups,
         IEnumerable<int> modifiedUsers,
         CancellationToken stoppingToken)
     {
+        using var httpClient = _httpClientFactory.CreateClient();
+        httpClient.BaseAddress = new Uri(PERSONAL_API);
 
+        using var scope = _services.CreateScope();
+
+        var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+        var electiveLessonRepository = scope.ServiceProvider.GetRequiredService<IElectiveLessonRepository>();
+        var scheduleLessonRepository = scope.ServiceProvider.GetRequiredService<IScheduleLessonRepository>();
+        var userLessonRepository = scope.ServiceProvider.GetRequiredService<IUserLessonRepository>();
+        var userLessonOccurenceRepository = scope.ServiceProvider.GetRequiredService<IUserLessonOccurenceRepository>();
+
+        foreach (var user in await userRepository.GetByGroupIdsAsync(removedGroups))
+        {
+            user.GroupId = null;
+            userRepository.Update(user);
+        }
+
+        //Using GroupBy to make sure there are no duplicates
+        foreach (var user in (await userRepository.GetByGroupIdsAsync(modifiedGroups.Union(removedGroups)))
+                 .Union(await userRepository.GetByIdsAsync(modifiedUsers))
+                 .GroupBy(x => x.Id)
+                 .Select(x => x.First()))
+        {
+            userLessonRepository.ClearByUserId(user.Id);
+            userLessonOccurenceRepository.ClearByUserId(user.Id);
+
+            if (user.GroupId != null)
+            {
+                var scheduleLessons = await scheduleLessonRepository.GetByGroupIdAsync(user.GroupId.Value, stoppingToken);
+                await userLessonRepository.AddRangeAsync(ScheduleLessonsMapper.Map(scheduleLessons, user.Id, BEGIN_UNIVERSITY_DATE, END_UNIVERSITY_DATE));
+            }
+
+            var electiveLessons = await electiveLessonRepository.GetByUserIdAsync(user.Id, stoppingToken);
+            await userLessonRepository.AddRangeAsync(ElectiveLessonsMapper.Map(electiveLessons, user.Id, BEGIN_UNIVERSITY_DATE, END_UNIVERSITY_DATE));
+        }
+
+        await userRepository.SaveChangesAsync(stoppingToken);
+        await electiveLessonRepository.SaveChangesAsync(stoppingToken);
+        await scheduleLessonRepository.SaveChangesAsync(stoppingToken);
+        await userLessonRepository.SaveChangesAsync(stoppingToken);
+        await userLessonOccurenceRepository.SaveChangesAsync(stoppingToken);
     }
 
     private async Task<(IEnumerable<int>, IEnumerable<int>, IEnumerable<int>)> UpdateAllSchedules(CancellationToken stoppingToken)
@@ -106,7 +157,7 @@ public class DailyScheduleUpdateService : BackgroundService
     /// </summary>
     private async Task<(IEnumerable<int>, IEnumerable<int>)> UpdateScheduleGroup(CancellationToken stoppingToken)
     {
-        var httpClient = _httpClientFactory.CreateClient();
+        using var httpClient = _httpClientFactory.CreateClient();
         httpClient.BaseAddress = new Uri(SCHEDULE_API);
         var html = await httpClient.GetStringAsync("/schedule/group/list", stoppingToken);
 
@@ -179,7 +230,7 @@ public class DailyScheduleUpdateService : BackgroundService
     /// Parses the page of the groups schedule
     /// </summary>
     /// <param name="href">Relative url to the schedule</param>
-    /// <param name="groupId">ID of the group the lessons belongs to</param>
+    /// <param name="group">Group the lessons belongs to</param>
     /// <param name="stoppingToken">Cancellation token</param>
     /// <returns></returns>
     private async Task<IEnumerable<ScheduleLesson>?> ExtractLessons(string href, Group group, CancellationToken stoppingToken)
