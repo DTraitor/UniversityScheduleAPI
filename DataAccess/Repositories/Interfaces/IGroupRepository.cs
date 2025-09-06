@@ -8,7 +8,7 @@ public interface IGroupRepository
     void RemoveRange(IEnumerable<Group> toRemove);
     Task AddRangeAsync(IEnumerable<Group> toUpdate);
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
-    Task AddAsync(Group group);
+    void AddOrUpdate(Group group);
     void Remove(Group group);
     Task<Group?> GetByNameAsync(string groupName);
 }

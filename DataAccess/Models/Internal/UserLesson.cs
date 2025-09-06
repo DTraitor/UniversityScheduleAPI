@@ -23,5 +23,5 @@ public class UserLesson
     public DateTimeOffset StartTime { get; set; }
     public DateTimeOffset EndTime { get; set; }
 
-    public DateTimeOffset OccurrencesCalculatedTill { get; set; }
+    public DateTimeOffset? OccurrencesCalculatedTill { get; set; }
 }

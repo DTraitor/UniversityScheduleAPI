@@ -18,13 +18,21 @@ public class PersistentDataRepository : IPersistentDataRepository
 
     public void SetData(PersistentData persistentData)
     {
-        persistentData.Id = GetData().Id;
-        _context.PersistentData.Add(persistentData);
+        var existing = _context.PersistentData.Find(persistentData.Id);
+
+        if (existing == null)
+        {
+            _context.PersistentData.Add(persistentData);
+        }
+        else
+        {
+            _context.Entry(existing).CurrentValues.SetValues(persistentData);
+        }
     }
 
     public PersistentData GetData()
     {
-        return _context.PersistentData.FirstOrDefault(new PersistentData() { Id = 0 });
+        return _context.PersistentData.FirstOrDefault() ?? new PersistentData{ Id = 0 };
     }
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)

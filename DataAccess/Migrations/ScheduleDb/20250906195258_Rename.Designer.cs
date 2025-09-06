@@ -3,6 +3,7 @@ using System;
 using DataAccess.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DataAccess.Migrations.ScheduleDb
 {
     [DbContext(typeof(ScheduleDbContext))]
-    partial class ScheduleDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250906195258_Rename")]
+    partial class Rename
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -114,7 +117,7 @@ namespace DataAccess.Migrations.ScheduleDb
                     b.Property<string>("Location")
                         .HasColumnType("text");
 
-                    b.Property<DateTimeOffset?>("OccurrencesCalculatedTill")
+                    b.Property<DateTimeOffset>("OccurrencesCalculatedTill")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("RepeatCount")

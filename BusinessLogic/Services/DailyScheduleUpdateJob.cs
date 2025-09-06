@@ -29,7 +29,8 @@ public class DailyScheduleUpdateService : IHostedService, IDisposable, IAsyncDis
     private readonly ILogger<DailyScheduleUpdateService> _logger;
 
     private Timer _timer;
-    private CancellationTokenSource _cancellationTokenSource;
+    private CancellationTokenSource _cancellationTokenSource = new();
+    private object _executingLock = new();
 
     public DailyScheduleUpdateService(
         IGroupsListReader  groupsListReader,
@@ -55,9 +56,7 @@ public class DailyScheduleUpdateService : IHostedService, IDisposable, IAsyncDis
             ExecuteTimer,
             null,
             TimeSpan.Zero,
-            TimeSpan.FromHours(6));
-
-        await ParseSchedule();
+            TimeSpan.FromMinutes(1));
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
@@ -71,7 +70,10 @@ public class DailyScheduleUpdateService : IHostedService, IDisposable, IAsyncDis
 
     private void ExecuteTimer(object? state)
     {
-        ParseSchedule().Wait();
+        lock (_executingLock)
+        {
+            ParseSchedule().Wait();
+        }
     }
 
     private async Task ParseSchedule()
@@ -81,8 +83,8 @@ public class DailyScheduleUpdateService : IHostedService, IDisposable, IAsyncDis
         var persistentDataRepository = scope.ServiceProvider.GetRequiredService<IPersistentDataRepository>();
         var persistentData = persistentDataRepository.GetData();
 
-        if (persistentData.LastScheduleParseDateTime.HasValue &&
-            persistentData.LastScheduleParseDateTime.Value.AddHours(20) > DateTimeOffset.Now)
+        if (persistentData.NextScheduleParseDateTime.HasValue &&
+            persistentData.NextScheduleParseDateTime > DateTimeOffset.Now)
         {
             return;
         }
@@ -95,9 +97,9 @@ public class DailyScheduleUpdateService : IHostedService, IDisposable, IAsyncDis
         await UploadChangesToPersonalSchedules(modifiedGroups, removedGroups, modifiedUsers, _cancellationTokenSource.Token);
         _logger.LogInformation("Finished uploading schedule at {Time}", DateTime.Now);
 
-        persistentData.LastScheduleParseDateTime = DateTimeOffset.Now;
+        persistentData.NextScheduleParseDateTime = DateTimeOffset.Now.AddHours(24);
         persistentDataRepository.SetData(persistentData);
-        persistentDataRepository.SaveChangesAsync(_cancellationTokenSource.Token);
+        await persistentDataRepository.SaveChangesAsync(_cancellationTokenSource.Token);
     }
 
     /// <summary>
@@ -192,8 +194,10 @@ public class DailyScheduleUpdateService : IHostedService, IDisposable, IAsyncDis
 
         ConcurrentDictionary<string, int> groups = new ConcurrentDictionary<string, int>(existingGroups.Select(g => new KeyValuePair<string, int>(g.GroupName, g.Id)));
         ConcurrentBag<Group> parsedGroups = new ConcurrentBag<Group>();
-        int highestId = groups.Values.Max();
+        int highestId = groups.Count > 0 ? groups.Values.Max() : 0;
         ConcurrentBag<int> modifiedGroupsIds = new ConcurrentBag<int>();
+
+        object repoLock = new object();
 
         await Parallel.ForEachAsync(_groupsListReader.ReadGroupsList(doc), stoppingToken, async (group, ct) =>
         {
@@ -221,8 +225,11 @@ public class DailyScheduleUpdateService : IHostedService, IDisposable, IAsyncDis
 
             modifiedGroupsIds.Add(group.Item1.Id);
 
-            lessonRepository.RemoveByGroupId(group.Item1.Id);
-            await lessonRepository.AddRangeAsync(lessons, ct);
+            lock (repoLock)
+            {
+                lessonRepository.RemoveByGroupId(group.Item1.Id);
+                lessonRepository.AddRange(lessons);
+            }
         });
 
         var parsedGroupsIds = parsedGroups.Select(g => g.Id);
@@ -230,7 +237,7 @@ public class DailyScheduleUpdateService : IHostedService, IDisposable, IAsyncDis
 
         foreach (int groupId in modifiedGroupsIds)
         {
-            await groupRepository.AddAsync(parsedGroups.First(g => g.Id == groupId));
+            groupRepository.AddOrUpdate(parsedGroups.First(g => g.Id == groupId));
         }
 
         foreach (Group group in removedGroups)

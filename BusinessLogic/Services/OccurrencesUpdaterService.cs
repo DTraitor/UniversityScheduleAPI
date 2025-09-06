@@ -13,6 +13,7 @@ public class OccurrencesUpdaterService : IHostedService, IDisposable, IAsyncDisp
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<OccurrencesUpdaterService> _logger;
     private Timer _timer;
+    private object _executingLock = new object();
 
     public OccurrencesUpdaterService(IServiceProvider serviceProvider, ILogger<OccurrencesUpdaterService> logger)
     {
@@ -35,44 +36,49 @@ public class OccurrencesUpdaterService : IHostedService, IDisposable, IAsyncDisp
 
     private void UpdateOccurrences(object? state)
     {
-        _logger.LogInformation("Updating lesson occurrences at: {time}", DateTimeOffset.Now);
-
-        using var scope = _serviceProvider.CreateScope();
-
-        var userLessonRepository = scope.ServiceProvider.GetRequiredService<IUserLessonRepository>();
-        var userLessonOccurenceRepository = scope.ServiceProvider.GetRequiredService<IUserLessonOccurenceRepository>();
-
-        var lessonsToUpdate = userLessonRepository.GetWithOccurrencesCalculatedDateLessThan(DateTimeOffset.Now.AddDays(180));
-
-        List<UserLessonOccurrence> userLessonOccurrences = new List<UserLessonOccurrence>();
-
-        DateTimeOffset limit = DateTimeOffset.Now.AddDays(270);
-
-        foreach (var lesson in lessonsToUpdate)
+        lock (_executingLock)
         {
-            var occurrence = userLessonOccurenceRepository.GetLatestOccurrence(lesson.Id);
-            DateTimeOffset? latestOccurrence;
-            if (occurrence == null)
-                latestOccurrence = lesson.RepeatType == RepeatType.Never ? null : lesson.StartTime;
-            else
-                latestOccurrence = lesson.RepeatType.GetNextOccurrence(occurrence.StartTime, lesson.RepeatCount);
+            _logger.LogDebug("Updating lesson occurrences at: {time}", DateTimeOffset.Now);
 
-            while (latestOccurrence != null && latestOccurrence < lesson.EndTime && latestOccurrence < limit)
+            using var scope = _serviceProvider.CreateScope();
+
+            var userLessonRepository = scope.ServiceProvider.GetRequiredService<IUserLessonRepository>();
+            var userLessonOccurenceRepository = scope.ServiceProvider.GetRequiredService<IUserLessonOccurenceRepository>();
+
+            var lessonsToUpdate = userLessonRepository.GetWithOccurrencesCalculatedDateLessThan(DateTimeOffset.Now.AddDays(90));
+
+            List<UserLessonOccurrence> userLessonOccurrences = new List<UserLessonOccurrence>();
+
+            DateTimeOffset limit = DateTimeOffset.Now.AddDays(270);
+
+            foreach (var lesson in lessonsToUpdate)
             {
-                userLessonOccurrences.Add(new UserLessonOccurrence
+                var occurrence = userLessonOccurenceRepository.GetLatestOccurrence(lesson.Id);
+                DateTimeOffset? latestOccurrence;
+                if (occurrence == null)
+                    latestOccurrence = lesson.RepeatType == RepeatType.Never ? null : lesson.StartTime;
+                else
+                    latestOccurrence = lesson.RepeatType.GetNextOccurrence(occurrence.StartTime, lesson.RepeatCount);
+
+                while (latestOccurrence != null && latestOccurrence < lesson.EndTime && latestOccurrence < limit)
                 {
-                    LessonId = lesson.Id,
-                    UserId = lesson.UserId,
-                    StartTime = latestOccurrence.Value,
-                    EndTime = latestOccurrence.Value.Add(lesson.Duration),
-                });
+                    userLessonOccurrences.Add(new UserLessonOccurrence
+                    {
+                        LessonId = lesson.Id,
+                        UserId = lesson.UserId,
+                        StartTime = latestOccurrence.Value,
+                        EndTime = latestOccurrence.Value.Add(lesson.Duration),
+                    });
 
-                latestOccurrence = lesson.RepeatType.GetNextOccurrence(latestOccurrence.Value, lesson.RepeatCount);
+                    latestOccurrence = lesson.RepeatType.GetNextOccurrence(latestOccurrence.Value, lesson.RepeatCount);
+                }
+
+                lesson.OccurrencesCalculatedTill = latestOccurrence;
             }
-        }
 
-        userLessonOccurenceRepository.AddRange(userLessonOccurrences);
-        userLessonOccurenceRepository.SaveChanges();
+            userLessonOccurenceRepository.AddRange(userLessonOccurrences);
+            userLessonOccurenceRepository.SaveChanges();
+        }
     }
 
     public Task StopAsync(CancellationToken cancellationToken)

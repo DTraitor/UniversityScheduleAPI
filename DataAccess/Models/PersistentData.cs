@@ -3,5 +3,5 @@
 public class PersistentData
 {
     public int Id { get; set; }
-    public DateTimeOffset? LastScheduleParseDateTime { get; set; }
+    public DateTimeOffset? NextScheduleParseDateTime { get; set; }
 }

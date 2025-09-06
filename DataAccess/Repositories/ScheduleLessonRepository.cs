@@ -17,9 +17,9 @@ public class ScheduleLessonRepository : IScheduleLessonRepository
         _logger = logger;
     }
 
-    public async Task AddRangeAsync(IEnumerable<ScheduleLesson> toAdd, CancellationToken stoppingToken)
+    public void AddRange(IEnumerable<ScheduleLesson> toAdd)
     {
-        await _context.ScheduleLessons.AddRangeAsync(toAdd, stoppingToken);
+        _context.ScheduleLessons.AddRange(toAdd);
     }
 
     public void RemoveAll()
