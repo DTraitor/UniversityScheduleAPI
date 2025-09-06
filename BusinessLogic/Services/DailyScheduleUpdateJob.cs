@@ -47,7 +47,7 @@ public class DailyScheduleUpdateService : IHostedService, IDisposable, IAsyncDis
         _logger = logger;
     }
 
-    public Task StartAsync(CancellationToken cancellationToken)
+    public async Task StartAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("DailyScheduleUpdateService starting...");
 
@@ -55,9 +55,9 @@ public class DailyScheduleUpdateService : IHostedService, IDisposable, IAsyncDis
             ExecuteTimer,
             null,
             TimeSpan.Zero,
-            TimeSpan.FromHours(24));
+            TimeSpan.FromHours(6));
 
-        return Task.CompletedTask;
+        await ParseSchedule();
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
@@ -76,25 +76,28 @@ public class DailyScheduleUpdateService : IHostedService, IDisposable, IAsyncDis
 
     private async Task ParseSchedule()
     {
-        _logger.LogInformation("DailyScheduleUpdateService started.");
+        using var scope = _services.CreateScope();
 
-        int hourSpan = 24 - DateTime.Now.Hour;
-        int numberOfHours = hourSpan;
+        var persistentDataRepository = scope.ServiceProvider.GetRequiredService<IPersistentDataRepository>();
+        var persistentData = persistentDataRepository.GetData();
 
-        if (hourSpan == 24)
+        if (persistentData.LastScheduleParseDateTime.HasValue &&
+            persistentData.LastScheduleParseDateTime.Value.AddHours(20) > DateTimeOffset.Now)
         {
-            _logger.LogInformation("Beginning daily parsing of the schedule at {Time}", DateTime.Now);
-            var (modifiedGroups, removedGroups, modifiedUsers) = await UpdateAllSchedules(_cancellationTokenSource.Token);
-            _logger.LogInformation("Finished parsing schedule at {Time}", DateTime.Now);
-
-            _logger.LogInformation("Beginning to upload schedule changes at {Time}", DateTime.Now);
-            await UploadChangesToPersonalSchedules(modifiedGroups, removedGroups, modifiedUsers, _cancellationTokenSource.Token);
-            _logger.LogInformation("Finished uploading schedule at {Time}", DateTime.Now);
-
-            numberOfHours = 24;
+            return;
         }
 
-        _logger.LogInformation("Next run scheduled after {NumberOfHours} hours.", numberOfHours);
+        _logger.LogInformation("Beginning daily parsing of the schedule at {Time}", DateTime.Now);
+        var (modifiedGroups, removedGroups, modifiedUsers) = await UpdateAllSchedules(_cancellationTokenSource.Token);
+        _logger.LogInformation("Finished parsing schedule at {Time}", DateTime.Now);
+
+        _logger.LogInformation("Beginning to upload schedule changes at {Time}", DateTime.Now);
+        await UploadChangesToPersonalSchedules(modifiedGroups, removedGroups, modifiedUsers, _cancellationTokenSource.Token);
+        _logger.LogInformation("Finished uploading schedule at {Time}", DateTime.Now);
+
+        persistentData.LastScheduleParseDateTime = DateTimeOffset.Now;
+        persistentDataRepository.SetData(persistentData);
+        persistentDataRepository.SaveChangesAsync(_cancellationTokenSource.Token);
     }
 
     /// <summary>
