@@ -23,13 +23,54 @@ public class UserService : IUserService
         _logger = logger;
     }
 
-    public async Task<UserDtoOutput> CreateUser(UserDtoInput user)
+    public async Task<bool> UserExists(long telegramId)
     {
-        var result = await _userRepository.AddAsync(new User
+        return (await _userRepository.GetByTelegramIdAsync(telegramId)) != null;
+    }
+
+    public async Task<UserDtoOutput> CreateUser(UserDtoInput userData)
+    {
+        var group = await _groupRepository.GetByNameAsync(userData.GroupName);
+        if (group == null)
+            throw new KeyNotFoundException("No group with such name found.");
+
+        var user = await _userRepository.GetByTelegramIdAsync(userData.TelegramId);
+        if (user != null)
         {
-            TelegramId = user.TelegramId,
-            GroupId = (await _groupRepository.GetByNameAsync(user.GroupName)).Id,
-        });
+            user.GroupId = group.Id;
+            user = _userRepository.Update(user);
+        }
+        else
+        {
+            user = await _userRepository.AddAsync(new User
+            {
+                TelegramId = userData.TelegramId,
+                GroupId = group.Id,
+            });
+        }
+
+        await _userRepository.SaveChangesAsync();
+
+        return new UserDtoOutput
+        {
+            Id = user.Id,
+            GroupId = user.GroupId,
+            ElectiveStatus = ElectiveStatusEnum.None,
+        };
+    }
+
+    public async Task<UserDtoOutput> ChangeGroup(UserDtoInput userData)
+    {
+        var user = await _userRepository.GetByTelegramIdAsync(userData.TelegramId);
+        if (user == null)
+            throw new KeyNotFoundException("No user with such telegram id.");
+
+        var group = await _groupRepository.GetByNameAsync(userData.GroupName);
+        if (group == null)
+            throw new KeyNotFoundException("No group with such name found.");
+
+        user.GroupId = group.Id;
+        var result = _userRepository.Update(user);
         await _userRepository.SaveChangesAsync();
 
         return new UserDtoOutput

@@ -7,11 +7,13 @@ namespace BusinessLogic.Services;
 
 public class ScheduleService : IScheduleService
 {
+    private readonly IUserRepository _userRepository;
     private readonly IUserLessonRepository _userLessonRepository;
     private readonly IUserLessonOccurenceRepository _userLessonOccurenceRepository;
     private readonly ILogger<ScheduleService> _logger;
 
     public ScheduleService(
+        IUserRepository userRepository,
         IUserLessonRepository userLessonRepository,
         IUserLessonOccurenceRepository userLessonOccurenceRepository,
         ILogger<ScheduleService> logger)
@@ -21,9 +23,13 @@ public class ScheduleService : IScheduleService
         _logger = logger;
     }
 
-    public async Task<IEnumerable<LessonDto>> GetScheduleForDate(DateTimeOffset dateTime, int userId)
+    public async Task<IEnumerable<LessonDto>> GetScheduleForDate(DateTimeOffset dateTime, int userTelegramId)
     {
-        var occurrences = await _userLessonOccurenceRepository.GetByUserIdAsync(userId);
+        var user = await _userRepository.GetByTelegramIdAsync(userTelegramId);
+        if(user  == null)
+            throw new KeyNotFoundException("User not found");
+
+        var occurrences = await _userLessonOccurenceRepository.GetByUserIdAndDateAsync(user.Id, dateTime);
         var lessons = await _userLessonRepository.GetByIdsAsync(occurrences.Select(x => x.LessonId));
 
         return lessons.Select(l => new LessonDto

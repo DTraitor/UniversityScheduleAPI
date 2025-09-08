@@ -56,6 +56,29 @@ public class GroupRepository : IGroupRepository
         _context.Groups.Remove(group);
     }
 
+    public async Task<IEnumerable<string>> GetFacultyNamesAsync()
+    {
+        return await _context.Groups.GroupBy(g => g.FacultyName)
+            .Select(x => x.Key)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Group>> GetBachelorGroupsAsync(string facultyName)
+    {
+        return await _context.Groups
+            .Where(g => g.FacultyName == facultyName)
+            .Where(g => g.GroupName[0] == 'Б')
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Group>> GetMasterGroupsAsync(string facultyName)
+    {
+        return await _context.Groups
+            .Where(g => g.FacultyName == facultyName)
+            .Where(g => g.GroupName[0] != 'Б')
+            .ToListAsync();
+    }
+
     public async Task<Group?> GetByNameAsync(string groupName)
     {
         return await _context.Groups.FirstOrDefaultAsync(g => g.GroupName == groupName);

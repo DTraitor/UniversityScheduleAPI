@@ -8,6 +8,6 @@ public interface IUserLessonOccurenceRepository
     void ClearByUserId(int userId);
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
     int SaveChanges();
-    Task<IEnumerable<UserLessonOccurrence>> GetByUserIdAsync(int userId);
+    Task<IEnumerable<UserLessonOccurrence>> GetByUserIdAndDateAsync(int userId, DateTimeOffset date);
     UserLessonOccurrence? GetLatestOccurrence(int lessonId);
 }

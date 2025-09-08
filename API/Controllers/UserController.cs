@@ -16,9 +16,35 @@ public class UserController : ControllerBase
         _logger = logger;
     }
 
+    [HttpGet("exists")]
+    public async Task<IActionResult> UserExists([FromQuery] int userTelegramId)
+    {
+        return Ok(await _userService.UserExists(userTelegramId));
+    }
+
     [HttpPost]
     public async Task<IActionResult> CreateUser([FromBody] UserDtoInput newUser)
     {
-        return Ok(await _userService.CreateUser(newUser));
+        try
+        {
+            return CreatedAtAction(nameof(UserExists), await _userService.CreateUser(newUser));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+    }
+
+    [HttpPatch("group")]
+    public async Task<IActionResult> ChangeGroup([FromBody] UserDtoInput editUser)
+    {
+        try
+        {
+            return Ok(await _userService.ChangeGroup(editUser));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 }

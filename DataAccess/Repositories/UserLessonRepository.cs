@@ -39,6 +39,6 @@ public class UserLessonRepository : IUserLessonRepository
 
     public IEnumerable<UserLesson> GetWithOccurrencesCalculatedDateLessThan(DateTimeOffset dateTime)
     {
-        return _context.UserLessons.Where(l => l.OccurrencesCalculatedTill < dateTime).ToList();
+        return _context.UserLessons.Where(l => l.OccurrencesCalculatedTill == null|| l.OccurrencesCalculatedTill < dateTime).ToList();
     }
 }

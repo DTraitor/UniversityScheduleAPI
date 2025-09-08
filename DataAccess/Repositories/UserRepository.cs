@@ -27,9 +27,9 @@ public class UserRepository : IUserRepository
         return await _context.Users.Where(u => userIds.Contains(u.Id)).ToListAsync();
     }
 
-    public void Update(User user)
+    public User Update(User user)
     {
-        _context.Users.Update(user);
+        return _context.Users.Update(user).Entity;
     }
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -40,5 +40,10 @@ public class UserRepository : IUserRepository
     public async Task<User> AddAsync(User user, CancellationToken cancellationToken = default)
     {
         return (await _context.Users.AddAsync(user, cancellationToken)).Entity;
+    }
+
+    public Task<User?> GetByTelegramIdAsync(long telegramId, CancellationToken cancellationToken = default)
+    {
+        return _context.Users.Where(u => u.TelegramId == telegramId).FirstOrDefaultAsync();
     }
 }

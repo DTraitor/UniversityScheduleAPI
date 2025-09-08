@@ -16,6 +16,7 @@ builder.Services.AddSingleton<IElectiveScheduleReader, ElectiveScheduleReader>()
 
 builder.Services.AddScoped<IScheduleService, ScheduleService> ();
 builder.Services.AddScoped<IUserService, UserService> ();
+builder.Services.AddScoped<IGroupService, GroupService> ();
 
 builder.Services.AddScoped<IPersistentDataRepository, PersistentDataRepository>();
 builder.Services.AddScoped<IGroupRepository, GroupRepository>();

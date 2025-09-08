@@ -25,8 +25,8 @@ public class GroupsListReader : IGroupsListReader
                 {
                     var newGroup = new Group
                     {
-                        GroupName = groupNode.InnerText,
-                        FacultyName = facultyName,
+                        GroupName = groupNode.InnerText.Replace("\r", string.Empty).Replace("\n", string.Empty).Trim(),
+                        FacultyName = facultyName.Replace("\r", string.Empty).Replace("\n", string.Empty).Trim(),
                     };
                     yield return (newGroup, groupNode.GetAttributeValue("href", ""));
                 }

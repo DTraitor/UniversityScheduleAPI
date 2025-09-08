@@ -70,17 +70,17 @@ public class GroupScheduleReader : IGroupScheduleReader
                         continue;
 
                     string name = lesson.SelectSingleNode(".//div[@class='subject']")?.InnerText;
-                    string activity =  lesson.SelectSingleNode(".//div[@class='activity-tag']")?.InnerText;
-                    string room =  lesson.SelectSingleNode(".//div[@class='room']")?.InnerText;
-                    string teacher =  lesson.SelectSingleNode(".//div[@class='teacher']/a")?.InnerText;
+                    string? activity = lesson.SelectSingleNode(".//div[@class='activity-tag']")?.InnerText;
+                    string? room = lesson.SelectSingleNode(".//div[@class='room']")?.InnerText;
+                    string? teacher = lesson.SelectSingleNode(".//div[@class='teacher']/a")?.InnerText;
 
                     scheduleLessons.Add(new ScheduleLesson
                     {
                         GroupId = group.Id,
-                        Title = name,
-                        Type = activity,
-                        Location = room,
-                        Teacher = teacher,
+                        Title = name.Replace("\r", string.Empty).Replace("\n", string.Empty).Trim(),
+                        Type = activity?.Replace("\r", string.Empty).Replace("\n", string.Empty).Trim(),
+                        Location = room?.Replace("\r", string.Empty).Replace("\n", string.Empty).Trim(),
+                        Teacher = teacher?.Replace("\r", string.Empty).Replace("\n", string.Empty).Trim(),
 
                         StartTime = StartTimes[k],
                         Length = TimeSpan.FromMinutes(95),

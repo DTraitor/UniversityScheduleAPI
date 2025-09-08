@@ -16,8 +16,15 @@ public class ScheduleController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetScheduleForDate([FromQuery] DateTimeOffset dateTime, [FromQuery] int userId)
+    public async Task<IActionResult> GetScheduleForDate([FromQuery] DateTimeOffset dateTime, [FromQuery] int userTelegramId)
     {
-        return Ok(await _scheduleService.GetScheduleForDate(dateTime, userId));
+        try
+        {
+            return Ok(await _scheduleService.GetScheduleForDate(dateTime, userTelegramId));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 }
