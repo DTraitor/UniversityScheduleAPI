@@ -1,6 +1,6 @@
 ﻿namespace DataAccess.Models;
 
-public class ScheduleLesson
+public class GroupLesson
 {
     public int Id { get; set; }
     public int GroupId { get; set; }

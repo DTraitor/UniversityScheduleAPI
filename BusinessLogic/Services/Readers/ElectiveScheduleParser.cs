@@ -6,7 +6,7 @@ using BusinessLogic.Services.Readers.Interfaces;
 
 namespace BusinessLogic.Services.Readers;
 
-public class ElectiveScheduleReader : IScheduleReader<ElectiveLesson>
+public class ElectiveScheduleParser : IScheduleParser<ElectiveLesson>
 {
     public bool HasHashChanged(HtmlDocument document, string oldHash, out string newHash)
     {

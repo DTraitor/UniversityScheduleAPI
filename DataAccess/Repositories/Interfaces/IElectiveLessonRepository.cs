@@ -2,8 +2,7 @@
 
 namespace DataAccess.Repositories.Interfaces;
 
-public interface IElectiveLessonRepository
+public interface IElectiveLessonRepository : IRepository<ElectiveLesson>
 {
-    Task<int> SaveChangesAsync(CancellationToken cancellationToken);
-    void AddRange(IEnumerable<ElectiveLesson> lessons);
+    void RemoveAll();
 }

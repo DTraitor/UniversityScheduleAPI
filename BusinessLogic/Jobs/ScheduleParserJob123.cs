@@ -18,9 +18,9 @@ public class ScheduleParserJob123 : IHostedService, IDisposable, IAsyncDisposabl
     private readonly DateTimeOffset END_UNIVERSITY_DATE = DateTimeOffset.Parse("31-12-2025");
 
     //readers
-    private readonly IGroupsListReader  _groupsListReader;
-    private readonly IScheduleReader<ElectiveLesson> _electiveScheduleReader;
-    private readonly IScheduleReader<ScheduleLesson> _groupScheduleReader;
+    private readonly IScheduleReader  scheduleReader;
+    private readonly IScheduleParser<ElectiveLesson> electiveScheduleParser;
+    private readonly IScheduleParser<GroupLesson> groupScheduleParser;
 
     // etc
     private IServiceProvider _services;
@@ -32,16 +32,16 @@ public class ScheduleParserJob123 : IHostedService, IDisposable, IAsyncDisposabl
     private object _executingLock = new();
 
     public ScheduleParserJob123(
-        IGroupsListReader  groupsListReader,
-        IScheduleReader<ElectiveLesson> electiveScheduleReader,
-        IScheduleReader<ScheduleLesson> groupScheduleReader,
+        IScheduleReader  scheduleReader,
+        IScheduleParser<ElectiveLesson> electiveScheduleParser,
+        IScheduleParser<GroupLesson> groupScheduleParser,
         IServiceProvider services,
         IHttpClientFactory httpClientFactory,
         ILogger<ScheduleParserJob123> logger)
     {
-        _groupsListReader = groupsListReader;
-        this._electiveScheduleReader = electiveScheduleReader;
-        _groupScheduleReader = groupScheduleReader;
+        this.scheduleReader = scheduleReader;
+        this.electiveScheduleParser = electiveScheduleParser;
+        this.groupScheduleParser = groupScheduleParser;
         _services = services;
         _httpClientFactory = httpClientFactory;
         _logger = logger;
@@ -121,7 +121,7 @@ public class ScheduleParserJob123 : IHostedService, IDisposable, IAsyncDisposabl
 
         var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
         var electiveLessonRepository = scope.ServiceProvider.GetRequiredService<IElectiveLessonRepository>();
-        var scheduleLessonRepository = scope.ServiceProvider.GetRequiredService<IScheduleLessonRepository>();
+        var scheduleLessonRepository = scope.ServiceProvider.GetRequiredService<IGroupLessonRepository>();
         var userLessonRepository = scope.ServiceProvider.GetRequiredService<IUserLessonRepository>();
         var userLessonOccurenceRepository = scope.ServiceProvider.GetRequiredService<IUserLessonOccurenceRepository>();
 
@@ -205,11 +205,11 @@ public class ScheduleParserJob123 : IHostedService, IDisposable, IAsyncDisposabl
             var scheduleDoc = new HtmlDocument();
             scheduleDoc.LoadHtml(scheduleString);
 
-            if (!_electiveScheduleReader.HasHashChanged(scheduleDoc, group.SchedulePageHash, out var newHash))
+            if (!electiveScheduleParser.HasHashChanged(scheduleDoc, group.SchedulePageHash, out var newHash))
                 return null;
             group.SchedulePageHash = newHash;
 
-            return _electiveScheduleReader.ReadLessons(scheduleDoc).Select(x =>
+            return electiveScheduleParser.ReadLessons(scheduleDoc).Select(x =>
             {
                 x.DayId = dayId;
                 x.HourId = hourId;
@@ -238,7 +238,7 @@ public class ScheduleParserJob123 : IHostedService, IDisposable, IAsyncDisposabl
         using var scope = _services.CreateScope();
 
         var groupRepository = scope.ServiceProvider.GetRequiredService<IGroupRepository>();
-        var lessonRepository = scope.ServiceProvider.GetRequiredService<IScheduleLessonRepository>();
+        var lessonRepository = scope.ServiceProvider.GetRequiredService<IGroupLessonRepository>();
 
         var existingGroups = await groupRepository.GetAllAsync(stoppingToken);
 
@@ -249,7 +249,7 @@ public class ScheduleParserJob123 : IHostedService, IDisposable, IAsyncDisposabl
 
         object repoLock = new object();
 
-        await Parallel.ForEachAsync(_groupsListReader.ReadGroupsList(doc), stoppingToken, async (group, ct) =>
+        await Parallel.ForEachAsync(scheduleReader.ReadGroupsList(doc), stoppingToken, async (group, ct) =>
         {
             if (groups.TryGetValue(group.Item1.GroupName, out var id))
             {
@@ -309,7 +309,7 @@ public class ScheduleParserJob123 : IHostedService, IDisposable, IAsyncDisposabl
     /// <param name="group">Group the lessons belongs to</param>
     /// <param name="stoppingToken">Cancellation token</param>
     /// <returns></returns>
-    private async Task<IEnumerable<ScheduleLesson>?> FetchGroupScheduleAsync(string href, Group group, CancellationToken stoppingToken)
+    private async Task<IEnumerable<GroupLesson>?> FetchGroupScheduleAsync(string href, Group group, CancellationToken stoppingToken)
     {
         try
         {
@@ -320,11 +320,11 @@ public class ScheduleParserJob123 : IHostedService, IDisposable, IAsyncDisposabl
             var scheduleDoc = new HtmlDocument();
             scheduleDoc.LoadHtml(scheduleString);
 
-            if (!_groupScheduleReader.HasHashChanged(scheduleDoc, group.SchedulePageHash, out var newHash))
+            if (!groupScheduleParser.HasHashChanged(scheduleDoc, group.SchedulePageHash, out var newHash))
                 return null;
             group.SchedulePageHash = newHash;
 
-            return _groupScheduleReader.ReadLessons(scheduleDoc).Select(x =>
+            return groupScheduleParser.ReadLessons(scheduleDoc).Select(x =>
             {
                 x.GroupId = group.Id;
                 return x;

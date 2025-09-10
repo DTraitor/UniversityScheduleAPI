@@ -12,9 +12,9 @@ using DataAccess.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddSingleton<IGroupsListReader, GroupsListReader>();
-builder.Services.AddSingleton<IScheduleReader<ScheduleLesson>, GroupScheduleReader>();
-builder.Services.AddSingleton<IScheduleReader<ElectiveLesson>, ElectiveScheduleReader>();
+builder.Services.AddSingleton<IScheduleReader, GroupScheduleReader>();
+builder.Services.AddSingleton<IScheduleParser<GroupLesson>, GroupScheduleParser>();
+builder.Services.AddSingleton<IScheduleParser<ElectiveLesson>, ElectiveScheduleParser>();
 
 builder.Services.AddScoped<IScheduleService, ScheduleService> ();
 builder.Services.AddScoped<IUserService, UserService> ();
@@ -23,7 +23,7 @@ builder.Services.AddScoped<IGroupService, GroupService> ();
 builder.Services.AddScoped<IPersistentDataRepository, PersistentDataRepository>();
 builder.Services.AddScoped<IGroupRepository, GroupRepository>();
 builder.Services.AddScoped<IElectiveLessonRepository, ElectiveLessonRepository>();
-builder.Services.AddScoped<IScheduleLessonRepository, ScheduleLessonRepository>();
+builder.Services.AddScoped<IGroupLessonRepository, GroupLessonRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserLessonRepository, UserLessonRepository>();
 builder.Services.AddScoped<IUserLessonOccurenceRepository, UserLessonOccurenceRepository>();

@@ -1,10 +1,11 @@
 ﻿using DataAccess.Models;
+using DataAccess.Models.Interface;
 using HtmlAgilityPack;
 
 namespace BusinessLogic.Services.Readers.Interfaces;
 
 public interface IScheduleReader<T>
 {
-    bool HasHashChanged(HtmlDocument document, string oldHash, out string newHash);
-    IEnumerable<T> ReadLessons(HtmlDocument document);
+    Task<(IEnumerable<IModifiedEntry>, IEnumerable<T>)> ReadSchedule(CancellationToken cancellationToken);
+    IEnumerable<T> ReadGroupsList(HtmlDocument document);
 }

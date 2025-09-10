@@ -7,7 +7,7 @@ namespace DataAccess.Domain;
 public class ScheduleDbContext(DbContextOptions<ScheduleDbContext> options) : DbContext(options)
 {
     // Group Schedule
-    public DbSet<ScheduleLesson> ScheduleLessons { get; set; }
+    public DbSet<GroupLesson> GroupLessons { get; set; }
     public DbSet<Group> Groups { get; set; }
 
     //Elective schedule
