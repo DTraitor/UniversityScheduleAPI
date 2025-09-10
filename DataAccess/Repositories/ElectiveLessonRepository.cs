@@ -17,13 +17,13 @@ public class ElectiveLessonRepository : IElectiveLessonRepository
         _logger = logger;
     }
 
-    public async Task<IEnumerable<ElectiveLesson>> GetByUserIdAsync(int userId, CancellationToken stoppingToken)
-    {
-        return await _context.ElectiveLessons.Where(sl => sl.UserId == userId).ToListAsync(stoppingToken);
-    }
-
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
         return await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public void AddRange(IEnumerable<ElectiveLesson> lessons)
+    {
+        _context.ElectiveLessons.AddRange(lessons);
     }
 }

@@ -6,16 +6,16 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace BusinessLogic.Services;
+namespace BusinessLogic.Jobs;
 
-public class OccurrencesUpdaterService : IHostedService, IDisposable, IAsyncDisposable
+public class OccurrencesUpdaterJob : IHostedService, IDisposable, IAsyncDisposable
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<OccurrencesUpdaterService> _logger;
+    private readonly ILogger<OccurrencesUpdaterJob> _logger;
     private Timer _timer;
     private object _executingLock = new object();
 
-    public OccurrencesUpdaterService(IServiceProvider serviceProvider, ILogger<OccurrencesUpdaterService> logger)
+    public OccurrencesUpdaterJob(IServiceProvider serviceProvider, ILogger<OccurrencesUpdaterJob> logger)
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
@@ -23,7 +23,7 @@ public class OccurrencesUpdaterService : IHostedService, IDisposable, IAsyncDisp
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("OccurrencesUpdaterService starting...");
+        _logger.LogInformation("OccurrencesUpdaterJob starting...");
 
         _timer = new Timer(
             UpdateOccurrences,
@@ -83,7 +83,7 @@ public class OccurrencesUpdaterService : IHostedService, IDisposable, IAsyncDisp
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("OccurrencesUpdaterService stopping...");
+        _logger.LogInformation("OccurrencesUpdaterJob stopping...");
 
         _timer?.Change(Timeout.Infinite, 0);
         return Task.CompletedTask;

@@ -1,6 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.Security.Cryptography;
-using System.Text;
+﻿using BusinessLogic.Helpers;
 using DataAccess.Models;
 using HtmlAgilityPack;
 using Microsoft.Extensions.Logging;
@@ -8,7 +6,7 @@ using BusinessLogic.Services.Readers.Interfaces;
 
 namespace BusinessLogic.Services.Readers;
 
-public class GroupScheduleReader : IGroupScheduleReader
+public class GroupScheduleReader : IScheduleReader<ScheduleLesson>
 {
     private readonly ILogger<GroupScheduleReader> _logger;
 
@@ -28,16 +26,15 @@ public class GroupScheduleReader : IGroupScheduleReader
         TimeOnly.Parse("19:00"),
     };
 
-    private string ComputeHash(string content)
+    public bool HasHashChanged(HtmlDocument document, string oldHash, out string newHash)
     {
-        using var sha = SHA256.Create();
-        var bytes = Encoding.UTF8.GetBytes(content);
-        var hashBytes = sha.ComputeHash(bytes);
-        return Convert.ToHexString(hashBytes);
+        var weeks = document.DocumentNode.SelectNodes("//table[@class='schedule']");
+        newHash = Hashing.ComputeHash(String.Join(' ', weeks.Select(w => w.InnerHtml)));
+
+        return newHash != oldHash;
     }
 
-    //TODO: Parallel all of this
-    public IEnumerable<ScheduleLesson>? ReadLessons(HtmlDocument document, Group group, CancellationToken stoppingToken)
+    public IEnumerable<ScheduleLesson> ReadLessons(HtmlDocument document)
     {
         var scheduleLessons = new List<ScheduleLesson>();
 
@@ -47,13 +44,6 @@ public class GroupScheduleReader : IGroupScheduleReader
         {
             throw new InvalidOperationException("No tables with class 'schedule' found in group.");
         }
-
-        var newHash = ComputeHash(String.Join(' ', weeks.Select(w => w.InnerHtml)));
-        if (group.SchedulePageHash == newHash)
-        {
-            return null;
-        }
-        group.SchedulePageHash = newHash;
 
         for (int i = 0; i < 2; i++)
         {
@@ -72,15 +62,17 @@ public class GroupScheduleReader : IGroupScheduleReader
                     string name = lesson.SelectSingleNode(".//div[@class='subject']")?.InnerText;
                     string? activity = lesson.SelectSingleNode(".//div[@class='activity-tag']")?.InnerText;
                     string? room = lesson.SelectSingleNode(".//div[@class='room']")?.InnerText;
-                    string? teacher = lesson.SelectSingleNode(".//div[@class='teacher']/a")?.InnerText;
+                    var teacherNodes = lesson.SelectNodes(".//div[@class='teacher']/a");
+                    var teachers = teacherNodes
+                        .Select(n => n.InnerText.Replace("\r", string.Empty).Replace("\n", string.Empty).Trim())
+                        .ToList();
 
                     scheduleLessons.Add(new ScheduleLesson
                     {
-                        GroupId = group.Id,
                         Title = name.Replace("\r", string.Empty).Replace("\n", string.Empty).Trim(),
                         Type = activity?.Replace("\r", string.Empty).Replace("\n", string.Empty).Trim(),
                         Location = room?.Replace("\r", string.Empty).Replace("\n", string.Empty).Trim(),
-                        Teacher = teacher?.Replace("\r", string.Empty).Replace("\n", string.Empty).Trim(),
+                        Teacher = teachers,
 
                         StartTime = StartTimes[k],
                         Length = TimeSpan.FromMinutes(95),

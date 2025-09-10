@@ -8,40 +8,39 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using BusinessLogic.Services.Readers.Interfaces;
 
-namespace BusinessLogic.Services;
+namespace BusinessLogic.Jobs;
 
-public class DailyScheduleUpdateService : IHostedService, IDisposable, IAsyncDisposable
+public class ScheduleParserJob123 : IHostedService, IDisposable, IAsyncDisposable
 {
     private const string SCHEDULE_API = "https://portal.nau.edu.ua";
-    private const string PERSONAL_API = "https://localhost:5001";
 
     private readonly DateTimeOffset BEGIN_UNIVERSITY_DATE = DateTimeOffset.Parse("01-09-2025");
     private readonly DateTimeOffset END_UNIVERSITY_DATE = DateTimeOffset.Parse("31-12-2025");
 
     //readers
     private readonly IGroupsListReader  _groupsListReader;
-    private readonly IElectiveScheduleReader _electiveScheduleReader;
-    private readonly IGroupScheduleReader _groupScheduleReader;
+    private readonly IScheduleReader<ElectiveLesson> _electiveScheduleReader;
+    private readonly IScheduleReader<ScheduleLesson> _groupScheduleReader;
 
     // etc
     private IServiceProvider _services;
     private readonly IHttpClientFactory _httpClientFactory;
-    private readonly ILogger<DailyScheduleUpdateService> _logger;
+    private readonly ILogger<ScheduleParserJob123> _logger;
 
     private Timer _timer;
     private CancellationTokenSource _cancellationTokenSource = new();
     private object _executingLock = new();
 
-    public DailyScheduleUpdateService(
+    public ScheduleParserJob123(
         IGroupsListReader  groupsListReader,
-        IElectiveScheduleReader electiveScheduleReader,
-        IGroupScheduleReader groupScheduleReader,
+        IScheduleReader<ElectiveLesson> electiveScheduleReader,
+        IScheduleReader<ScheduleLesson> groupScheduleReader,
         IServiceProvider services,
         IHttpClientFactory httpClientFactory,
-        ILogger<DailyScheduleUpdateService> logger)
+        ILogger<ScheduleParserJob123> logger)
     {
         _groupsListReader = groupsListReader;
-        _electiveScheduleReader = electiveScheduleReader;
+        this._electiveScheduleReader = electiveScheduleReader;
         _groupScheduleReader = groupScheduleReader;
         _services = services;
         _httpClientFactory = httpClientFactory;
@@ -50,7 +49,7 @@ public class DailyScheduleUpdateService : IHostedService, IDisposable, IAsyncDis
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("DailyScheduleUpdateService starting...");
+        _logger.LogInformation("ScheduleParserJob123 starting...");
 
         _timer = new Timer(
             ExecuteTimer,
@@ -61,7 +60,7 @@ public class DailyScheduleUpdateService : IHostedService, IDisposable, IAsyncDis
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("DailyScheduleUpdateService stopping...");
+        _logger.LogInformation("ScheduleParserJob123 stopping...");
 
         _cancellationTokenSource.Cancel();
         _timer?.Change(Timeout.Infinite, 0);
@@ -103,7 +102,7 @@ public class DailyScheduleUpdateService : IHostedService, IDisposable, IAsyncDis
     }
 
     /// <summary>
-    /// Populates User specific lessons with latests information
+    /// Populates User specific lessons with latest information
     /// </summary>
     /// <param name="modifiedGroups"></param>
     /// <param name="removedGroups"></param>
@@ -170,7 +169,58 @@ public class DailyScheduleUpdateService : IHostedService, IDisposable, IAsyncDis
 
     private async Task<IEnumerable<int>> UpdateScheduleElective(CancellationToken stoppingToken)
     {
-        return [];
+        var tasks = new List<Task<IEnumerable<ElectiveLesson>>>();
+
+        for (int i = 1; i <= 14; i++)
+        {
+            for (int j = 1; j <= 2; j++)
+            {
+                tasks.Add(FetchElectiveScheduleAsync(i, j, stoppingToken));
+            }
+        }
+
+        Task.WaitAll(tasks, stoppingToken);
+
+        using var scope = _services.CreateScope();
+
+        var electiveLessonRepository = scope.ServiceProvider.GetRequiredService<IElectiveLessonRepository>();
+
+        foreach (var task in tasks)
+        {
+            electiveLessonRepository.AddRange(task.Result);
+        }
+
+        await electiveLessonRepository.SaveChangesAsync(stoppingToken);
+    }
+
+    private async Task<IEnumerable<ElectiveLesson>> FetchElectiveScheduleAsync(int dayId, int hourId, CancellationToken stoppingToken)
+    {
+        //
+        try
+        {
+            var httpClient = _httpClientFactory.CreateClient();
+            httpClient.BaseAddress = new Uri(SCHEDULE_API);
+            var scheduleString = await httpClient.GetStringAsync($"$/schedule/pairs/elective?day_id={dayId}&hour_id={hourId}", stoppingToken);
+
+            var scheduleDoc = new HtmlDocument();
+            scheduleDoc.LoadHtml(scheduleString);
+
+            if (!_electiveScheduleReader.HasHashChanged(scheduleDoc, group.SchedulePageHash, out var newHash))
+                return null;
+            group.SchedulePageHash = newHash;
+
+            return _electiveScheduleReader.ReadLessons(scheduleDoc).Select(x =>
+            {
+                x.DayId = dayId;
+                x.HourId = hourId;
+                return x;
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error encountered when processing elective lessons. DayId: {DayId} | HourId: {HourId}", dayId, hourId);
+            throw;
+        }
     }
 
     /// <summary>
@@ -217,7 +267,7 @@ public class DailyScheduleUpdateService : IHostedService, IDisposable, IAsyncDis
 
             parsedGroups.Add(group.Item1);
 
-            var lessons = await ExtractLessons(group.Item2, group.Item1, ct);
+            var lessons = await FetchGroupScheduleAsync(group.Item2, group.Item1, ct);
             if (lessons == null)
             {
                 return;
@@ -259,7 +309,7 @@ public class DailyScheduleUpdateService : IHostedService, IDisposable, IAsyncDis
     /// <param name="group">Group the lessons belongs to</param>
     /// <param name="stoppingToken">Cancellation token</param>
     /// <returns></returns>
-    private async Task<IEnumerable<ScheduleLesson>?> ExtractLessons(string href, Group group, CancellationToken stoppingToken)
+    private async Task<IEnumerable<ScheduleLesson>?> FetchGroupScheduleAsync(string href, Group group, CancellationToken stoppingToken)
     {
         try
         {
@@ -270,7 +320,15 @@ public class DailyScheduleUpdateService : IHostedService, IDisposable, IAsyncDis
             var scheduleDoc = new HtmlDocument();
             scheduleDoc.LoadHtml(scheduleString);
 
-            return _groupScheduleReader.ReadLessons(scheduleDoc, group, stoppingToken);
+            if (!_groupScheduleReader.HasHashChanged(scheduleDoc, group.SchedulePageHash, out var newHash))
+                return null;
+            group.SchedulePageHash = newHash;
+
+            return _groupScheduleReader.ReadLessons(scheduleDoc).Select(x =>
+            {
+                x.GroupId = group.Id;
+                return x;
+            });
         }
         catch (Exception ex)
         {

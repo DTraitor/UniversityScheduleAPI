@@ -1,13 +1,51 @@
-﻿using DataAccess.Models;
+﻿using System.Text.RegularExpressions;
+using BusinessLogic.Helpers;
+using DataAccess.Models;
 using HtmlAgilityPack;
 using BusinessLogic.Services.Readers.Interfaces;
 
 namespace BusinessLogic.Services.Readers;
 
-public class ElectiveScheduleReader : IElectiveScheduleReader
+public class ElectiveScheduleReader : IScheduleReader<ElectiveLesson>
 {
+    public bool HasHashChanged(HtmlDocument document, string oldHash, out string newHash)
+    {
+        var schedule = document.DocumentNode.SelectSingleNode("//table[@class='schedule']");
+        newHash = Hashing.ComputeHash(schedule.InnerHtml);
+
+        return newHash != oldHash;
+    }
+
     public IEnumerable<ElectiveLesson> ReadLessons(HtmlDocument document)
     {
-        throw new NotImplementedException();
+        var dateTime = document.DocumentNode.SelectNodes("//h2")[1].InnerText;
+        var matches = Regex.Match(dateTime, @"^.* (\d\d?:\d\d)-(\d\d?:\d\d)$");
+        var startTime = TimeOnly.Parse(matches.Groups[1].Value);
+        var endTime = TimeOnly.Parse(matches.Groups[2].Value);
+        var length = endTime - startTime;
+
+        List<ElectiveLesson>  electiveLessons = new List<ElectiveLesson>();
+
+        foreach (var lesson in document.DocumentNode.SelectNodes("//table[@class='schedule']/tbody/tr"))
+        {
+            var values = lesson.SelectNodes(".//td");
+
+            var teachers = values[2].SelectNodes(".//div/a")
+                .Select(n => n.InnerText.Replace("\r", string.Empty).Replace("\n", string.Empty).Trim())
+                .ToList();
+
+            electiveLessons.Add(new ElectiveLesson
+            {
+                Title = values[0].InnerText.Replace("\r", string.Empty).Replace("\n", string.Empty).Trim(),
+                Type = values[1].InnerText.Replace("\r", string.Empty).Replace("\n", string.Empty).Trim(),
+                Location = values[3].InnerText.Replace("\r", string.Empty).Replace("\n", string.Empty).Trim(),
+                Teacher = teachers,
+
+                StartTime = startTime,
+                Length = length,
+            });
+        }
+
+        return electiveLessons;
     }
 }

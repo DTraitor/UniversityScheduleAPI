@@ -6,11 +6,14 @@ namespace DataAccess.Domain;
 
 public class ScheduleDbContext(DbContextOptions<ScheduleDbContext> options) : DbContext(options)
 {
-    // University Schedule
+    // Group Schedule
     public DbSet<ScheduleLesson> ScheduleLessons { get; set; }
-    public DbSet<ElectiveLesson> ElectiveLessons { get; set; }
     public DbSet<Group> Groups { get; set; }
-    public DbSet<Group> RemovedGroups { get; set; }
+
+    //Elective schedule
+    public DbSet<ElectiveLesson> ElectiveLessons { get; set; }
+    public DbSet<ElectedLesson> ElectedLessons { get; set; }
+    public DbSet<ElectiveLessonDay> ElectiveLessonDays { get; set; }
 
     // Internal Schedule
     public DbSet<UserLesson> UserLessons { get; set; }

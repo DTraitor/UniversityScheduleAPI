@@ -1,3 +1,4 @@
+using BusinessLogic.Jobs;
 using BusinessLogic.Services;
 using BusinessLogic.Services.Interfaces;
 using DataAccess.Domain;
@@ -6,13 +7,14 @@ using DataAccess.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using BusinessLogic.Services.Readers;
 using BusinessLogic.Services.Readers.Interfaces;
+using DataAccess.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddSingleton<IGroupsListReader, GroupsListReader>();
-builder.Services.AddSingleton<IGroupScheduleReader, GroupScheduleReader>();
-builder.Services.AddSingleton<IElectiveScheduleReader, ElectiveScheduleReader>();
+builder.Services.AddSingleton<IScheduleReader<ScheduleLesson>, GroupScheduleReader>();
+builder.Services.AddSingleton<IScheduleReader<ElectiveLesson>, ElectiveScheduleReader>();
 
 builder.Services.AddScoped<IScheduleService, ScheduleService> ();
 builder.Services.AddScoped<IUserService, UserService> ();
@@ -25,11 +27,14 @@ builder.Services.AddScoped<IScheduleLessonRepository, ScheduleLessonRepository>(
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserLessonRepository, UserLessonRepository>();
 builder.Services.AddScoped<IUserLessonOccurenceRepository, UserLessonOccurenceRepository>();
+builder.Services.AddScoped<IElectedLessonRepository, ElectedLessonRepository>();
+builder.Services.AddScoped<IElectiveLessonDayRepository, ElectiveLessonDayRepository>();
 
 builder.Services.AddHttpClient();
 
-builder.Services.AddHostedService<DailyScheduleUpdateService>();
-builder.Services.AddHostedService<OccurrencesUpdaterService>();
+builder.Services.AddHostedService<ScheduleParserJob123>();
+builder.Services.AddHostedService<ScheduleParserJob123>();
+builder.Services.AddHostedService<OccurrencesUpdaterJob>();
 
 builder.Services.AddSwaggerGen();
 
