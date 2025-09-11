@@ -2,8 +2,7 @@
 
 namespace DataAccess.Repositories.Interfaces;
 
-public interface IGroupLessonRepository : IRepository<GroupLesson>
+public interface IGroupLessonRepository : IKeyBasedRepository<GroupLesson>
 {
-    void RemoveByGroupId(int groupId);
     Task<IEnumerable<GroupLesson>> GetByGroupIdAsync(int groupId, CancellationToken stoppingToken);
 }

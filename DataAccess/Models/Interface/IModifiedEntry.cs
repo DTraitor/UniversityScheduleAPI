@@ -1,6 +1,9 @@
-﻿namespace DataAccess.Models.Interface;
+﻿using DataAccess.Enums;
+
+namespace DataAccess.Models.Interface;
 
 public interface IModifiedEntry
 {
-    int GetKey();
+    int Id { get; }
+    int Key { get; }
 }

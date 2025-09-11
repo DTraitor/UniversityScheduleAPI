@@ -1,7 +1,6 @@
-﻿using DataAccess.Models;
-using HtmlAgilityPack;
+﻿using HtmlAgilityPack;
 
-namespace BusinessLogic.Services.Readers.Interfaces;
+namespace BusinessLogic.Services.Interfaces;
 
 public interface IScheduleParser<T>
 {

@@ -42,19 +42,19 @@ public class GroupLessonRepository : IGroupLessonRepository
         _context.GroupLessons.RemoveRange(entities);
     }
 
+    public async Task<GroupLesson?> GetById(int id)
+    {
+        return await _context.GroupLessons.FirstOrDefaultAsync(x => x.GroupId == id);
+    }
+
     public void RemoveByKey(int key)
     {
         _context.GroupLessons.RemoveRange(_context.GroupLessons.Where(l => l.GroupId == key));
     }
 
-    public void RemoveAll()
+    public async Task<IEnumerable<GroupLesson>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        _context.GroupLessons.RemoveRange(_context.GroupLessons);
-    }
-
-    public void RemoveByGroupId(int groupId)
-    {
-        _context.GroupLessons.RemoveRange(_context.GroupLessons.Where(sl  => sl.GroupId == groupId));
+        return await _context.GroupLessons.ToListAsync(cancellationToken);
     }
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)

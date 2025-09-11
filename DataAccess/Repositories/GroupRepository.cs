@@ -17,9 +17,34 @@ public class GroupRepository : IGroupRepository
         _logger = logger;
     }
 
-    public async Task<List<Group>> GetAllAsync(CancellationToken cancellationToken)
+    public async Task<Group?> GetById(int id)
+    {
+        return await _context.Groups.FirstOrDefaultAsync(g => g.Id == id);
+    }
+
+    public async Task<IEnumerable<Group>> GetAllAsync(CancellationToken cancellationToken)
     {
         return await _context.Groups.ToListAsync(cancellationToken);
+    }
+
+    public void Add(Group entity)
+    {
+        _context.Groups.Add(entity);
+    }
+
+    public void Update(Group entity)
+    {
+        _context.Groups.Update(entity);
+    }
+
+    public void Delete(Group entity)
+    {
+        _context.Groups.Remove(entity);
+    }
+
+    public void AddRange(IEnumerable<Group> entities)
+    {
+        _context.Groups.AddRange(entities);
     }
 
     public void RemoveRange(IEnumerable<Group> toRemove)
@@ -35,6 +60,11 @@ public class GroupRepository : IGroupRepository
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
         return _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public int SaveChanges()
+    {
+        return _context.SaveChanges();
     }
 
     public void AddOrUpdate(Group group)

@@ -22,6 +22,16 @@ public class ElectiveLessonRepository : IElectiveLessonRepository
         _context.ElectiveLessons.RemoveRange(_context.ElectiveLessons.Where(x => x.ElectiveLessonDayId == key));
     }
 
+    public async Task<ElectiveLesson?> GetById(int id)
+    {
+        return await _context.ElectiveLessons.FirstOrDefaultAsync(x => x.ElectiveLessonDayId == id);
+    }
+
+    public async Task<IEnumerable<ElectiveLesson>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.ElectiveLessons.ToListAsync(cancellationToken);
+    }
+
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
         return await _context.SaveChangesAsync(cancellationToken);

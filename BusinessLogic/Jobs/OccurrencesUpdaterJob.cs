@@ -29,7 +29,7 @@ public class OccurrencesUpdaterJob : IHostedService, IDisposable, IAsyncDisposab
             UpdateOccurrences,
             null,
             TimeSpan.Zero,
-            TimeSpan.FromSeconds(5));
+            TimeSpan.FromSeconds(2));
 
         return Task.CompletedTask;
     }

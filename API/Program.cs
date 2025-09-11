@@ -1,12 +1,12 @@
 using BusinessLogic.Jobs;
 using BusinessLogic.Services;
+using BusinessLogic.Services.ElectiveLessons;
+using BusinessLogic.Services.GroupLessons;
 using BusinessLogic.Services.Interfaces;
 using DataAccess.Domain;
 using DataAccess.Repositories;
 using DataAccess.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using BusinessLogic.Services.Readers;
-using BusinessLogic.Services.Readers.Interfaces;
 using DataAccess.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -35,6 +35,8 @@ builder.Services.AddHttpClient();
 
 builder.Services.AddHostedService<ScheduleParserJob<GroupLesson, GroupLessonModified>>();
 builder.Services.AddHostedService<ScheduleParserJob<ElectiveLesson, ElectiveLessonModified>>();
+builder.Services.AddHostedService<UserLessonUpdaterJob<GroupLesson, GroupLessonModified>>();
+builder.Services.AddHostedService<UserLessonUpdaterJob<ElectiveLesson, ElectiveLessonModified>>();
 builder.Services.AddHostedService<OccurrencesUpdaterJob>();
 
 builder.Services.AddSwaggerGen();

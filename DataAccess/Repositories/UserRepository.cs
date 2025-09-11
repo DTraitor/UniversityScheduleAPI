@@ -17,14 +17,39 @@ public class UserRepository : IUserRepository
         _logger = logger;
     }
 
-    public async Task<IEnumerable<User>> GetByGroupIdsAsync(IEnumerable<int> groupIds)
+    public void Add(User entity)
     {
-        return await _context.Users.Where(u => u.GroupId.HasValue && groupIds.Contains(u.GroupId.Value)).ToListAsync();
+        _context.Add(entity);
     }
 
-    public async Task<IEnumerable<User>> GetByIdsAsync(IEnumerable<int> userIds)
+    void IRepository<User>.Update(User entity)
     {
-        return await _context.Users.Where(u => userIds.Contains(u.Id)).ToListAsync();
+        _context.Update(entity);
+    }
+
+    public void Delete(User entity)
+    {
+        _context.Remove(entity);
+    }
+
+    public void AddRange(IEnumerable<User> entities)
+    {
+        _context.AddRange(entities);
+    }
+
+    public void RemoveRange(IEnumerable<User> entities)
+    {
+        _context.RemoveRange(entities);
+    }
+
+    public Task<User?> GetById(int id)
+    {
+        return _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+    }
+
+    public async Task<IEnumerable<User>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.Users.ToListAsync(cancellationToken);
     }
 
     public User Update(User user)
@@ -32,9 +57,29 @@ public class UserRepository : IUserRepository
         return _context.Users.Update(user).Entity;
     }
 
+    public async Task<IEnumerable<User>> GetByGroupIdsAsync(IEnumerable<int> groupIds, CancellationToken cancellationToken = default)
+    {
+        return await _context.Users.Where(u => u.GroupId.HasValue && groupIds.Contains(u.GroupId.Value)).ToListAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<User>> GetByGroupIdAsync(int groupId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Users.Where(u => u.GroupId.HasValue && u.GroupId.Value == groupId).ToListAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<User>> GetByIdsAsync(IEnumerable<int> userIds, CancellationToken cancellationToken = default)
+    {
+        return await _context.Users.Where(u => userIds.Contains(u.Id)).ToListAsync(cancellationToken);
+    }
+
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         return await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public int SaveChanges()
+    {
+        return _context.SaveChanges();
     }
 
     public async Task<User> AddAsync(User user, CancellationToken cancellationToken = default)
@@ -44,6 +89,6 @@ public class UserRepository : IUserRepository
 
     public Task<User?> GetByTelegramIdAsync(long telegramId, CancellationToken cancellationToken = default)
     {
-        return _context.Users.Where(u => u.TelegramId == telegramId).FirstOrDefaultAsync();
+        return _context.Users.Where(u => u.TelegramId == telegramId).FirstOrDefaultAsync(cancellationToken);
     }
 }

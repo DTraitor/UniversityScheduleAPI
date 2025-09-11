@@ -1,9 +1,8 @@
-﻿using BusinessLogic.Services.Readers.Interfaces;
+﻿using BusinessLogic.Services.Interfaces;
 using DataAccess.Models;
-using DataAccess.Models.Interface;
 using HtmlAgilityPack;
 
-namespace BusinessLogic.Services.Readers;
+namespace BusinessLogic.Services.ElectiveLessons;
 
 public class ElectiveScheduleReader : IScheduleReader<ElectiveLesson, ElectiveLessonModified>
 {

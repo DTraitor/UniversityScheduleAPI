@@ -1,10 +1,10 @@
 ﻿using BusinessLogic.Helpers;
+using BusinessLogic.Services.Interfaces;
 using DataAccess.Models;
 using HtmlAgilityPack;
 using Microsoft.Extensions.Logging;
-using BusinessLogic.Services.Readers.Interfaces;
 
-namespace BusinessLogic.Services.Readers;
+namespace BusinessLogic.Services.GroupLessons;
 
 public class GroupScheduleParser : IScheduleParser<GroupLesson>
 {

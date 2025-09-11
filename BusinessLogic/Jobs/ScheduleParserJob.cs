@@ -1,10 +1,6 @@
-﻿using System.Collections.Concurrent;
-using BusinessLogic.Mappers;
-using BusinessLogic.Services.Readers.Interfaces;
-using DataAccess.Models;
+﻿using BusinessLogic.Services.Interfaces;
 using DataAccess.Models.Interface;
 using DataAccess.Repositories.Interfaces;
-using HtmlAgilityPack;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -69,7 +65,7 @@ public class ScheduleParserJob<T, TModifiedEntry> : IHostedService, IDisposable 
         }
 
         var scheduleReader = scope.ServiceProvider.GetRequiredService<IScheduleReader<T, TModifiedEntry>>();
-        var repository = scope.ServiceProvider.GetRequiredService<IRepository<T>>();
+        var repository = scope.ServiceProvider.GetRequiredService<IKeyBasedRepository<T>>();
         var modifiedRepository = scope.ServiceProvider.GetRequiredService<IRepository<TModifiedEntry>>();
 
         _logger.LogInformation("Beginning daily parsing of the schedule at {Time}", DateTime.Now);
@@ -78,7 +74,7 @@ public class ScheduleParserJob<T, TModifiedEntry> : IHostedService, IDisposable 
 
         foreach (var modifiedEntry in modifiedEntries)
         {
-            repository.RemoveByKey(modifiedEntry.GetKey());
+            repository.RemoveByKey(modifiedEntry.Key);
         }
         repository.AddRange(lessons);
         modifiedRepository.AddRange(modifiedEntries);
@@ -98,11 +94,5 @@ public class ScheduleParserJob<T, TModifiedEntry> : IHostedService, IDisposable 
         _cancellationTokenSource.Cancel();
         _cancellationTokenSource.Dispose();
         _timer.Dispose();
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        _cancellationTokenSource.Dispose();
-        await _timer.DisposeAsync();
     }
 }

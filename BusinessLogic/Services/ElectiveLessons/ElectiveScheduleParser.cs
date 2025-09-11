@@ -1,10 +1,10 @@
 ﻿using System.Text.RegularExpressions;
 using BusinessLogic.Helpers;
+using BusinessLogic.Services.Interfaces;
 using DataAccess.Models;
 using HtmlAgilityPack;
-using BusinessLogic.Services.Readers.Interfaces;
 
-namespace BusinessLogic.Services.Readers;
+namespace BusinessLogic.Services.ElectiveLessons;
 
 public class ElectiveScheduleParser : IScheduleParser<ElectiveLesson>
 {

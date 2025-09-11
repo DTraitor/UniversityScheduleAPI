@@ -7,10 +7,6 @@ public class ElectiveLessonModified : IModifiedEntry
 {
     public int Id { get; set; }
     public int ElectiveDayId { get; set; }
-    public ModifiedState State { get; set; }
 
-    public int GetKey()
-    {
-        return ElectiveDayId;
-    }
+    public int Key => ElectiveDayId;
 }

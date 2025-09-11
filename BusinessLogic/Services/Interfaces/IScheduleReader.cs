@@ -1,8 +1,7 @@
-﻿using DataAccess.Models;
-using DataAccess.Models.Interface;
+﻿using DataAccess.Models.Interface;
 using HtmlAgilityPack;
 
-namespace BusinessLogic.Services.Readers.Interfaces;
+namespace BusinessLogic.Services.Interfaces;
 
 public interface IScheduleReader<T, TModifiedEntry> where TModifiedEntry : IModifiedEntry
 {
