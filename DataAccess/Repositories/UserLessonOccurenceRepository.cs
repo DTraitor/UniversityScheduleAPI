@@ -22,9 +22,9 @@ public class UserLessonOccurenceRepository : IUserLessonOccurenceRepository
         _context.UserLessonOccurrences.AddRange(lessonOccurrences);
     }
 
-    public void ClearByUserId(int userId)
+    public void ClearByLessonIds(IEnumerable<int> toRemove)
     {
-        _context.UserLessonOccurrences.RemoveRange(_context.UserLessonOccurrences.Where(x => x.UserId == userId));
+        _context.UserLessonOccurrences.RemoveRange(_context.UserLessonOccurrences.Where(x => toRemove.Contains(x.LessonId)));
     }
 
     public int SaveChanges()

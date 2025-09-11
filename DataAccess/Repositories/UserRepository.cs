@@ -1,4 +1,5 @@
 ﻿using DataAccess.Domain;
+using DataAccess.Enums;
 using DataAccess.Models;
 using DataAccess.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -42,7 +43,7 @@ public class UserRepository : IUserRepository
         _context.RemoveRange(entities);
     }
 
-    public Task<User?> GetById(int id)
+    public Task<User?> GetByIdAsync(int id)
     {
         return _context.Users.FirstOrDefaultAsync(u => u.Id == id);
     }

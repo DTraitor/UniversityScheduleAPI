@@ -16,6 +16,8 @@ builder.Services.AddScoped<IScheduleReader<GroupLesson, GroupLessonModified>, Gr
 builder.Services.AddScoped<IScheduleReader<ElectiveLesson, ElectiveLessonModified>, ElectiveScheduleReader>();
 builder.Services.AddScoped<IScheduleParser<GroupLesson>, GroupScheduleParser>();
 builder.Services.AddScoped<IScheduleParser<ElectiveLesson>, ElectiveScheduleParser>();
+builder.Services.AddScoped<ILessonUpdaterService<GroupLesson, GroupLessonModified>, GroupLessonUpdaterService>();
+builder.Services.AddScoped<ILessonUpdaterService<ElectiveLesson, ElectiveLessonModified>, ElectiveLessonUpdaterService>();
 
 builder.Services.AddScoped<IScheduleService, ScheduleService> ();
 builder.Services.AddScoped<IUserService, UserService> ();

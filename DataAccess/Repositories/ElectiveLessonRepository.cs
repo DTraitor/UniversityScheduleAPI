@@ -22,7 +22,7 @@ public class ElectiveLessonRepository : IElectiveLessonRepository
         _context.ElectiveLessons.RemoveRange(_context.ElectiveLessons.Where(x => x.ElectiveLessonDayId == key));
     }
 
-    public async Task<ElectiveLesson?> GetById(int id)
+    public async Task<ElectiveLesson?> GetByIdAsync(int id)
     {
         return await _context.ElectiveLessons.FirstOrDefaultAsync(x => x.ElectiveLessonDayId == id);
     }

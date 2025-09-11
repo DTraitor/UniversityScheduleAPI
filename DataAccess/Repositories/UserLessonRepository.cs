@@ -1,4 +1,5 @@
 ﻿using DataAccess.Domain;
+using DataAccess.Enums;
 using DataAccess.Models.Internal;
 using DataAccess.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -35,6 +36,13 @@ public class UserLessonRepository : IUserLessonRepository
     public async Task<IEnumerable<UserLesson>> GetByIdsAsync(IEnumerable<int> ids)
     {
         return await _context.UserLessons.Where(ul => ids.Contains(ul.Id)).ToListAsync();
+    }
+
+    public IEnumerable<int> RemoveByUserIdAndLessonSourceType(int userId, LessonSourceTypeEnum sourceType)
+    {
+        var lessons = _context.UserLessons.Where(ul => ul.UserId == userId && ul.LessonSourceType == sourceType);
+        _context.RemoveRange(lessons);
+        return lessons.Select(x => x.Id);
     }
 
     public IEnumerable<UserLesson> GetWithOccurrencesCalculatedDateLessThan(DateTimeOffset dateTime)

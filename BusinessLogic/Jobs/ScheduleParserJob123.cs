@@ -14,8 +14,6 @@ public class ScheduleParserJob123 : IHostedService, IDisposable, IAsyncDisposabl
 {
     private const string SCHEDULE_API = "https://portal.nau.edu.ua";
 
-    private readonly DateTimeOffset BEGIN_UNIVERSITY_DATE = DateTimeOffset.Parse("01-09-2025");
-    private readonly DateTimeOffset END_UNIVERSITY_DATE = DateTimeOffset.Parse("31-12-2025");
 
     //readers
     private readonly IScheduleReader  scheduleReader;
@@ -138,7 +136,7 @@ public class ScheduleParserJob123 : IHostedService, IDisposable, IAsyncDisposabl
                  .Select(x => x.First()))
         {
             userLessonRepository.ClearByUserId(user.Id);
-            userLessonOccurenceRepository.ClearByUserId(user.Id);
+            userLessonOccurenceRepository.ClearByLessonIds(user.Id);
 
             if (user.GroupId != null)
             {

@@ -42,7 +42,7 @@ public class GroupLessonRepository : IGroupLessonRepository
         _context.GroupLessons.RemoveRange(entities);
     }
 
-    public async Task<GroupLesson?> GetById(int id)
+    public async Task<GroupLesson?> GetByIdAsync(int id)
     {
         return await _context.GroupLessons.FirstOrDefaultAsync(x => x.GroupId == id);
     }

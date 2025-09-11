@@ -17,7 +17,7 @@ public class GroupRepository : IGroupRepository
         _logger = logger;
     }
 
-    public async Task<Group?> GetById(int id)
+    public async Task<Group?> GetByIdAsync(int id)
     {
         return await _context.Groups.FirstOrDefaultAsync(g => g.Id == id);
     }

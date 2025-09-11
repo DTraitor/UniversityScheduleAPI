@@ -16,7 +16,7 @@ public static class ElectiveLessonsMapper
                 UserId = userId,
                 Title = lesson.Title,
                 LessonType = lesson.Type,
-                //Teacher = lesson.Teacher,
+                Teacher = lesson.Teacher,
                 Location = lesson.Location,
                 BeginTime = lesson.StartTime,
                 Duration = lesson.Length,
