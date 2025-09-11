@@ -4,8 +4,8 @@ using HtmlAgilityPack;
 
 namespace BusinessLogic.Services.Readers.Interfaces;
 
-public interface IScheduleReader<T>
+public interface IScheduleReader<T, TModifiedEntry> where TModifiedEntry : IModifiedEntry
 {
-    Task<(IEnumerable<IModifiedEntry>, IEnumerable<T>)> ReadSchedule(CancellationToken cancellationToken);
+    Task<(IEnumerable<TModifiedEntry>, IEnumerable<T>)> ReadSchedule(CancellationToken cancellationToken);
     IEnumerable<T> ReadGroupsList(HtmlDocument document);
 }

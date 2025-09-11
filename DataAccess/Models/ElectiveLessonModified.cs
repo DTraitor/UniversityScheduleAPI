@@ -1,8 +1,9 @@
 ﻿using DataAccess.Enums;
+using DataAccess.Models.Interface;
 
 namespace DataAccess.Models;
 
-public class ElectiveLessonModified
+public class ElectiveLessonModified : IModifiedEntry
 {
     public int Id { get; set; }
     public int ElectiveDayId { get; set; }

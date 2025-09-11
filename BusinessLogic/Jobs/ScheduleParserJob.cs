@@ -2,6 +2,7 @@
 using BusinessLogic.Mappers;
 using BusinessLogic.Services.Readers.Interfaces;
 using DataAccess.Models;
+using DataAccess.Models.Interface;
 using DataAccess.Repositories.Interfaces;
 using HtmlAgilityPack;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,43 +11,26 @@ using Microsoft.Extensions.Logging;
 
 namespace BusinessLogic.Jobs;
 
-public class ScheduleParserJob<T> : IHostedService, IDisposable
+public class ScheduleParserJob<T, TModifiedEntry> : IHostedService, IDisposable where TModifiedEntry : IModifiedEntry
 {
-    private const string SCHEDULE_API = "https://portal.nau.edu.ua";
-
-    private readonly DateTimeOffset BEGIN_UNIVERSITY_DATE = DateTimeOffset.Parse("01-09-2025");
-    private readonly DateTimeOffset END_UNIVERSITY_DATE = DateTimeOffset.Parse("31-12-2025");
-
-    private readonly IScheduleReader<T> _scheduleReader;
-    private readonly IRepository<T> _repository;
-    private readonly IModifiedRepository<T> _modifiedRepository;
-
-    // etc
     private IServiceProvider _services;
-    private readonly IHttpClientFactory _httpClientFactory;
-    private readonly ILogger<ScheduleParserJob<T>> _logger;
+    private readonly ILogger<ScheduleParserJob<T, TModifiedEntry>> _logger;
 
     private Timer _timer;
     private CancellationTokenSource _cancellationTokenSource = new();
     private object _executingLock = new();
 
     public ScheduleParserJob(
-        IScheduleReader<T> scheduleReader,
-        IRepository<T> repository,
         IServiceProvider services,
-        IHttpClientFactory httpClientFactory,
-        ILogger<ScheduleParserJob<T>> logger)
+        ILogger<ScheduleParserJob<T, TModifiedEntry>> logger)
     {
-        _scheduleReader = scheduleReader;
-        _repository = repository;
         _services = services;
-        _httpClientFactory = httpClientFactory;
         _logger = logger;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("ScheduleParserJob123 starting...");
+        _logger.LogInformation("ScheduleParserJob starting...");
 
         _timer = new Timer(
             ExecuteTimer,
@@ -57,7 +41,7 @@ public class ScheduleParserJob<T> : IHostedService, IDisposable
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("ScheduleParserJob123 stopping...");
+        _logger.LogInformation("ScheduleParserJob stopping...");
 
         _cancellationTokenSource.Cancel();
         _timer?.Change(Timeout.Infinite, 0);
@@ -84,19 +68,23 @@ public class ScheduleParserJob<T> : IHostedService, IDisposable
             return;
         }
 
+        var scheduleReader = scope.ServiceProvider.GetRequiredService<IScheduleReader<T, TModifiedEntry>>();
+        var repository = scope.ServiceProvider.GetRequiredService<IRepository<T>>();
+        var modifiedRepository = scope.ServiceProvider.GetRequiredService<IRepository<TModifiedEntry>>();
+
         _logger.LogInformation("Beginning daily parsing of the schedule at {Time}", DateTime.Now);
 
-        var (modifiedEntries, lessons) = await _scheduleReader.ReadSchedule(_cancellationTokenSource.Token);
+        var (modifiedEntries, lessons) = await scheduleReader.ReadSchedule(_cancellationTokenSource.Token);
 
         foreach (var modifiedEntry in modifiedEntries)
         {
-            _repository.RemoveByKey(modifiedEntry.GetKey());
+            repository.RemoveByKey(modifiedEntry.GetKey());
         }
-        _repository.AddRange(lessons);
-        _modifiedRepository.PushModifiedEntries(modifiedEntries);
+        repository.AddRange(lessons);
+        modifiedRepository.AddRange(modifiedEntries);
 
-        await _modifiedRepository.SaveChangesAsync(_cancellationTokenSource.Token);
-        await _repository.SaveChangesAsync(_cancellationTokenSource.Token);
+        await modifiedRepository.SaveChangesAsync(_cancellationTokenSource.Token);
+        await repository.SaveChangesAsync(_cancellationTokenSource.Token);
 
         _logger.LogInformation("Finished parsing schedule at {Time}", DateTime.Now);
 

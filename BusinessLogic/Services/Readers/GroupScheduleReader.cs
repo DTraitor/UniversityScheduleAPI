@@ -1,16 +1,23 @@
 ﻿using DataAccess.Models;
 using HtmlAgilityPack;
 using BusinessLogic.Services.Readers.Interfaces;
+using DataAccess.Models.Interface;
 
 namespace BusinessLogic.Services.Readers;
 
-public class GroupScheduleReader<T> : IScheduleReader<T>
+public class GroupScheduleReader : IScheduleReader<GroupLesson, GroupLessonModified>
 {
-    private IScheduleParser<T> _parser;
+    public Task<(IEnumerable<GroupLessonModified>, IEnumerable<GroupLesson>)> ReadSchedule(CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
 
+    public IEnumerable<GroupLesson> ReadGroupsList(HtmlDocument document)
+    {
+        throw new NotImplementedException();
+    }
 
-
-    public IEnumerable<(Group, string)> ReadGroupsList(HtmlDocument document)
+    public IEnumerable<(Group, string)> ReadGroupsList123(HtmlDocument document)
     {
         var accordion = document.DocumentNode.SelectSingleNode("//div[@class='accordion-item']");
 

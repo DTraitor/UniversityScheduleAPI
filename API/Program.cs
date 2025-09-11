@@ -12,9 +12,10 @@ using DataAccess.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddSingleton<IScheduleReader, GroupScheduleReader>();
-builder.Services.AddSingleton<IScheduleParser<GroupLesson>, GroupScheduleParser>();
-builder.Services.AddSingleton<IScheduleParser<ElectiveLesson>, ElectiveScheduleParser>();
+builder.Services.AddScoped<IScheduleReader<GroupLesson, GroupLessonModified>, GroupScheduleReader>();
+builder.Services.AddScoped<IScheduleReader<ElectiveLesson, ElectiveLessonModified>, ElectiveScheduleReader>();
+builder.Services.AddScoped<IScheduleParser<GroupLesson>, GroupScheduleParser>();
+builder.Services.AddScoped<IScheduleParser<ElectiveLesson>, ElectiveScheduleParser>();
 
 builder.Services.AddScoped<IScheduleService, ScheduleService> ();
 builder.Services.AddScoped<IUserService, UserService> ();
@@ -32,8 +33,8 @@ builder.Services.AddScoped<IElectiveLessonDayRepository, ElectiveLessonDayReposi
 
 builder.Services.AddHttpClient();
 
-builder.Services.AddHostedService<ScheduleParserJob123>();
-builder.Services.AddHostedService<ScheduleParserJob123>();
+builder.Services.AddHostedService<ScheduleParserJob<GroupLesson, GroupLessonModified>>();
+builder.Services.AddHostedService<ScheduleParserJob<ElectiveLesson, ElectiveLessonModified>>();
 builder.Services.AddHostedService<OccurrencesUpdaterJob>();
 
 builder.Services.AddSwaggerGen();
