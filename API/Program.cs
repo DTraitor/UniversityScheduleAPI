@@ -7,38 +7,36 @@ using DataAccess.Domain;
 using DataAccess.Repositories;
 using DataAccess.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using API.Extensions;
 using DataAccess.Models;
+using DataAccess.Models.Internal;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddScoped<IScheduleReader<GroupLesson, GroupLessonModified>, GroupScheduleReader>();
-builder.Services.AddScoped<IScheduleReader<ElectiveLesson, ElectiveLessonModified>, ElectiveScheduleReader>();
-builder.Services.AddScoped<IScheduleParser<GroupLesson>, GroupScheduleParser>();
-builder.Services.AddScoped<IScheduleParser<ElectiveLesson>, ElectiveScheduleParser>();
-builder.Services.AddScoped<ILessonUpdaterService<GroupLesson, GroupLessonModified>, GroupLessonUpdaterService>();
-builder.Services.AddScoped<ILessonUpdaterService<ElectiveLesson, ElectiveLessonModified>, ElectiveLessonUpdaterService>();
+builder.Services.AddScoped<IScheduleService, ScheduleService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IGroupService, GroupService>();
 
-builder.Services.AddScoped<IScheduleService, ScheduleService> ();
-builder.Services.AddScoped<IUserService, UserService> ();
-builder.Services.AddScoped<IGroupService, GroupService> ();
-
+// Repositories
 builder.Services.AddScoped<IPersistentDataRepository, PersistentDataRepository>();
-builder.Services.AddScoped<IGroupRepository, GroupRepository>();
-builder.Services.AddScoped<IElectiveLessonRepository, ElectiveLessonRepository>();
-builder.Services.AddScoped<IGroupLessonRepository, GroupLessonRepository>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IUserLessonRepository, UserLessonRepository>();
-builder.Services.AddScoped<IUserLessonOccurenceRepository, UserLessonOccurenceRepository>();
-builder.Services.AddScoped<IElectedLessonRepository, ElectedLessonRepository>();
-builder.Services.AddScoped<IElectiveLessonDayRepository, ElectiveLessonDayRepository>();
+builder.Services.AddScoped<IUserModifiedRepository, UserModifiedRepository>();
+builder.Services.AddRepository<IGroupRepository, GroupRepository, Group>();
+builder.Services.AddRepository<IElectiveLessonRepository, ElectiveLessonRepository, ElectiveLesson>();
+builder.Services.AddRepository<IGroupLessonRepository, GroupLessonRepository, GroupLesson>();
+builder.Services.AddRepository<IUserRepository, UserRepository, User>();
+builder.Services.AddRepository<IUserLessonRepository, UserLessonRepository, UserLesson>();
+builder.Services.AddRepository<IUserLessonOccurenceRepository, UserLessonOccurenceRepository, UserLessonOccurrence>();
+builder.Services.AddRepository<IElectedLessonRepository, ElectedLessonRepository, ElectedLesson>();
+builder.Services.AddRepository<IElectiveLessonDayRepository, ElectiveLessonDayRepository, ElectiveLessonDay>();
 
 builder.Services.AddHttpClient();
 
-builder.Services.AddHostedService<ScheduleParserJob<GroupLesson, GroupLessonModified>>();
-builder.Services.AddHostedService<ScheduleParserJob<ElectiveLesson, ElectiveLessonModified>>();
-builder.Services.AddHostedService<UserLessonUpdaterJob<GroupLesson, GroupLessonModified>>();
-builder.Services.AddHostedService<UserLessonUpdaterJob<ElectiveLesson, ElectiveLessonModified>>();
+// Schedule sources
+builder.Services.AddScheduleSource<GroupLesson, GroupLessonModified>();
+builder.Services.AddScheduleSource<ElectiveLesson, ElectiveLessonModified>();
+
+// Jobs
 builder.Services.AddHostedService<OccurrencesUpdaterJob>();
 
 builder.Services.AddSwaggerGen();

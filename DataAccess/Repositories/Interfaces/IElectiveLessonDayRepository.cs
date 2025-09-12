@@ -1,6 +1,8 @@
-﻿namespace DataAccess.Repositories.Interfaces;
+﻿using DataAccess.Models;
 
-public interface IElectiveLessonDayRepository
+namespace DataAccess.Repositories.Interfaces;
+
+public interface IElectiveLessonDayRepository : IRepository<ElectiveLessonDay>
 {
     
 }

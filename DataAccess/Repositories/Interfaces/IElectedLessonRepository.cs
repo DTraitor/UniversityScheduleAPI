@@ -1,6 +1,8 @@
-﻿namespace DataAccess.Repositories.Interfaces;
+﻿using DataAccess.Models;
 
-public interface IElectedLessonRepository
+namespace DataAccess.Repositories.Interfaces;
+
+public interface IElectedLessonRepository : IRepository<ElectedLesson>
 {
     
 }

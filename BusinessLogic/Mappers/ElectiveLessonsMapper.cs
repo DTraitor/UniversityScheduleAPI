@@ -22,8 +22,9 @@ public static class ElectiveLessonsMapper
                 Duration = lesson.Length,
                 RepeatType = RepeatType.Weekly,
                 RepeatCount = 2,
-                StartTime = begin.GetNextDayOfWeek(lesson.DayOfWeek).AddDays(lesson.Week ? 7 : 0),
+                //StartTime = begin.GetNextDayOfWeek(lesson.DayOfWeek).AddDays(lesson.Week ? 7 : 0),
                 EndTime = end,
+                LessonSourceType = LessonSourceTypeEnum.Elective,
             };
         }
     }

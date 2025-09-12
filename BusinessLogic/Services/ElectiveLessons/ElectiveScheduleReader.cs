@@ -10,9 +10,4 @@ public class ElectiveScheduleReader : IScheduleReader<ElectiveLesson, ElectiveLe
     {
         throw new NotImplementedException();
     }
-
-    public IEnumerable<ElectiveLesson> ReadGroupsList(HtmlDocument document)
-    {
-        throw new NotImplementedException();
-    }
 }

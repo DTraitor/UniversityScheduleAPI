@@ -24,6 +24,7 @@ public static class ScheduleLessonsMapper
                 RepeatCount = 2,
                 StartTime = begin.GetNextDayOfWeek(lesson.DayOfWeek).AddDays(lesson.Week ? 7 : 0),
                 EndTime = end,
+                LessonSourceType = LessonSourceTypeEnum.Group,
             };
         }
     }

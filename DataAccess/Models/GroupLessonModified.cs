@@ -7,7 +7,6 @@ public class GroupLessonModified : IModifiedEntry
 {
     public int Id { get; set; }
     public int GroupId { get; set; }
-    public List<int> ModifiedEntryIds { get; set; } = [];
 
     public int Key => GroupId;
 }
