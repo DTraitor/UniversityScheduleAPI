@@ -7,7 +7,7 @@ public class UserModified : IModifiedEntry
 {
     public int Id { get; set; }
     public int UserId { get; set; }
-    public ProcessedByEnum ProcessedBy { get; set; }
+    public ProcessedByEnum ToProcess { get; set; }
 
     public int Key => UserId;
 }

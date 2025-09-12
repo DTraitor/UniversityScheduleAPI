@@ -20,18 +20,29 @@ public class UserModifiedRepository : IUserModifiedRepository
 
     public async Task<IEnumerable<UserModified>> GetNotProcessed(ProcessedByEnum flag, CancellationToken cancellationToken = default)
     {
-        return await _context.UserModifications.Where(x => (x.ProcessedBy & flag) != ProcessedByEnum.None).ToListAsync(cancellationToken);
+        return await _context.UserModifications.Where(x => x.ToProcess == flag).ToListAsync(cancellationToken);
     }
 
-    public async Task ActivateBitFlag(int id, ProcessedByEnum flag)
+    public void Add(int userId, ProcessedByEnum toProcessBy)
     {
-        await _context.Database.ExecuteSqlInterpolatedAsync(
-            $"UPDATE UserModifications SET Flags = Flags | {(int)flag} WHERE Id = {id}");
+        _context.Add(new UserModified { UserId = userId, ToProcess = toProcessBy });
     }
 
-    public async Task DeactivateBitFlag(int id, ProcessedByEnum flag)
+    public void AddProcessByAll(int userId)
     {
-        await _context.Database.ExecuteSqlInterpolatedAsync(
-            $"UPDATE UserModifications SET Flags = Flags & ~{(int)flag} WHERE Id = {id}");
+        foreach (ProcessedByEnum value in Enum.GetValues(typeof(ProcessedByEnum)))
+        {
+            _context.Add(new UserModified { UserId = userId, ToProcess = value });
+        }
+    }
+
+    public void RemoveProcessed(IEnumerable<UserModified> toRemove)
+    {
+        _context.UserModifications.RemoveRange(toRemove);
+    }
+
+    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.SaveChangesAsync(cancellationToken);
     }
 }

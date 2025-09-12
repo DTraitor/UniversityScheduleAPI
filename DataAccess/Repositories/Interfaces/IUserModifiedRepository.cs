@@ -6,6 +6,8 @@ namespace DataAccess.Repositories.Interfaces;
 public interface IUserModifiedRepository
 {
     Task<IEnumerable<UserModified>> GetNotProcessed(ProcessedByEnum flag, CancellationToken cancellationToken = default);
-    Task ActivateBitFlag(int id, ProcessedByEnum flag);
-    Task DeactivateBitFlag(int id, ProcessedByEnum flag);
+    void Add(int userId, ProcessedByEnum toProcessBy);
+    void AddProcessByAll(int userId);
+    void RemoveProcessed(IEnumerable<UserModified> toRemove);
+    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

@@ -33,8 +33,8 @@ builder.Services.AddRepository<IElectiveLessonDayRepository, ElectiveLessonDayRe
 builder.Services.AddHttpClient();
 
 // Schedule sources
-builder.Services.AddScheduleSource<GroupLesson, GroupLessonModified>();
-builder.Services.AddScheduleSource<ElectiveLesson, ElectiveLessonModified>();
+builder.Services.AddScheduleSource<GroupLesson, GroupLessonModified, GroupScheduleParser, GroupScheduleReader, GroupLessonUpdaterService, GroupLessonUserUpdaterService>();
+builder.Services.AddScheduleSource<ElectiveLesson, ElectiveLessonModified, ElectiveScheduleParser, ElectiveScheduleReader, ElectiveLessonUpdaterService, ElectiveUserUpdaterService>();
 
 // Jobs
 builder.Services.AddHostedService<OccurrencesUpdaterJob>();

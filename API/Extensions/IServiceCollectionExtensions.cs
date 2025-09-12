@@ -7,17 +7,22 @@ namespace API.Extensions;
 
 public static class IServiceCollectionExtensions
 {
-    public static IServiceCollection AddScheduleSource<TLesson, TLessonModified>(this IServiceCollection services)
+    public static IServiceCollection AddScheduleSource<TLesson, TLessonModified, TParser, TReader, TUpdater, TUserUpdater>(this IServiceCollection services)
         where TLesson: class
         where TLessonModified: class, IModifiedEntry
+        where TParser: class, IScheduleParser<TLesson>
+        where TReader: class, IScheduleReader<TLesson, TLessonModified>
+        where TUpdater: class, ILessonUpdaterService<TLesson, TLessonModified>
+        where TUserUpdater: class, IUserLessonUpdaterService<TLesson>
     {
         return services
-            .AddScoped<IScheduleParser<TLesson>>()
-            .AddScoped<IScheduleReader<TLesson, TLessonModified>>()
-            .AddScoped<ILessonUpdaterService<TLesson, TLessonModified>>()
-            .AddScoped<ILessonUpdaterService<TLesson, TLessonModified>>()
+            .AddScoped<IScheduleParser<TLesson>, TParser>()
+            .AddScoped<IScheduleReader<TLesson, TLessonModified>, TReader>()
+            .AddScoped<ILessonUpdaterService<TLesson, TLessonModified>, TUpdater>()
+            .AddScoped<IUserLessonUpdaterService<TLesson>, TUserUpdater>()
             .AddHostedService<ScheduleParserJob<TLesson,TLessonModified>>()
-            .AddHostedService<LessonUpdaterJob<TLesson,TLessonModified>>();
+            .AddHostedService<LessonUpdaterJob<TLesson,TLessonModified>>()
+            .AddHostedService<UserLessonUpdaterJob<TLesson>>();
     }
 
     public static IServiceCollection AddRepository<TInterface, TImplementation, TItem>(this IServiceCollection services)
