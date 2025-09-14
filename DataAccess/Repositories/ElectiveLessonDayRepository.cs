@@ -37,6 +37,11 @@ public class ElectiveLessonDayRepository : IElectiveLessonDayRepository
         _context.ElectiveLessonDays.AddRange(entities);
     }
 
+    public void UpdateRange(IEnumerable<ElectiveLessonDay> entity)
+    {
+        _context.ElectiveLessonDays.UpdateRange(entity);
+    }
+
     public void RemoveRange(IEnumerable<ElectiveLessonDay> entities)
     {
         _context.ElectiveLessonDays.RemoveRange(entities);

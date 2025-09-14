@@ -61,10 +61,22 @@ public class GroupScheduleReader : IScheduleReader<GroupLesson, GroupLessonModif
 
         var newGroupNames = new HashSet<string>(groupsData.Select(g => g.Item1.GroupName));
 
-        var removedGroups = (await _groupRepository.GetAllAsync(cancellationToken))
-            .Where(c => !newGroupNames.Contains(c.GroupName));
+        var allGroups = await _groupRepository.GetAllAsync(cancellationToken);
+        var groupsLookup = allGroups.ToDictionary(g => g.GroupName, g => g.Id);
 
+        var updatedGroupsData = groupsData
+            .Select(tuple =>
+            {
+                var (group, extra) = tuple;
+                group.Id = groupsLookup.GetValueOrDefault(group.GroupName, 0);
+                return group;
+            })
+            .ToList();
+
+        var removedGroups = allGroups.Where(c => !newGroupNames.Contains(c.GroupName));
         _groupRepository.RemoveRange(removedGroups);
+        _groupRepository.AddRange(updatedGroupsData.Where(x => x.Id == 0));
+        _groupRepository.UpdateRange(updatedGroupsData.Where(x => x.Id != 0));
 
         await _groupRepository.SaveChangesAsync(cancellationToken);
 
@@ -104,6 +116,8 @@ public class GroupScheduleReader : IScheduleReader<GroupLesson, GroupLessonModif
         var results = new List<(Group, string)>();
         var accordion = document.DocumentNode.SelectSingleNode("//div[@class='accordion-item']");
 
+        int id = 1;
+
         while (accordion != null)
         {
             string facultyName = accordion
@@ -119,6 +133,7 @@ public class GroupScheduleReader : IScheduleReader<GroupLesson, GroupLessonModif
                 {
                     var newGroup = new Group
                     {
+                        Id = id++,
                         GroupName = groupNode.InnerText.Replace("\r", string.Empty).Replace("\n", string.Empty).Trim(),
                         FacultyName = facultyName.Replace("\r", string.Empty).Replace("\n", string.Empty).Trim(),
                     };

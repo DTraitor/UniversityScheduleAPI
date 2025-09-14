@@ -1,4 +1,5 @@
 ﻿using BusinessLogic.Services.Interfaces;
+using DataAccess.Models;
 using DataAccess.Models.Interface;
 using DataAccess.Repositories.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
@@ -57,9 +58,13 @@ public class ScheduleParserJob<T, TModifiedEntry> : IHostedService, IDisposable 
         using var scope = _services.CreateScope();
 
         var persistentDataRepository = scope.ServiceProvider.GetRequiredService<IPersistentDataRepository>();
-        var persistentData = persistentDataRepository.GetData();
+        var persistentData = persistentDataRepository.GetData(typeof(T).Name) ?? new PersistentData
+        {
+            Key = typeof(T).Name,
+            Value = DateTimeOffset.UtcNow.ToString("o"),
+        };
 
-        if (persistentData.NextScheduleParseDateTime[typeof(T).Name] > DateTimeOffset.Now)
+        if (DateTimeOffset.TryParse(persistentData.Value, out var result) && result > DateTimeOffset.Now)
         {
             return;
         }
@@ -84,7 +89,7 @@ public class ScheduleParserJob<T, TModifiedEntry> : IHostedService, IDisposable 
 
         _logger.LogInformation("Finished parsing schedule at {Time}", DateTime.Now);
 
-        persistentData.NextScheduleParseDateTime[typeof(T).Name] = DateTimeOffset.Now.AddHours(24);
+        persistentData.Value = DateTimeOffset.UtcNow.AddHours(24).ToString("o");
         persistentDataRepository.SetData(persistentData);
         await persistentDataRepository.SaveChangesAsync(_cancellationTokenSource.Token);
     }

@@ -25,6 +25,11 @@ public class ElectiveLessonModifiedRepository : IRepository<ElectiveLessonModifi
         throw new NotImplementedException();
     }
 
+    public void UpdateRange(IEnumerable<ElectiveLessonModified> entity)
+    {
+        throw new NotImplementedException();
+    }
+
     public void RemoveRange(IEnumerable<ElectiveLessonModified> entities)
     {
         throw new NotImplementedException();

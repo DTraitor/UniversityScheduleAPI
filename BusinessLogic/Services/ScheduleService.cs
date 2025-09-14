@@ -18,6 +18,7 @@ public class ScheduleService : IScheduleService
         IUserLessonOccurenceRepository userLessonOccurenceRepository,
         ILogger<ScheduleService> logger)
     {
+        _userRepository = userRepository;
         _userLessonRepository = userLessonRepository;
         _userLessonOccurenceRepository = userLessonOccurenceRepository;
         _logger = logger;
@@ -26,7 +27,7 @@ public class ScheduleService : IScheduleService
     public async Task<IEnumerable<LessonDto>> GetScheduleForDate(DateTimeOffset dateTime, int userTelegramId)
     {
         var user = await _userRepository.GetByTelegramIdAsync(userTelegramId);
-        if(user  == null)
+        if(user == null)
             throw new KeyNotFoundException("User not found");
 
         var occurrences = await _userLessonOccurenceRepository.GetByUserIdAndDateAsync(user.Id, dateTime);

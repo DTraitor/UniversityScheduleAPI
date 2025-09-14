@@ -7,13 +7,12 @@ namespace BusinessLogic.Mappers;
 
 public static class ScheduleLessonsMapper
 {
-    public static IEnumerable<UserLesson> Map(IEnumerable<GroupLesson> lessons, int userId, DateTimeOffset begin, DateTimeOffset end)
+    public static IEnumerable<UserLesson> Map(IEnumerable<GroupLesson> lessons, DateTimeOffset begin, DateTimeOffset end)
     {
         foreach (var lesson in lessons)
         {
             yield return new UserLesson
             {
-                UserId = userId,
                 Title = lesson.Title,
                 LessonType = lesson.Type,
                 Teacher = lesson.Teacher,

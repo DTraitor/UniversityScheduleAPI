@@ -62,6 +62,11 @@ public class ElectiveLessonRepository : IElectiveLessonRepository
         _context.ElectiveLessons.AddRange(lessons);
     }
 
+    public void UpdateRange(IEnumerable<ElectiveLesson> entity)
+    {
+        _context.ElectiveLessons.UpdateRange(entity);
+    }
+
     public void RemoveRange(IEnumerable<ElectiveLesson> lessons)
     {
         _context.ElectiveLessons.RemoveRange(lessons);

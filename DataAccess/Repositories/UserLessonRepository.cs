@@ -48,6 +48,11 @@ public class UserLessonRepository : IUserLessonRepository
         _context.UserLessons.AddRange(entities);
     }
 
+    public void UpdateRange(IEnumerable<UserLesson> entity)
+    {
+        _context.UserLessons.UpdateRange(entity);
+    }
+
     public void RemoveRange(IEnumerable<UserLesson> entities)
     {
         _context.UserLessons.RemoveRange(entities);

@@ -33,4 +33,14 @@ public static class IServiceCollectionExtensions
             .AddScoped<IRepository<TItem>, TImplementation>()
             .AddScoped<TInterface, TImplementation>();
     }
+
+    public static IServiceCollection AddKeyBasedRepository<TInterface, TImplementation, TItem>(this IServiceCollection services)
+        where TInterface : class, IRepository<TItem>
+        where TImplementation : class, TInterface, IKeyBasedRepository<TItem>
+    {
+        return services
+            .AddScoped<IRepository<TItem>, TImplementation>()
+            .AddScoped<IKeyBasedRepository<TItem>, TImplementation>()
+            .AddScoped<TInterface, TImplementation>();
+    }
 }

@@ -18,7 +18,7 @@ public class PersistentDataRepository : IPersistentDataRepository
 
     public void SetData(PersistentData persistentData)
     {
-        var existing = _context.PersistentData.Find(persistentData.Id);
+        var existing = _context.PersistentData.FirstOrDefault(x => x.Key == persistentData.Key);
 
         if (existing == null)
         {
@@ -30,9 +30,9 @@ public class PersistentDataRepository : IPersistentDataRepository
         }
     }
 
-    public PersistentData GetData()
+    public PersistentData? GetData(string key)
     {
-        return _context.PersistentData.FirstOrDefault() ?? new PersistentData{ Id = 0 };
+        return _context.PersistentData.FirstOrDefault(x => x.Key == key);
     }
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)

@@ -37,6 +37,11 @@ public class UserLessonOccurenceRepository : IUserLessonOccurenceRepository
         _context.UserLessonOccurrences.AddRange(lessonOccurrences);
     }
 
+    public void UpdateRange(IEnumerable<UserLessonOccurrence> entity)
+    {
+        _context.UserLessonOccurrences.UpdateRange(entity);
+    }
+
     public void RemoveRange(IEnumerable<UserLessonOccurrence> entities)
     {
         _context.UserLessonOccurrences.RemoveRange(entities);

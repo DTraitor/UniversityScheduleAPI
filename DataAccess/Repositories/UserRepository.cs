@@ -38,6 +38,11 @@ public class UserRepository : IUserRepository
         _context.AddRange(entities);
     }
 
+    public void UpdateRange(IEnumerable<User> entity)
+    {
+        _context.UpdateRange(entity);
+    }
+
     public void RemoveRange(IEnumerable<User> entities)
     {
         _context.RemoveRange(entities);

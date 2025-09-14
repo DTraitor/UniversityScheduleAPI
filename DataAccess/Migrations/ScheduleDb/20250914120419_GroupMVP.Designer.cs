@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DataAccess.Migrations.ScheduleDb
 {
     [DbContext(typeof(ScheduleDbContext))]
-    [Migration("20250906195258_Rename")]
-    partial class Rename
+    [Migration("20250914120419_GroupMVP")]
+    partial class GroupMVP
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,6 +25,32 @@ namespace DataAccess.Migrations.ScheduleDb
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("DataAccess.Models.ElectedLesson", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ElectiveLessonDayId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ElectiveLessonId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ElectedLessons");
+                });
+
             modelBuilder.Entity("DataAccess.Models.ElectiveLesson", b =>
                 {
                     b.Property<int>("Id")
@@ -33,7 +59,7 @@ namespace DataAccess.Migrations.ScheduleDb
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("DayOfWeek")
+                    b.Property<int>("ElectiveLessonDayId")
                         .HasColumnType("integer");
 
                     b.Property<TimeSpan>("Length")
@@ -45,8 +71,9 @@ namespace DataAccess.Migrations.ScheduleDb
                     b.Property<TimeOnly>("StartTime")
                         .HasColumnType("time without time zone");
 
-                    b.Property<string>("Teacher")
-                        .HasColumnType("text");
+                    b.PrimitiveCollection<string[]>("Teacher")
+                        .IsRequired()
+                        .HasColumnType("text[]");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -55,15 +82,48 @@ namespace DataAccess.Migrations.ScheduleDb
                     b.Property<string>("Type")
                         .HasColumnType("text");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("Week")
-                        .HasColumnType("boolean");
-
                     b.HasKey("Id");
 
                     b.ToTable("ElectiveLessons");
+                });
+
+            modelBuilder.Entity("DataAccess.Models.ElectiveLessonDay", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DayId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("HashPage")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("HourId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ElectiveLessonDays");
+                });
+
+            modelBuilder.Entity("DataAccess.Models.ElectiveLessonModified", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ElectiveDayId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ElectiveLessonModifications");
                 });
 
             modelBuilder.Entity("DataAccess.Models.Group", b =>
@@ -88,7 +148,65 @@ namespace DataAccess.Migrations.ScheduleDb
 
                     b.HasKey("Id");
 
-                    b.ToTable("Group");
+                    b.ToTable("Groups");
+                });
+
+            modelBuilder.Entity("DataAccess.Models.GroupLesson", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("GroupId")
+                        .HasColumnType("integer");
+
+                    b.Property<TimeSpan>("Length")
+                        .HasColumnType("interval");
+
+                    b.Property<string>("Location")
+                        .HasColumnType("text");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("time without time zone");
+
+                    b.PrimitiveCollection<string[]>("Teacher")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Type")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("Week")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("GroupLessons");
+                });
+
+            modelBuilder.Entity("DataAccess.Models.GroupLessonModified", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("GroupId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("GroupLessonModifications");
                 });
 
             modelBuilder.Entity("DataAccess.Models.Internal.UserLesson", b =>
@@ -111,13 +229,16 @@ namespace DataAccess.Migrations.ScheduleDb
                     b.Property<DateTimeOffset>("EndTime")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("LessonSourceType")
+                        .HasColumnType("integer");
+
                     b.Property<string>("LessonType")
                         .HasColumnType("text");
 
                     b.Property<string>("Location")
                         .HasColumnType("text");
 
-                    b.Property<DateTimeOffset>("OccurrencesCalculatedTill")
+                    b.Property<DateTimeOffset?>("OccurrencesCalculatedTill")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("RepeatCount")
@@ -129,8 +250,9 @@ namespace DataAccess.Migrations.ScheduleDb
                     b.Property<DateTimeOffset>("StartTime")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Teacher")
-                        .HasColumnType("text");
+                    b.PrimitiveCollection<string[]>("Teacher")
+                        .IsRequired()
+                        .HasColumnType("text[]");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -177,15 +299,20 @@ namespace DataAccess.Migrations.ScheduleDb
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTimeOffset?>("NextScheduleParseDateTime")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
                     b.ToTable("PersistentData");
                 });
 
-            modelBuilder.Entity("DataAccess.Models.ScheduleLesson", b =>
+            modelBuilder.Entity("DataAccess.Models.UserModified", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -193,37 +320,15 @@ namespace DataAccess.Migrations.ScheduleDb
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("DayOfWeek")
+                    b.Property<int>("ToProcess")
                         .HasColumnType("integer");
 
-                    b.Property<int>("GroupId")
+                    b.Property<int>("UserId")
                         .HasColumnType("integer");
-
-                    b.Property<TimeSpan>("Length")
-                        .HasColumnType("interval");
-
-                    b.Property<string>("Location")
-                        .HasColumnType("text");
-
-                    b.Property<TimeOnly>("StartTime")
-                        .HasColumnType("time without time zone");
-
-                    b.Property<string>("Teacher")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Type")
-                        .HasColumnType("text");
-
-                    b.Property<bool>("Week")
-                        .HasColumnType("boolean");
 
                     b.HasKey("Id");
 
-                    b.ToTable("ScheduleLessons");
+                    b.ToTable("UserModifications");
                 });
 #pragma warning restore 612, 618
         }

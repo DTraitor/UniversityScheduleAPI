@@ -1,6 +1,7 @@
 ﻿using BusinessLogic.DTO;
 using BusinessLogic.Enums;
 using BusinessLogic.Services.Interfaces;
+using DataAccess.Enums;
 using DataAccess.Models;
 using DataAccess.Repositories.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -9,15 +10,18 @@ namespace BusinessLogic.Services;
 
 public class UserService : IUserService
 {
+    private readonly IUserModifiedRepository _userModifiedRepository;
     private readonly IUserRepository _userRepository;
     private readonly IGroupRepository _groupRepository;
     private readonly ILogger<UserService> _logger;
 
     public UserService(
+        IUserModifiedRepository userModifiedRepository,
         IUserRepository userRepository,
         IGroupRepository groupRepository,
         ILogger<UserService> logger)
     {
+        _userModifiedRepository = userModifiedRepository;
         _userRepository = userRepository;
         _groupRepository = groupRepository;
         _logger = logger;
@@ -51,6 +55,9 @@ public class UserService : IUserService
 
         await _userRepository.SaveChangesAsync();
 
+        _userModifiedRepository.Add(user.Id, ProcessedByEnum.GroupLessons);
+        await _userModifiedRepository.SaveChangesAsync();
+
         return new UserDtoOutput
         {
             Id = user.Id,
@@ -72,6 +79,9 @@ public class UserService : IUserService
         user.GroupId = group.Id;
         var result = _userRepository.Update(user);
         await _userRepository.SaveChangesAsync();
+
+        _userModifiedRepository.Add(user.Id, ProcessedByEnum.GroupLessons);
+        await _userModifiedRepository.SaveChangesAsync();
 
         return new UserDtoOutput
         {

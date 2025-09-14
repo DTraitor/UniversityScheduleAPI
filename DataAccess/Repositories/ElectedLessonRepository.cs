@@ -37,6 +37,11 @@ public class ElectedLessonRepository : IElectedLessonRepository
         _context.ElectedLessons.AddRange(entities);
     }
 
+    public void UpdateRange(IEnumerable<ElectedLesson> entity)
+    {
+        _context.ElectedLessons.UpdateRange(entity);
+    }
+
     public void RemoveRange(IEnumerable<ElectedLesson> entities)
     {
         _context.ElectedLessons.RemoveRange(entities);

@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using API.Extensions;
 using DataAccess.Models;
 using DataAccess.Models.Internal;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,20 +22,22 @@ builder.Services.AddScoped<IGroupService, GroupService>();
 // Repositories
 builder.Services.AddScoped<IPersistentDataRepository, PersistentDataRepository>();
 builder.Services.AddScoped<IUserModifiedRepository, UserModifiedRepository>();
+builder.Services.AddScoped<IRepository<ElectiveLessonModified>, ElectiveLessonModifiedRepository>();
+builder.Services.AddScoped<IRepository<GroupLessonModified>, GroupLessonModifiedRepository>();
 builder.Services.AddRepository<IGroupRepository, GroupRepository, Group>();
-builder.Services.AddRepository<IElectiveLessonRepository, ElectiveLessonRepository, ElectiveLesson>();
-builder.Services.AddRepository<IGroupLessonRepository, GroupLessonRepository, GroupLesson>();
 builder.Services.AddRepository<IUserRepository, UserRepository, User>();
 builder.Services.AddRepository<IUserLessonRepository, UserLessonRepository, UserLesson>();
 builder.Services.AddRepository<IUserLessonOccurenceRepository, UserLessonOccurenceRepository, UserLessonOccurrence>();
 builder.Services.AddRepository<IElectedLessonRepository, ElectedLessonRepository, ElectedLesson>();
 builder.Services.AddRepository<IElectiveLessonDayRepository, ElectiveLessonDayRepository, ElectiveLessonDay>();
+builder.Services.AddKeyBasedRepository<IElectiveLessonRepository, ElectiveLessonRepository, ElectiveLesson>();
+builder.Services.AddKeyBasedRepository<IGroupLessonRepository, GroupLessonRepository, GroupLesson>();
 
 builder.Services.AddHttpClient();
 
 // Schedule sources
 builder.Services.AddScheduleSource<GroupLesson, GroupLessonModified, GroupScheduleParser, GroupScheduleReader, GroupLessonUpdaterService, GroupLessonUserUpdaterService>();
-builder.Services.AddScheduleSource<ElectiveLesson, ElectiveLessonModified, ElectiveScheduleParser, ElectiveScheduleReader, ElectiveLessonUpdaterService, ElectiveUserUpdaterService>();
+//builder.Services.AddScheduleSource<ElectiveLesson, ElectiveLessonModified, ElectiveScheduleParser, ElectiveScheduleReader, ElectiveLessonUpdaterService, ElectiveUserUpdaterService>();
 
 // Jobs
 builder.Services.AddHostedService<OccurrencesUpdaterJob>();

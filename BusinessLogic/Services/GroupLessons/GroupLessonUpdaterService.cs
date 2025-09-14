@@ -52,7 +52,13 @@ public class GroupLessonUpdaterService : ILessonUpdaterService<GroupLesson, Grou
         var lessons = await _groupLessonRepository.GetByGroupIdAsync(group.Id);
         foreach (var user in users)
         {
-            await _userLessonRepository.AddRangeAsync(ScheduleLessonsMapper.Map(lessons, user.Id, BEGIN_UNIVERSITY_DATE, END_UNIVERSITY_DATE));
+            await _userLessonRepository.AddRangeAsync(
+                ScheduleLessonsMapper.Map(lessons, BEGIN_UNIVERSITY_DATE, END_UNIVERSITY_DATE)
+                    .Select(x =>
+                    {
+                        x.UserId = user.Id;
+                        return x;
+                    }));
         }
 
         await _userLessonOccurenceRepository.SaveChangesAsync();

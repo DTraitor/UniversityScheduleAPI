@@ -37,6 +37,11 @@ public class GroupLessonRepository : IGroupLessonRepository
         _context.GroupLessons.AddRange(toAdd);
     }
 
+    public void UpdateRange(IEnumerable<GroupLesson> entity)
+    {
+        _context.GroupLessons.UpdateRange(entity);
+    }
+
     public void RemoveRange(IEnumerable<GroupLesson> entities)
     {
         _context.GroupLessons.RemoveRange(entities);

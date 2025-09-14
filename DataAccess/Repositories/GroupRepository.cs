@@ -47,6 +47,11 @@ public class GroupRepository : IGroupRepository
         _context.Groups.AddRange(entities);
     }
 
+    public void UpdateRange(IEnumerable<Group> entity)
+    {
+        _context.Groups.UpdateRange(entity);
+    }
+
     public void RemoveRange(IEnumerable<Group> toRemove)
     {
         _context.Groups.RemoveRange(toRemove);

@@ -1,52 +1,69 @@
-﻿using DataAccess.Models;
+﻿using DataAccess.Domain;
+using DataAccess.Models;
 using DataAccess.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace DataAccess.Repositories;
 
 public class GroupLessonModifiedRepository : IRepository<GroupLessonModified>
 {
+    private readonly ScheduleDbContext _context;
+    private readonly ILogger<GroupLessonModifiedRepository> _logger;
+
+    public GroupLessonModifiedRepository(ScheduleDbContext scheduleDbContext, ILogger<GroupLessonModifiedRepository> logger)
+    {
+        _context = scheduleDbContext;
+        _logger = logger;
+    }
+
     public void Add(GroupLessonModified entity)
     {
-        throw new NotImplementedException();
+        _context.GroupLessonModifications.Add(entity);
     }
 
     public void Update(GroupLessonModified entity)
     {
-        throw new NotImplementedException();
+        _context.GroupLessonModifications.Update(entity);
     }
 
     public void Delete(GroupLessonModified entity)
     {
-        throw new NotImplementedException();
+        _context.GroupLessonModifications.Remove(entity);
     }
 
     public void AddRange(IEnumerable<GroupLessonModified> entities)
     {
-        throw new NotImplementedException();
+        _context.GroupLessonModifications.AddRange(entities);
+    }
+
+    public void UpdateRange(IEnumerable<GroupLessonModified> entity)
+    {
+        _context.GroupLessonModifications.UpdateRange(entity);
     }
 
     public void RemoveRange(IEnumerable<GroupLessonModified> entities)
     {
-        throw new NotImplementedException();
+        _context.GroupLessonModifications.RemoveRange(entities);
     }
 
-    public Task<GroupLessonModified?> GetByIdAsync(int id)
+    public async Task<GroupLessonModified?> GetByIdAsync(int id)
     {
-        throw new NotImplementedException();
+        return await _context.GroupLessonModifications.FirstOrDefaultAsync(x => x.Id == id);
     }
 
-    public Task<IEnumerable<GroupLessonModified>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<GroupLessonModified>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return await _context.GroupLessonModifications.ToListAsync(cancellationToken: cancellationToken);
     }
 
-    public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return await _context.SaveChangesAsync(cancellationToken);
     }
 
     public int SaveChanges()
     {
-        throw new NotImplementedException();
+        return _context.SaveChanges();
     }
 }
