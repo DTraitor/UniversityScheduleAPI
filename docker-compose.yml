@@ -7,7 +7,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ~/schedule_configs/appsettings.json:/app/appsettings.json:ro
+      - ~/schedule_configs/:/app/:ro
     depends_on:
       - db
 
