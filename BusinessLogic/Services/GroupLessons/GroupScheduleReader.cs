@@ -9,7 +9,7 @@ namespace BusinessLogic.Services.GroupLessons;
 
 public class GroupScheduleReader : IScheduleReader<GroupLesson, GroupLessonModified>
 {
-    private const string SCHEDULE_API = "https://portal.nau.edu.ua";
+    private const string ScheduleApi = "https://portal.nau.edu.ua";
 
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IGroupRepository  _groupRepository;
@@ -31,7 +31,7 @@ public class GroupScheduleReader : IScheduleReader<GroupLesson, GroupLessonModif
     public async Task<(IEnumerable<GroupLessonModified>, IEnumerable<GroupLesson>)> ReadSchedule(CancellationToken cancellationToken)
     {
         var httpClient = _httpClientFactory.CreateClient();
-        httpClient.BaseAddress = new Uri(SCHEDULE_API);
+        httpClient.BaseAddress = new Uri(ScheduleApi);
 
         var html = await httpClient.GetStringAsync("/schedule/group/list", cancellationToken);
 
@@ -102,7 +102,7 @@ public class GroupScheduleReader : IScheduleReader<GroupLesson, GroupLessonModif
         try
         {
             var httpClient = _httpClientFactory.CreateClient();
-            httpClient.BaseAddress = new Uri(SCHEDULE_API);
+            httpClient.BaseAddress = new Uri(ScheduleApi);
             var scheduleString = await httpClient.GetStringAsync(href, stoppingToken);
 
             var scheduleDoc = new HtmlDocument();

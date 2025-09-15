@@ -1,57 +1,69 @@
-﻿using DataAccess.Models;
+﻿using DataAccess.Domain;
+using DataAccess.Models;
 using DataAccess.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace DataAccess.Repositories;
 
 public class ElectiveLessonModifiedRepository : IRepository<ElectiveLessonModified>
 {
+    private readonly ScheduleDbContext _context;
+    private readonly ILogger<ElectiveLessonModifiedRepository> _logger;
+
+    public ElectiveLessonModifiedRepository(ScheduleDbContext scheduleDbContext, ILogger<ElectiveLessonModifiedRepository> logger)
+    {
+        _context = scheduleDbContext;
+        _logger = logger;
+    }
+
     public void Add(ElectiveLessonModified entity)
     {
-        throw new NotImplementedException();
+        _context.ElectiveLessonModifications.Add(entity);
     }
 
     public void Update(ElectiveLessonModified entity)
     {
-        throw new NotImplementedException();
+        _context.ElectiveLessonModifications.Update(entity);
     }
 
     public void Delete(ElectiveLessonModified entity)
     {
-        throw new NotImplementedException();
+        _context.ElectiveLessonModifications.Remove(entity);
     }
 
     public void AddRange(IEnumerable<ElectiveLessonModified> entities)
     {
-        throw new NotImplementedException();
+        _context.ElectiveLessonModifications.AddRange(entities);
     }
 
     public void UpdateRange(IEnumerable<ElectiveLessonModified> entity)
     {
-        throw new NotImplementedException();
+        _context.ElectiveLessonModifications.UpdateRange(entity);
     }
 
     public void RemoveRange(IEnumerable<ElectiveLessonModified> entities)
     {
-        throw new NotImplementedException();
+        _context.ElectiveLessonModifications.RemoveRange(entities);
     }
 
-    public Task<ElectiveLessonModified?> GetByIdAsync(int id)
+    public async Task<ElectiveLessonModified?> GetByIdAsync(int id)
     {
-        throw new NotImplementedException();
+        return await _context.ElectiveLessonModifications.FirstOrDefaultAsync(x => x.Id == id);
     }
 
-    public Task<IEnumerable<ElectiveLessonModified>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<ElectiveLessonModified>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return await _context.ElectiveLessonModifications.ToListAsync(cancellationToken: cancellationToken);
     }
 
-    public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return await _context.SaveChangesAsync(cancellationToken);
     }
 
     public int SaveChanges()
     {
-        throw new NotImplementedException();
+        return _context.SaveChanges();
     }
 }

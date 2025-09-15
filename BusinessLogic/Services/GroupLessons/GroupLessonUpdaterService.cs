@@ -49,7 +49,16 @@ public class GroupLessonUpdaterService : ILessonUpdaterService<GroupLesson, Grou
 
         var group = await _groupRepository.GetByIdAsync(modifiedEntry.Key);
         if (group == null)
+        {
+            foreach (var user in users)
+            {
+                user.GroupId = null;
+                _userRepository.Update(user);
+            }
+            //TODO: Alert users
+            await _userRepository.SaveChangesAsync();
             return;
+        }
 
         var lessons = await _groupLessonRepository.GetByGroupIdAsync(group.Id);
         foreach (var user in users)

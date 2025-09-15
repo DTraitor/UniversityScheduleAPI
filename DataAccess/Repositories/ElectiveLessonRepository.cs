@@ -72,6 +72,11 @@ public class ElectiveLessonRepository : IElectiveLessonRepository
         _context.ElectiveLessons.RemoveRange(lessons);
     }
 
+    public async Task<IEnumerable<ElectiveLesson>> GetByElectiveDayIdAsync(int electiveDayId)
+    {
+        return await _context.ElectiveLessons.Where(x => x.ElectiveLessonDayId == electiveDayId).ToListAsync();
+    }
+
     public void RemoveAll()
     {
         _context.ElectiveLessons.RemoveRange(_context.ElectiveLessons);
