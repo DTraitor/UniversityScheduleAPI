@@ -10,6 +10,8 @@ services:
       - /home/dtraitor/schedule_configs/appsettings.json:/app/configs/appsettings.json:ro
     depends_on:
       - db
+    networks:
+      - schedule-net
 
   db:
     image: postgres:16
@@ -23,6 +25,12 @@ services:
     #  - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - schedule-net
 
 volumes:
   postgres_data:
+
+networks:
+  schedule-net:
+    driver: bridge
