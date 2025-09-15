@@ -1,0 +1,28 @@
+version: "3.9"
+services:
+  app:
+    build: .
+    image: schedule_api:0.9
+    container_name: schedule_api
+    ports:
+      - "8080:8080"
+    volumes:
+      - ~/schedule_configs/appsettings.json:/app/appsettings.json:ro
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_DB: mydb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
