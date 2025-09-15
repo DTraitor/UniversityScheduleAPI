@@ -4,10 +4,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace DataAccess.Migrations.UserDb
+namespace DataAccess.Migrations.ScheduleDb
 {
     /// <inheritdoc />
-    public partial class mvp : Migration
+    public partial class MovedUsers : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

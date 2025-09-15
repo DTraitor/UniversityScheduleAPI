@@ -9,10 +9,10 @@ namespace DataAccess.Repositories;
 
 public class UserRepository : IUserRepository
 {
-    private readonly UserDbContext _context;
+    private readonly ScheduleDbContext _context;
     private readonly ILogger<UserRepository> _logger;
 
-    public UserRepository(UserDbContext userDbContext, ILogger<UserRepository> logger)
+    public UserRepository(ScheduleDbContext userDbContext, ILogger<UserRepository> logger)
     {
         _context = userDbContext;
         _logger = logger;

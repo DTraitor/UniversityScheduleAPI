@@ -46,8 +46,6 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<ScheduleDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("ScheduleDBConnection")));
-builder.Services.AddDbContext<UserDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("UserDBConnection")));
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -62,9 +60,6 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ScheduleDbContext>();
     db.Database.Migrate();
-
-    var userDb = scope.ServiceProvider.GetRequiredService<UserDbContext>();
-    userDb.Database.Migrate();
 }
 
 // Configure the HTTP request pipeline.

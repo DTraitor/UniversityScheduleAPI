@@ -26,4 +26,6 @@ public class ScheduleDbContext(DbContextOptions<ScheduleDbContext> options) : Db
 
     // Internal stuff
     public DbSet<PersistentData> PersistentData { get; set; }
+
+    public DbSet<User> Users { get; set; }
 }
