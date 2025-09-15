@@ -6,8 +6,8 @@ services:
     container_name: schedule_api
     ports:
       - "8080:8080"
-    volumes:
-      - ~/schedule_configs/:/app/configs/:ro
+    #volumes:
+    #  - ~/schedule_configs/:/app/configs/:ro
     depends_on:
       - db
 
