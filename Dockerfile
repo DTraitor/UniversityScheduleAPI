@@ -4,9 +4,9 @@ WORKDIR /src
 
 # Copy solution and project files
 COPY *.sln .
-COPY Schedule/API/*.csproj ./API/
-COPY ScheduleBusinessLogic/*.csproj ./BusinessLogic/
-COPY Schedule/DataAccess/*.csproj ./DataAccess/
+COPY API/*.csproj ./API/
+COPY BusinessLogic/*.csproj ./BusinessLogic/
+COPY DataAccess/*.csproj ./DataAccess/
 
 # Restore all dependencies
 RUN dotnet restore
