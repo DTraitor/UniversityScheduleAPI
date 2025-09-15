@@ -2,6 +2,7 @@
 using DataAccess.Enums;
 using DataAccess.Models.Internal;
 using DataAccess.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -77,6 +78,42 @@ public class OccurrencesUpdaterJob : IHostedService, IDisposable, IAsyncDisposab
             }
 
             userLessonOccurenceRepository.AddRange(userLessonOccurrences);
+            try
+            {
+                userLessonRepository.SaveChanges();
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                foreach (var entry in ex.Entries)
+                {
+                    if (entry.Entity is UserLesson)
+                    {
+                        var proposedValues = entry.CurrentValues;
+                        var databaseValues = entry.GetDatabaseValues();
+
+                        if (databaseValues == null)
+                        {
+                            userLessonOccurenceRepository.RemoveRange(userLessonOccurrences.Where(x => x.LessonId == proposedValues.GetValue<int>("Id")));
+                        }
+                        else
+                        {
+                            throw new NotSupportedException(
+                                "Don't know how to handle concurrency conflicts for "
+                                + entry.Metadata.Name + "When ");
+                        }
+
+                        // Refresh original values to bypass next concurrency check
+                        entry.OriginalValues.SetValues(databaseValues);
+                    }
+                    else
+                    {
+                        throw new NotSupportedException(
+                            "Don't know how to handle concurrency conflicts for "
+                            + entry.Metadata.Name);
+                    }
+                }
+            }
+
             userLessonOccurenceRepository.SaveChanges();
         }
     }

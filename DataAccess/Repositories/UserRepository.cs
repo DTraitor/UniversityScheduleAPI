@@ -20,32 +20,32 @@ public class UserRepository : IUserRepository
 
     public void Add(User entity)
     {
-        _context.Add(entity);
+        _context.Users.Add(entity);
     }
 
     void IRepository<User>.Update(User entity)
     {
-        _context.Update(entity);
+        _context.Users.Update(entity);
     }
 
     public void Delete(User entity)
     {
-        _context.Remove(entity);
+        _context.Users.Remove(entity);
     }
 
     public void AddRange(IEnumerable<User> entities)
     {
-        _context.AddRange(entities);
+        _context.Users.AddRange(entities);
     }
 
     public void UpdateRange(IEnumerable<User> entity)
     {
-        _context.UpdateRange(entity);
+        _context.Users.UpdateRange(entity);
     }
 
     public void RemoveRange(IEnumerable<User> entities)
     {
-        _context.RemoveRange(entities);
+        _context.Users.RemoveRange(entities);
     }
 
     public Task<User?> GetByIdAsync(int id)

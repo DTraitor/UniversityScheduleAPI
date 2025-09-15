@@ -17,9 +17,9 @@ public class UserController : ControllerBase
     }
 
     [HttpGet("exists")]
-    public async Task<IActionResult> UserExists([FromQuery] int userTelegramId)
+    public async Task<IActionResult> UserExists([FromQuery] int telegramId)
     {
-        return Ok(await _userService.UserExists(userTelegramId));
+        return Ok(await _userService.UserExists(telegramId));
     }
 
     [HttpPost]

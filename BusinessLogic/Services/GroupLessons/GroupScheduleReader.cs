@@ -42,8 +42,13 @@ public class GroupScheduleReader : IScheduleReader<GroupLesson, GroupLessonModif
         ConcurrentBag<GroupLesson> groupLessons = new ConcurrentBag<GroupLesson>();
         ConcurrentBag<GroupLessonModified> groupsModifications = new ConcurrentBag<GroupLessonModified>();
 
+        var allGroups = await _groupRepository.GetAllAsync(cancellationToken);
+        var groupsLookup = allGroups.ToDictionary(g => g.GroupName, g => g);
+
         await Parallel.ForEachAsync(groupsData, cancellationToken, async (groupData, ct) =>
         {
+            groupData.Item1.SchedulePageHash = groupsLookup.GetValueOrDefault(groupData.Item1.GroupName, new Group()).SchedulePageHash;
+
             var lessons = await FetchGroupScheduleAsync(groupData.Item2, groupData.Item1, ct);
             if (lessons == null)
                 return;
@@ -60,25 +65,34 @@ public class GroupScheduleReader : IScheduleReader<GroupLesson, GroupLessonModif
         });
 
         var newGroupNames = new HashSet<string>(groupsData.Select(g => g.Item1.GroupName));
+        var removedGroups = allGroups.Where(c => !newGroupNames.Contains(c.GroupName)).ToList();
 
-        var allGroups = await _groupRepository.GetAllAsync(cancellationToken);
-        var groupsLookup = allGroups.ToDictionary(g => g.GroupName, g => g.Id);
+        var parsedGroups = groupsData
+            .Select(x => x.Item1)
+            .ToDictionary(x => x.Id, x => x);
 
-        var updatedGroupsData = groupsData
-            .Select(tuple =>
-            {
-                var (group, extra) = tuple;
-                group.Id = groupsLookup.GetValueOrDefault(group.GroupName, 0);
-                return group;
-            })
-            .ToList();
-
-        var removedGroups = allGroups.Where(c => !newGroupNames.Contains(c.GroupName));
         _groupRepository.RemoveRange(removedGroups);
-        _groupRepository.AddRange(updatedGroupsData.Where(x => x.Id == 0));
-        _groupRepository.UpdateRange(updatedGroupsData.Where(x => x.Id != 0));
+        _groupRepository.AddRange(parsedGroups.Values
+            .Where(x => !groupsLookup.ContainsKey(x.GroupName))
+            .Select(x =>
+        {
+            x.Id = 0;
+            return x;
+        }));
+        _groupRepository.UpdateRange(groupsLookup.Values
+            .Where(x => !removedGroups.Contains(x))
+            .Select(x =>
+            {
+                x.SchedulePageHash = parsedGroups[x.Id].SchedulePageHash;
+                return x;
+            }));
 
         await _groupRepository.SaveChangesAsync(cancellationToken);
+
+        foreach (var groupLesson in groupLessons)
+        {
+            groupLesson.GroupId = parsedGroups[groupLesson.GroupId].Id;
+        }
 
         return (groupsModifications, groupLessons);
     }

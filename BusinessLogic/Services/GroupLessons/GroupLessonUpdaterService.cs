@@ -9,8 +9,8 @@ namespace BusinessLogic.Services.GroupLessons;
 
 public class GroupLessonUpdaterService : ILessonUpdaterService<GroupLesson, GroupLessonModified>
 {
-    private readonly DateTimeOffset BEGIN_UNIVERSITY_DATE = DateTimeOffset.Parse("01-09-2025");
-    private readonly DateTimeOffset END_UNIVERSITY_DATE = DateTimeOffset.Parse("30-11-2025");
+    private readonly DateTimeOffset BEGIN_UNIVERSITY_DATE = DateTimeOffset.Parse("2025-09-01T00:00:00.000000+03:00");
+    private readonly DateTimeOffset END_UNIVERSITY_DATE = DateTimeOffset.Parse("2025-11-30T00:00:00.000000+03:00");
 
     private readonly IGroupRepository _groupRepository;
     private readonly IGroupLessonRepository  _groupLessonRepository;
@@ -38,6 +38,8 @@ public class GroupLessonUpdaterService : ILessonUpdaterService<GroupLesson, Grou
     public async Task ProcessModifiedEntry(GroupLessonModified modifiedEntry)
     {
         var users = await _userRepository.GetByGroupIdAsync(modifiedEntry.Key);
+        if(!users.Any())
+            return;
 
         foreach (var user in users)
         {

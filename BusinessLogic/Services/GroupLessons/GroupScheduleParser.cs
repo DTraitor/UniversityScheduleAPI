@@ -38,16 +38,19 @@ public class GroupScheduleParser : IScheduleParser<GroupLesson>
     {
         var scheduleLessons = new List<GroupLesson>();
 
-        var weeks = document.DocumentNode.SelectNodes("//table[@class='schedule']");
+        var wrappers = document.DocumentNode.SelectNodes("//div[@class='wrapper']");
 
-        if (weeks == null)
+        if (wrappers == null)
         {
-            throw new InvalidOperationException("No tables with class 'schedule' found in group.");
+            throw new InvalidOperationException("No schedules found in group.");
         }
 
-        for (int i = 0; i < 2; i++)
+        foreach (var wrapper in wrappers)
         {
-            var schedules = weeks[i].SelectNodes(".//tbody/tr");
+            var header = wrapper.SelectSingleNode(".//h2");
+            bool weekNumber = header.InnerText.Contains("2");
+
+            var schedules = wrapper.SelectNodes(".//table[@class='schedule']/tbody/tr");
 
             for(int j = 0; j < schedules.Count(); j++)
             {
@@ -79,11 +82,11 @@ public class GroupScheduleParser : IScheduleParser<GroupLesson>
                         Location = room?.Replace("\r", string.Empty).Replace("\n", string.Empty).Trim(),
                         Teacher = teachers,
 
-                        StartTime = StartTimes[k],
+                        StartTime = StartTimes[j],
                         Length = TimeSpan.FromMinutes(95),
 
-                        Week = i == 1,
-                        DayOfWeek = (DayOfWeek)j,
+                        Week = weekNumber,
+                        DayOfWeek = k == 7 ? DayOfWeek.Sunday : (DayOfWeek)k+1,
                     });
                 }
             }
