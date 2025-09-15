@@ -62,7 +62,7 @@ public class ElectiveLessonUpdaterService : ILessonUpdaterService<ElectiveLesson
 
         foreach (var user in users.Where(x => x.ElectedLessonIds.Count != 0))
         {
-            await _userLessonRepository.AddRangeAsync(
+            _userLessonRepository.AddRange(
                 ElectiveLessonsMapper.Map(
                         electiveLessons.Where(x => user.ElectedLessonIds.Contains(x.Id)),
                         electiveDay,

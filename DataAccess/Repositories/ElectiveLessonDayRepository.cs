@@ -66,4 +66,9 @@ public class ElectiveLessonDayRepository : IElectiveLessonDayRepository
     {
         return _context.SaveChanges();
     }
+
+    public async Task<IEnumerable<ElectiveLessonDay>> GetByIdsAsync(IEnumerable<int> ids)
+    {
+        return await _context.ElectiveLessonDays.Where(x => ids.Contains(x.Id)).ToListAsync();
+    }
 }

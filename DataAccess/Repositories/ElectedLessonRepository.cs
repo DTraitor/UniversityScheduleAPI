@@ -71,4 +71,9 @@ public class ElectedLessonRepository : IElectedLessonRepository
     {
         return await _context.ElectedLessons.Where(x => x.ElectiveLessonDayId == electiveDayId).ToListAsync();
     }
+
+    public async Task<IEnumerable<ElectedLesson>> GetByIdsAsync(IEnumerable<int> ids)
+    {
+        return await _context.ElectedLessons.Where(x => ids.Contains(x.Id)).ToListAsync();
+    }
 }

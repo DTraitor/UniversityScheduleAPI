@@ -49,7 +49,11 @@ public class GroupLessonUserUpdaterService : IUserLessonUpdaterService<GroupLess
         _userLessonOccurenceRepository.ClearByLessonIds(removed);
 
         if (user.GroupId == null)
+        {
+            await _userLessonOccurenceRepository.SaveChangesAsync();
+            await _userLessonRepository.SaveChangesAsync();
             return;
+        }
 
         var group = await _groupRepository.GetByIdAsync(user.GroupId.Value);
         if (group == null)
@@ -57,7 +61,7 @@ public class GroupLessonUserUpdaterService : IUserLessonUpdaterService<GroupLess
 
         var lessons = await _groupLessonRepository.GetByGroupIdAsync(group.Id);
 
-        await _userLessonRepository.AddRangeAsync(
+        _userLessonRepository.AddRange(
             ScheduleLessonsMapper.Map(lessons, BEGIN_UNIVERSITY_DATE, END_UNIVERSITY_DATE)
             .Select(x =>
             {

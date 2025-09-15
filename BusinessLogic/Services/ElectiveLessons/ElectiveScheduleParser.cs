@@ -26,13 +26,24 @@ public class ElectiveScheduleParser : IScheduleParser<ElectiveLesson>
 
         List<ElectiveLesson>  electiveLessons = new List<ElectiveLesson>();
 
-        foreach (var lesson in document.DocumentNode.SelectNodes("//table[@class='schedule']/tbody/tr"))
+        var lessons = document.DocumentNode.SelectNodes("//table[@class='schedule']/tbody/tr");
+
+        if (lessons == null)
+            return [];
+
+        foreach (var lesson in lessons)
         {
             var values = lesson.SelectNodes(".//td");
 
-            var teachers = values[2].SelectNodes(".//div/a")
-                .Select(n => n.InnerText.Replace("\r", string.Empty).Replace("\n", string.Empty).Trim())
-                .ToList();
+            var teacherNodes = lesson.SelectNodes(".//div/a");
+            List<string> teachers = [];
+
+            if (teacherNodes != null)
+            {
+                teachers = teacherNodes
+                    .Select(n => n.InnerText.Replace("\r", string.Empty).Replace("\n", string.Empty).Trim())
+                    .ToList();
+            }
 
             electiveLessons.Add(new ElectiveLesson
             {

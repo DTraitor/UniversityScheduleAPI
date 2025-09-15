@@ -37,7 +37,7 @@ builder.Services.AddHttpClient();
 
 // Schedule sources
 builder.Services.AddScheduleSource<GroupLesson, GroupLessonModified, GroupScheduleParser, GroupScheduleReader, GroupLessonUpdaterService, GroupLessonUserUpdaterService>();
-//builder.Services.AddScheduleSource<ElectiveLesson, ElectiveLessonModified, ElectiveScheduleParser, ElectiveScheduleReader, ElectiveLessonUpdaterService, ElectiveUserUpdaterService>();
+builder.Services.AddScheduleSource<ElectiveLesson, ElectiveLessonModified, ElectiveScheduleParser, ElectiveScheduleReader, ElectiveLessonUpdaterService, ElectiveUserUpdaterService>();
 
 // Jobs
 builder.Services.AddHostedService<OccurrencesUpdaterJob>();
@@ -56,6 +56,16 @@ builder.Services.AddOpenApi();
 var app = builder.Build();
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
+// Apply migrations automatically
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ScheduleDbContext>();
+    db.Database.Migrate();
+
+    var userDb = scope.ServiceProvider.GetRequiredService<UserDbContext>();
+    userDb.Database.Migrate();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

@@ -77,8 +77,8 @@ public class ElectiveLessonRepository : IElectiveLessonRepository
         return await _context.ElectiveLessons.Where(x => x.ElectiveLessonDayId == electiveDayId).ToListAsync();
     }
 
-    public void RemoveAll()
+    public async Task<IEnumerable<ElectiveLesson>> GetByIdsAsync(IEnumerable<int> ids)
     {
-        _context.ElectiveLessons.RemoveRange(_context.ElectiveLessons);
+        return await _context.ElectiveLessons.Where(x => ids.Contains(x.Id)).ToListAsync();
     }
 }

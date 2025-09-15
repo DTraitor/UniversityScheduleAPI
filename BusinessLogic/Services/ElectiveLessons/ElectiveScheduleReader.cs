@@ -47,6 +47,7 @@ public class ElectiveScheduleReader : IScheduleReader<ElectiveLesson, ElectiveLe
                     {
                         DayId = i,
                         HourId = j,
+                        HashPage = "",
                     });
                 }
             }
