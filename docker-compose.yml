@@ -33,5 +33,6 @@ volumes:
   postgres_data:
 
 networks:
-  schedule-net:
-    driver: bridge
+  default:
+    external:
+      name: schedule-net
