@@ -89,7 +89,7 @@ public class ScheduleParserJob<T, TModifiedEntry> : IHostedService, IDisposable 
 
         _logger.LogInformation("Finished parsing schedule at {Time}", DateTime.Now);
 
-        persistentData.Value = DateTimeOffset.UtcNow.AddHours(24).ToString("o");
+        persistentData.Value = DateTimeOffset.UtcNow.AddHours(6).ToString("o");
         persistentDataRepository.SetData(persistentData);
         await persistentDataRepository.SaveChangesAsync(_cancellationTokenSource.Token);
     }

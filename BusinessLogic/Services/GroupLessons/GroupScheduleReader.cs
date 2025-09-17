@@ -69,6 +69,10 @@ public class GroupScheduleReader : IScheduleReader<GroupLesson, GroupLessonModif
 
         var parsedGroups = groupsData
             .Select(x => x.Item1)
+            .ToDictionary(x => x.GroupName, x => x);
+
+        var parsedGroupsOriginalIds = groupsData
+            .Select(x => x.Item1)
             .ToDictionary(x => x.Id, x => x);
 
         _groupRepository.RemoveRange(removedGroups);
@@ -83,7 +87,8 @@ public class GroupScheduleReader : IScheduleReader<GroupLesson, GroupLessonModif
             .Where(x => !removedGroups.Contains(x))
             .Select(x =>
             {
-                x.SchedulePageHash = parsedGroups[x.Id].SchedulePageHash;
+                x.SchedulePageHash = parsedGroups[x.GroupName].SchedulePageHash;
+                parsedGroups[x.GroupName].Id = x.Id;
                 return x;
             }));
 
@@ -91,7 +96,7 @@ public class GroupScheduleReader : IScheduleReader<GroupLesson, GroupLessonModif
 
         foreach (var groupLesson in groupLessons)
         {
-            groupLesson.GroupId = parsedGroups[groupLesson.GroupId].Id;
+            groupLesson.GroupId = parsedGroupsOriginalIds[groupLesson.GroupId].Id;
         }
 
         return (groupsModifications, groupLessons);

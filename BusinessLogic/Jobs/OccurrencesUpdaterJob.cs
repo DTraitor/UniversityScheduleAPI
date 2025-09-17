@@ -101,9 +101,6 @@ public class OccurrencesUpdaterJob : IHostedService, IDisposable, IAsyncDisposab
                                 "Don't know how to handle concurrency conflicts for "
                                 + entry.Metadata.Name + "When ");
                         }
-
-                        // Refresh original values to bypass next concurrency check
-                        entry.OriginalValues.SetValues(databaseValues);
                     }
                     else
                     {
