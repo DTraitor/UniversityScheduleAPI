@@ -38,7 +38,7 @@ public class ElectiveController : ControllerBase
     public async Task<IActionResult> CreateNewElectedLesson([FromBody] CreateElectiveLessonDto newLesson)
     {
         await _electiveService.CreateNewElectedLesson(newLesson);
-        return Ok(true);
+        return Created();
     }
 
     [HttpDelete]
@@ -47,5 +47,4 @@ public class ElectiveController : ControllerBase
         await _electiveService.RemoveElectedLesson(telegramId, lessonId);
         return Ok(true);
     }
-
 }

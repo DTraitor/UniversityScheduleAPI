@@ -52,6 +52,7 @@ public class ElectiveService : IElectiveService
         return allDays.Select(x => new ElectiveLessonDayDto
         {
             Id = x.Id,
+            WeekNumber = x.DayId / 7,
             DayOfWeek = (DayOfWeek)(x.DayId % 7),
             StartTime = StartTimes[x.HourId],
         });
@@ -60,17 +61,21 @@ public class ElectiveService : IElectiveService
     public async Task<IEnumerable<ElectiveLessonDto>> GetElectiveLessons(int electiveDayId, string partialLessonName)
     {
         var lessons = await _lessonRepository.GetByDayIdAndPartialNameAsync(electiveDayId, partialLessonName);
+        var days = await _dayRepository.GetByIdsAsync(lessons.Select(x => x.ElectiveLessonDayId));
 
-        return lessons.Select(x => new ElectiveLessonDto
-        {
-            Id = x.Id,
-            Title = x.Title,
-            Type = x.Type,
-            Location = x.Location,
-            Teacher = x.Teacher,
-            StartTime = x.StartTime,
-            Length = x.Length,
-        });
+        return lessons
+            .Join(days, x => x.ElectiveLessonDayId, y => y.Id, (x, y) => new ElectiveLessonDto
+            {
+                Id = x.Id,
+                Title = x.Title,
+                Type = x.Type,
+                Location = x.Location,
+                Teacher = x.Teacher,
+                WeekNumber = y.DayId / 7,
+                DayOfWeek = (DayOfWeek)(y.DayId % 7),
+                StartTime = x.StartTime,
+                Length = x.Length,
+            });
     }
 
     public async Task<IEnumerable<ElectiveLessonDto>> GetCurrentLessons(long telegramId)
@@ -81,9 +86,9 @@ public class ElectiveService : IElectiveService
 
         var elected = await _electedRepository.GetByUserId(user.Id);
         return (await _lessonRepository.GetByIdsAsync(elected.Select(x => x.ElectiveLessonId)))
-            .Select(x => new ElectiveLessonDto
+            .Join(elected, x => x.Id, y => y.ElectiveLessonId, (x, y) => new ElectiveLessonDto
             {
-                Id = x.Id,
+                Id = y.Id,
                 Title = x.Title,
                 Type = x.Type,
                 Location = x.Location,
