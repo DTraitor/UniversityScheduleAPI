@@ -6,6 +6,7 @@ public class ElectedLesson
     public int UserId { get; set; }
     // Name of the elected lesson
     public string Name { get; set; }
+    public string? Type { get; set; }
     public int ElectiveLessonDayId { get; set; }
     public int ElectiveLessonId { get; set; }
 }

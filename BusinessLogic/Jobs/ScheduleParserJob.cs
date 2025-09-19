@@ -72,15 +72,21 @@ public class ScheduleParserJob<T, TModifiedEntry> : IHostedService, IDisposable 
         var scheduleReader = scope.ServiceProvider.GetRequiredService<IScheduleReader<T, TModifiedEntry>>();
         var repository = scope.ServiceProvider.GetRequiredService<IKeyBasedRepository<T>>();
         var modifiedRepository = scope.ServiceProvider.GetRequiredService<IRepository<TModifiedEntry>>();
+        var changeHandler = scope.ServiceProvider.GetRequiredService<IChangeHandler<T>>();
 
         _logger.LogInformation("Beginning daily parsing of the schedule at {Time}", DateTime.Now);
 
         var (modifiedEntries, lessons) = await scheduleReader.ReadSchedule(_cancellationTokenSource.Token);
 
+        var previousLessons = await repository.GetAllAsync(_cancellationTokenSource.Token);
+
         foreach (var modifiedEntry in modifiedEntries)
         {
             repository.RemoveByKey(modifiedEntry.Key);
         }
+
+        await changeHandler.HandleChanges(previousLessons, lessons, _cancellationTokenSource.Token);
+
         repository.AddRange(lessons);
         modifiedRepository.AddRange(modifiedEntries);
 

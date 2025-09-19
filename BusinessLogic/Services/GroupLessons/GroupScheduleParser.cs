@@ -66,7 +66,7 @@ public class GroupScheduleParser : IScheduleParser<GroupLesson>
                     string? activity = lesson.SelectSingleNode(".//div[@class='activity-tag']")?.InnerText;
                     string? room = lesson.SelectSingleNode(".//div[@class='room']")?.InnerText;
                     var teacherNodes = lesson.SelectNodes(".//div[@class='teacher']/a");
-                    List<string> teachers = []; // Todo: handle https://portal.nau.edu.ua/schedule/group?id=4688
+                    List<string> teachers = [];// Todo: handle https://portal.nau.edu.ua/schedule/group?id=4688
 
                     if (teacherNodes != null)
                     {

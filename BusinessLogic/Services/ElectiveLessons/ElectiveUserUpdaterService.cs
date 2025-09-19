@@ -51,10 +51,10 @@ public class ElectiveUserUpdaterService : IUserLessonUpdaterService<ElectiveLess
         var removed = _userLessonRepository.RemoveByUserIdAndLessonSourceType(user.Id, LessonSourceTypeEnum.Elective);
         _userLessonOccurenceRepository.ClearByLessonIds(removed);
 
-        if (user.ElectedLessonIds.Count == 0)
+        var electedLessons = await _electedRepository.GetByUserId(user.Id);
+        if (!electedLessons.Any())
             return;
 
-        var electedLessons = await _electedRepository.GetByIdsAsync(user.ElectedLessonIds);
         var electiveLessons = await _lessonRepository.GetByIdsAsync(electedLessons.Select(x => x.ElectiveLessonId));
         var electiveDays = await _dayRepository.GetByIdsAsync(electedLessons.Select(x => x.ElectiveLessonDayId));
 

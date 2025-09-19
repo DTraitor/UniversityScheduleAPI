@@ -51,20 +51,20 @@ public class ElectiveLessonUpdaterService : ILessonUpdaterService<ElectiveLesson
 
         _electedRepository.RemoveRange(removedElected);
 
+        var electiveDay = await _dayRepository.GetByIdAsync(modifiedEntry.Key);
+
         foreach (var user in users)
         {
             var removed = _userLessonRepository.RemoveByUserIdAndLessonSourceType(user.Id, LessonSourceTypeEnum.Elective);
-            user.ElectedLessonIds = user.ElectedLessonIds.Except(removedElected.Select(x => x.Id)).ToList();
             _userLessonOccurenceRepository.ClearByLessonIds(removed);
-        }
 
-        var electiveDay = await _dayRepository.GetByIdAsync(modifiedEntry.Key);
+            var userElectedLessons = await _electedRepository.GetByUserId(user.Id);
+            if(!userElectedLessons.Any())
+                return;
 
-        foreach (var user in users.Where(x => x.ElectedLessonIds.Count != 0))
-        {
             _userLessonRepository.AddRange(
                 ElectiveLessonsMapper.Map(
-                        electiveLessons.Where(x => user.ElectedLessonIds.Contains(x.Id)),
+                        electiveLessons.Where(x => userElectedLessons.Select(x => x.Id).Contains(x.Id)),
                         electiveDay,
                         BEGIN_UNIVERSITY_DATE,
                         END_UNIVERSITY_DATE)

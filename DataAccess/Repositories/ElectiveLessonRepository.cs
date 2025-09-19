@@ -24,7 +24,7 @@ public class ElectiveLessonRepository : IElectiveLessonRepository
 
     public async Task<ElectiveLesson?> GetByIdAsync(int id)
     {
-        return await _context.ElectiveLessons.FirstOrDefaultAsync(x => x.ElectiveLessonDayId == id);
+        return await _context.ElectiveLessons.FirstOrDefaultAsync(x => x.Id == id);
     }
 
     public async Task<IEnumerable<ElectiveLesson>> GetAllAsync(CancellationToken cancellationToken = default)
@@ -70,6 +70,19 @@ public class ElectiveLessonRepository : IElectiveLessonRepository
     public void RemoveRange(IEnumerable<ElectiveLesson> lessons)
     {
         _context.ElectiveLessons.RemoveRange(lessons);
+    }
+
+    public async Task<IEnumerable<int>> GetUniqueLessonDaysAsync()
+    {
+        return await _context.ElectiveLessons.GroupBy(x => x.ElectiveLessonDayId).Select(x => x.Key).ToListAsync();
+    }
+
+    public async Task<IEnumerable<ElectiveLesson>> GetByDayIdAndPartialNameAsync(int dayId, string partialName)
+    {
+        return await _context.ElectiveLessons
+            .Where(x => x.ElectiveLessonDayId == dayId)
+            .Where(x => x.Title.ToLower().Contains(partialName.ToLower()))
+            .ToListAsync();
     }
 
     public async Task<IEnumerable<ElectiveLesson>> GetByElectiveDayIdAsync(int electiveDayId)

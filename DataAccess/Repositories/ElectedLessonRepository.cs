@@ -67,6 +67,11 @@ public class ElectedLessonRepository : IElectedLessonRepository
         return _context.SaveChanges();
     }
 
+    public async Task<IEnumerable<ElectedLesson>> GetByUserId(int userId)
+    {
+        return await _context.ElectedLessons.Where(x => x.UserId == userId).ToListAsync();
+    }
+
     public async Task<IEnumerable<ElectedLesson>> GetByElectiveDayIdAsync(int electiveDayId)
     {
         return await _context.ElectedLessons.Where(x => x.ElectiveLessonDayId == electiveDayId).ToListAsync();

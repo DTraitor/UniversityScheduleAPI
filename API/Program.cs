@@ -18,6 +18,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddScoped<IScheduleService, ScheduleService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IGroupService, GroupService>();
+builder.Services.AddScoped<IElectiveService, ElectiveService>();
 
 // Repositories
 builder.Services.AddScoped<IPersistentDataRepository, PersistentDataRepository>();
@@ -36,8 +37,8 @@ builder.Services.AddKeyBasedRepository<IGroupLessonRepository, GroupLessonReposi
 builder.Services.AddHttpClient();
 
 // Schedule sources
-builder.Services.AddScheduleSource<GroupLesson, GroupLessonModified, GroupScheduleParser, GroupScheduleReader, GroupLessonUpdaterService, GroupLessonUserUpdaterService>();
-builder.Services.AddScheduleSource<ElectiveLesson, ElectiveLessonModified, ElectiveScheduleParser, ElectiveScheduleReader, ElectiveLessonUpdaterService, ElectiveUserUpdaterService>();
+builder.Services.AddScheduleSource<GroupLesson, GroupLessonModified, GroupScheduleParser, GroupScheduleReader, GroupLessonUpdaterService, GroupLessonUserUpdaterService, GroupChangeHandler>();
+builder.Services.AddScheduleSource<ElectiveLesson, ElectiveLessonModified, ElectiveScheduleParser, ElectiveScheduleReader, ElectiveLessonUpdaterService, ElectiveUserUpdaterService, ElectiveChangeHandler>();
 
 // Jobs
 builder.Services.AddHostedService<OccurrencesUpdaterJob>();

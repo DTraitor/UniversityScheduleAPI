@@ -63,7 +63,7 @@ public class ElectiveScheduleReader : IScheduleReader<ElectiveLesson, ElectiveLe
 
         await Parallel.ForEachAsync(currentElectiveDays, cancellationToken, async (elective, ct) =>
         {
-            var lessons = await FetchGroupScheduleAsync(string.Format(ScheduleLocation, elective.DayId, elective.HourId), elective, ct);
+            var lessons = await FetchElectiveScheduleAsync(string.Format(ScheduleLocation, elective.DayId, elective.HourId), elective, ct);
             if (lessons == null)
                 return;
 
@@ -83,7 +83,7 @@ public class ElectiveScheduleReader : IScheduleReader<ElectiveLesson, ElectiveLe
         return (lessonModifications, parsedLessons);
     }
 
-    private async Task<IEnumerable<ElectiveLesson>?> FetchGroupScheduleAsync(string href, ElectiveLessonDay day, CancellationToken stoppingToken)
+    private async Task<IEnumerable<ElectiveLesson>?> FetchElectiveScheduleAsync(string href, ElectiveLessonDay day, CancellationToken stoppingToken)
     {
         try
         {
