@@ -29,7 +29,7 @@ public class ElectiveController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetCurrentElectedLessons([FromQuery] int telegramId)
+    public async Task<IActionResult> GetCurrentElectedLessons([FromQuery] long telegramId)
     {
         return Ok(await _electiveService.GetCurrentLessons(telegramId));
     }

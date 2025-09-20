@@ -24,7 +24,7 @@ public class ScheduleService : IScheduleService
         _logger = logger;
     }
 
-    public async Task<IEnumerable<LessonDto>> GetScheduleForDate(DateTimeOffset dateTime, int userTelegramId)
+    public async Task<IEnumerable<LessonDto>> GetScheduleForDate(DateTimeOffset dateTime, long userTelegramId)
     {
         var user = await _userRepository.GetByTelegramIdAsync(userTelegramId);
         if(user == null)

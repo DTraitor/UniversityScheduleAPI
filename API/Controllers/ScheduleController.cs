@@ -16,7 +16,7 @@ public class ScheduleController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetScheduleForDate([FromQuery] DateTimeOffset dateTime, [FromQuery] int userTelegramId)
+    public async Task<IActionResult> GetScheduleForDate([FromQuery] DateTimeOffset dateTime, [FromQuery] long userTelegramId)
     {
         try
         {
