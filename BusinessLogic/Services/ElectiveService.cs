@@ -134,6 +134,9 @@ public class ElectiveService : IElectiveService
         if (lesson == null)
             return;
 
+        if(lesson.UserId != user.Id)
+            throw new InvalidOperationException("Lesson doesn't belong to the user");
+
         _electedRepository.Delete(lesson);
         await _electedRepository.SaveChangesAsync();
 
