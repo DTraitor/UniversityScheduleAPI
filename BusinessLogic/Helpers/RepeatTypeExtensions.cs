@@ -4,7 +4,7 @@ namespace BusinessLogic.Helpers;
 
 public static class RepeatTypeExtensions
 {
-    public static DateTimeOffset? GetNextOccurrence(this RepeatType repeatType, DateTimeOffset dateTime, int count)
+    public static DateTime? GetNextOccurrence(this RepeatType repeatType, DateTime dateTime, int count)
     {
         switch (repeatType)
         {

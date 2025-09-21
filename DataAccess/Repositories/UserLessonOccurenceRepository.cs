@@ -72,11 +72,11 @@ public class UserLessonOccurenceRepository : IUserLessonOccurenceRepository
         return await _context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<UserLessonOccurrence>> GetByUserIdAndDateAsync(int userId, DateTimeOffset date)
+    public async Task<IEnumerable<UserLessonOccurrence>> GetByUserIdAndBetweenDateAsync(int userId, DateTimeOffset beginDate, DateTimeOffset endDate)
     {
         return await _context.UserLessonOccurrences
             .Where(x => x.UserId == userId)
-            .Where(x => x.StartTime >= date.Date && x.StartTime < date.Date.AddDays(1))
+            .Where(x => x.StartTime >= beginDate && x.StartTime < endDate)
             .ToListAsync();
     }
 

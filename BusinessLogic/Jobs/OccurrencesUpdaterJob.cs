@@ -39,42 +39,46 @@ public class OccurrencesUpdaterJob : IHostedService, IDisposable, IAsyncDisposab
     {
         lock (_executingLock)
         {
-            _logger.LogDebug("Updating lesson occurrences at: {time}", DateTimeOffset.Now);
+            _logger.LogDebug("Updating lesson occurrences at: {time}", DateTimeOffset.UtcNow.ToString("o"));
 
             using var scope = _serviceProvider.CreateScope();
 
             var userLessonRepository = scope.ServiceProvider.GetRequiredService<IUserLessonRepository>();
             var userLessonOccurenceRepository = scope.ServiceProvider.GetRequiredService<IUserLessonOccurenceRepository>();
 
-            var lessonsToUpdate = userLessonRepository.GetWithOccurrencesCalculatedDateLessThan(DateTimeOffset.Now.AddDays(90));
+            var lessonsToUpdate = userLessonRepository.GetWithOccurrencesCalculatedDateLessThan(DateTimeOffset.UtcNow.AddDays(90));
 
             List<UserLessonOccurrence> userLessonOccurrences = new List<UserLessonOccurrence>();
 
-            DateTimeOffset limit = DateTimeOffset.Now.AddDays(270);
+            DateTimeOffset limit = DateTimeOffset.UtcNow.AddDays(180);
 
             foreach (var lesson in lessonsToUpdate)
             {
+                TimeZoneInfo timeZone = TimeZoneInfo.FindSystemTimeZoneById(lesson.TimeZoneId);
+
                 var occurrence = userLessonOccurenceRepository.GetLatestOccurrence(lesson.Id);
-                DateTimeOffset? latestOccurrence;
+                DateTime? latestOccurrence;
                 if (occurrence == null)
-                    latestOccurrence = lesson.RepeatType == RepeatType.Never ? null : lesson.StartTime;
+                    latestOccurrence = lesson.RepeatType == RepeatType.Never ? null : TimeZoneInfo.ConvertTime(lesson.StartTime, timeZone).DateTime;
                 else
-                    latestOccurrence = lesson.RepeatType.GetNextOccurrence(occurrence.StartTime, lesson.RepeatCount);
+                    latestOccurrence = lesson.RepeatType.GetNextOccurrence(TimeZoneInfo.ConvertTime(occurrence.StartTime, timeZone).DateTime, lesson.RepeatCount);
 
                 while (latestOccurrence != null && latestOccurrence < lesson.EndTime && latestOccurrence < limit)
                 {
+                    var startTime = TimeZoneInfo.ConvertTimeToUtc(latestOccurrence.Value, timeZone);
+
                     userLessonOccurrences.Add(new UserLessonOccurrence
                     {
                         LessonId = lesson.Id,
                         UserId = lesson.UserId,
-                        StartTime = latestOccurrence.Value,
-                        EndTime = latestOccurrence.Value.Add(lesson.Duration),
+                        StartTime = startTime,
+                        EndTime = startTime.Add(lesson.Duration),
                     });
 
                     latestOccurrence = lesson.RepeatType.GetNextOccurrence(latestOccurrence.Value, lesson.RepeatCount);
                 }
 
-                lesson.OccurrencesCalculatedTill = latestOccurrence;
+                lesson.OccurrencesCalculatedTill = latestOccurrence == null? null : TimeZoneInfo.ConvertTimeToUtc(latestOccurrence.Value, timeZone);
             }
 
             userLessonOccurenceRepository.AddRange(userLessonOccurrences);

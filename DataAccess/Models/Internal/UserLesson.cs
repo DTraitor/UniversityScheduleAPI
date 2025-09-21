@@ -24,6 +24,7 @@ public class UserLesson
 
     public DateTimeOffset StartTime { get; set; }
     public DateTimeOffset EndTime { get; set; }
+    public string TimeZoneId { get; set; } = "UTC";
 
     public DateTimeOffset? OccurrencesCalculatedTill { get; set; }
 }

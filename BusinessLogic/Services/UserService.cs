@@ -50,7 +50,7 @@ public class UserService : IUserService
             {
                 TelegramId = userData.TelegramId,
                 GroupId = group.Id,
-                CreatedAt = DateTimeOffset.Now,
+                CreatedAt = DateTimeOffset.UtcNow,
             });
         }
 

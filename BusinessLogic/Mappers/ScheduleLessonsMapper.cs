@@ -7,7 +7,7 @@ namespace BusinessLogic.Mappers;
 
 public static class ScheduleLessonsMapper
 {
-    public static IEnumerable<UserLesson> Map(IEnumerable<GroupLesson> lessons, DateTimeOffset begin, DateTimeOffset end)
+    public static IEnumerable<UserLesson> Map(IEnumerable<GroupLesson> lessons, DateTimeOffset begin, DateTimeOffset end, TimeZoneInfo timeZone)
     {
         foreach (var lesson in lessons)
         {
@@ -23,6 +23,7 @@ public static class ScheduleLessonsMapper
                 RepeatCount = 2,
                 StartTime = begin.GetNextDayOfWeek(lesson.DayOfWeek).AddDays(lesson.Week ? 7 : 0),
                 EndTime = end,
+                TimeZoneId = timeZone.Id,
                 LessonSourceType = LessonSourceTypeEnum.Group,
             };
         }

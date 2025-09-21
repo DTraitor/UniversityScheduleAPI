@@ -1,23 +1,23 @@
-﻿using BusinessLogic.Mappers;
+﻿using BusinessLogic.Configuration;
+using BusinessLogic.Mappers;
 using BusinessLogic.Services.Interfaces;
 using DataAccess.Enums;
 using DataAccess.Models;
 using DataAccess.Repositories.Interfaces;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace BusinessLogic.Services.ElectiveLessons;
 
 public class ElectiveUserUpdaterService : IUserLessonUpdaterService<ElectiveLesson>
 {
-    private readonly DateTimeOffset BEGIN_UNIVERSITY_DATE = DateTimeOffset.Parse("2025-09-01T00:00:00.000000+03:00");
-    private readonly DateTimeOffset END_UNIVERSITY_DATE = DateTimeOffset.Parse("2025-11-30T00:00:00.000000+03:00");
-
     private readonly IElectiveLessonDayRepository _dayRepository;
     private readonly IElectiveLessonRepository _lessonRepository;
     private readonly IElectedLessonRepository _electedRepository;
     private readonly IUserRepository _userRepository;
     private readonly IUserLessonRepository _userLessonRepository;
     private readonly IUserLessonOccurenceRepository _userLessonOccurenceRepository;
+    private readonly IOptions<ElectiveScheduleParsingOptions> _options;
     private readonly ILogger<ElectiveUserUpdaterService> _logger;
 
     public ElectiveUserUpdaterService(
@@ -27,6 +27,7 @@ public class ElectiveUserUpdaterService : IUserLessonUpdaterService<ElectiveLess
         IUserRepository userRepository,
         IUserLessonRepository userLessonRepository,
         IUserLessonOccurenceRepository userLessonOccurenceRepository,
+        IOptions<ElectiveScheduleParsingOptions> options,
         ILogger<ElectiveUserUpdaterService> logger)
     {
         _dayRepository = dayRepository;
@@ -35,6 +36,7 @@ public class ElectiveUserUpdaterService : IUserLessonUpdaterService<ElectiveLess
         _userRepository = userRepository;
         _userLessonRepository = userLessonRepository;
         _userLessonOccurenceRepository = userLessonOccurenceRepository;
+        _options = options;
         _logger = logger;
     }
 
@@ -58,14 +60,17 @@ public class ElectiveUserUpdaterService : IUserLessonUpdaterService<ElectiveLess
         var electiveLessons = await _lessonRepository.GetByIdsAsync(electedLessons.Select(x => x.ElectiveLessonId));
         var electiveDays = await _dayRepository.GetByIdsAsync(electedLessons.Select(x => x.ElectiveLessonDayId));
 
+        TimeZoneInfo timeZone = TimeZoneInfo.FindSystemTimeZoneById(_options.Value.TimeZone);
+
         foreach (var lessonsGroup in electiveLessons.GroupBy(x => x.ElectiveLessonDayId))
         {
             _userLessonRepository.AddRange(
                 ElectiveLessonsMapper.Map(
                         lessonsGroup,
                         electiveDays.FirstOrDefault(x => x.Id == lessonsGroup.Key),
-                        BEGIN_UNIVERSITY_DATE,
-                        END_UNIVERSITY_DATE)
+                        _options.Value.StartTime,
+                        _options.Value.EndTime,
+                        timeZone)
                     .Select(x =>
                     {
                         x.UserId = user.Id;

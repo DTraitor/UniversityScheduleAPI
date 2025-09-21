@@ -30,7 +30,8 @@ public class ScheduleService : IScheduleService
         if(user == null)
             throw new KeyNotFoundException("User not found");
 
-        var occurrences = await _userLessonOccurenceRepository.GetByUserIdAndDateAsync(user.Id, dateTime);
+        DateTimeOffset dayBegin = dateTime.Date.ToUniversalTime();
+        var occurrences = await _userLessonOccurenceRepository.GetByUserIdAndBetweenDateAsync(user.Id, dayBegin, dayBegin.AddDays(1));
         var lessons = await _userLessonRepository.GetByIdsAsync(occurrences.Select(x => x.LessonId));
 
         return lessons.Select(l => new LessonDto

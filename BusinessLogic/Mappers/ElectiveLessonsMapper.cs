@@ -7,7 +7,7 @@ namespace BusinessLogic.Mappers;
 
 public static class ElectiveLessonsMapper
 {
-    public static IEnumerable<UserLesson> Map(IEnumerable<ElectiveLesson> lessons, ElectiveLessonDay day, DateTimeOffset begin, DateTimeOffset end)
+    public static IEnumerable<UserLesson> Map(IEnumerable<ElectiveLesson> lessons, ElectiveLessonDay day, DateTimeOffset begin, DateTimeOffset end, TimeZoneInfo timeZone)
     {
         foreach (var lesson in lessons)
         {
@@ -23,6 +23,7 @@ public static class ElectiveLessonsMapper
                 RepeatCount = 2,
                 StartTime = begin.AddDays(day.DayId-1),
                 EndTime = end,
+                TimeZoneId = timeZone.Id,
                 LessonSourceType = LessonSourceTypeEnum.Elective,
             };
         }

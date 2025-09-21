@@ -61,8 +61,6 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-
 // Apply migrations automatically
 using (var scope = app.Services.CreateScope())
 {

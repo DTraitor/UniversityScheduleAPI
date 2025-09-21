@@ -1,22 +1,22 @@
-﻿using BusinessLogic.Mappers;
+﻿using BusinessLogic.Configuration;
+using BusinessLogic.Mappers;
 using BusinessLogic.Services.Interfaces;
 using DataAccess.Enums;
 using DataAccess.Models;
 using DataAccess.Repositories.Interfaces;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace BusinessLogic.Services.GroupLessons;
 
 public class GroupLessonUserUpdaterService : IUserLessonUpdaterService<GroupLesson>
 {
-    private readonly DateTimeOffset BEGIN_UNIVERSITY_DATE = DateTimeOffset.Parse("2025-09-01T00:00:00.000000+03:00");
-    private readonly DateTimeOffset END_UNIVERSITY_DATE = DateTimeOffset.Parse("2025-11-30T00:00:00.000000+03:00");
-
     private readonly IGroupRepository _groupRepository;
     private readonly IGroupLessonRepository  _groupLessonRepository;
     private readonly IUserRepository _userRepository;
     private readonly IUserLessonRepository _userLessonRepository;
     private readonly IUserLessonOccurenceRepository _userLessonOccurenceRepository;
+    private readonly IOptions<GroupScheduleParsingOptions> _options;
     private readonly ILogger<GroupLessonUserUpdaterService> _logger;
 
     public GroupLessonUserUpdaterService(
@@ -25,6 +25,7 @@ public class GroupLessonUserUpdaterService : IUserLessonUpdaterService<GroupLess
         IUserRepository userRepository,
         IUserLessonRepository userLessonRepository,
         IUserLessonOccurenceRepository userLessonOccurenceRepository,
+        IOptions<GroupScheduleParsingOptions> options,
         ILogger<GroupLessonUserUpdaterService> logger)
     {
         _groupRepository = groupRepository;
@@ -32,6 +33,7 @@ public class GroupLessonUserUpdaterService : IUserLessonUpdaterService<GroupLess
         _userRepository = userRepository;
         _userLessonRepository = userLessonRepository;
         _userLessonOccurenceRepository = userLessonOccurenceRepository;
+        _options = options;
         _logger = logger;
     }
 
@@ -59,10 +61,11 @@ public class GroupLessonUserUpdaterService : IUserLessonUpdaterService<GroupLess
         if (group == null)
             return;
 
+        TimeZoneInfo timeZone = TimeZoneInfo.FindSystemTimeZoneById(_options.Value.TimeZone);
         var lessons = await _groupLessonRepository.GetByGroupIdAsync(group.Id);
 
         _userLessonRepository.AddRange(
-            ScheduleLessonsMapper.Map(lessons, BEGIN_UNIVERSITY_DATE, END_UNIVERSITY_DATE)
+            ScheduleLessonsMapper.Map(lessons, _options.Value.StartTime, _options.Value.EndTime, timeZone)
             .Select(x =>
             {
                 x.UserId = user.Id;

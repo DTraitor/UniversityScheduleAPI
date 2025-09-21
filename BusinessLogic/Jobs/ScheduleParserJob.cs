@@ -64,7 +64,7 @@ public class ScheduleParserJob<T, TModifiedEntry> : IHostedService, IDisposable 
             Value = DateTimeOffset.UtcNow.ToString("o"),
         };
 
-        if (DateTimeOffset.TryParse(persistentData.Value, out var result) && result > DateTimeOffset.Now)
+        if (DateTimeOffset.TryParse(persistentData.Value, out var result) && result > DateTimeOffset.UtcNow)
         {
             return;
         }
@@ -74,7 +74,7 @@ public class ScheduleParserJob<T, TModifiedEntry> : IHostedService, IDisposable 
         var modifiedRepository = scope.ServiceProvider.GetRequiredService<IRepository<TModifiedEntry>>();
         var changeHandler = scope.ServiceProvider.GetRequiredService<IChangeHandler<T>>();
 
-        _logger.LogInformation("Beginning daily parsing of the schedule at {Time}", DateTime.Now);
+        _logger.LogInformation("Beginning daily parsing of the schedule at {Time}", DateTimeOffset.UtcNow.ToString("o"));
 
         var (modifiedEntries, lessons) = await scheduleReader.ReadSchedule(_cancellationTokenSource.Token);
 
@@ -93,7 +93,7 @@ public class ScheduleParserJob<T, TModifiedEntry> : IHostedService, IDisposable 
         await modifiedRepository.SaveChangesAsync(_cancellationTokenSource.Token);
         await repository.SaveChangesAsync(_cancellationTokenSource.Token);
 
-        _logger.LogInformation("Finished parsing schedule at {Time}", DateTime.Now);
+        _logger.LogInformation("Finished parsing schedule at {Time}", DateTimeOffset.UtcNow.ToString("o"));
 
         persistentData.Value = DateTimeOffset.UtcNow.AddHours(6).ToString("o");
         persistentDataRepository.SetData(persistentData);
