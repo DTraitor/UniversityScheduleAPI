@@ -49,7 +49,7 @@ public class LessonUpdaterJob<T, TModifiedEntry> : IHostedService, IDisposable w
     {
         lock (_executingLock)
         {
-            UpdateUserLessons().Wait();
+            UpdateUserLessons().GetAwaiter().GetResult();
         }
     }
 

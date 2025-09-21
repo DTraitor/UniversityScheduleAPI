@@ -33,7 +33,7 @@ public class ElectiveScheduleReader : IScheduleReader<ElectiveLesson, ElectiveLe
         _logger = logger;
     }
 
-    public async Task<(IEnumerable<ElectiveLessonModified>, IEnumerable<ElectiveLesson>)> ReadSchedule(CancellationToken cancellationToken)
+    public async Task<(IEnumerable<ElectiveLessonModified>, ICollection<ElectiveLesson>)> ReadSchedule(CancellationToken cancellationToken)
     {
         var httpClient = _httpClientFactory.CreateClient();
         httpClient.BaseAddress = new Uri(_options.Value.ScheduleUrl);
@@ -84,7 +84,7 @@ public class ElectiveScheduleReader : IScheduleReader<ElectiveLesson, ElectiveLe
 
         await _electiveLessonDayRepository.SaveChangesAsync(cancellationToken);
 
-        return (lessonModifications, parsedLessons);
+        return (lessonModifications, parsedLessons.ToList());
     }
 
     private async Task<IEnumerable<ElectiveLesson>?> FetchElectiveScheduleAsync(string href, ElectiveLessonDay day, CancellationToken stoppingToken)

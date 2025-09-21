@@ -70,8 +70,8 @@ public class ElectiveLessonUpdaterService : ILessonUpdaterService<ElectiveLesson
                 ElectiveLessonsMapper.Map(
                         electiveLessons.Where(x => userElectedLessons.Select(x => x.Id).Contains(x.Id)),
                         electiveDay,
-                        _options.Value.StartTime,
-                        _options.Value.EndTime,
+                        _options.Value.StartTime.ToUniversalTime(),
+                        _options.Value.EndTime.ToUniversalTime(),
                         timeZone)
                     .Select(x =>
                     {

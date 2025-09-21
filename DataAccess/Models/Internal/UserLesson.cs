@@ -13,7 +13,7 @@ public class UserLesson
     public string? Location { get; set; }
     public bool Cancelled { get; set; }
 
-    public TimeOnly BeginTime { get; set; }
+    public TimeSpan BeginTime { get; set; }
     public TimeSpan Duration { get; set; }
 
     public RepeatType RepeatType { get; set; }

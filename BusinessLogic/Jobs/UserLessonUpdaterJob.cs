@@ -47,7 +47,7 @@ public class UserLessonUpdaterJob<T> : IHostedService, IDisposable
     {
         lock (_executingLock)
         {
-            UpdateUserLessons().Wait();
+            UpdateUserLessons().GetAwaiter().GetResult();
         }
     }
 

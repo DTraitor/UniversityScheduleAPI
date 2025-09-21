@@ -49,7 +49,7 @@ public class ScheduleParserJob<T, TModifiedEntry> : IHostedService, IDisposable 
     {
         lock (_executingLock)
         {
-            ParseSchedule().Wait();
+            ParseSchedule().GetAwaiter().GetResult();
         }
     }
 
@@ -85,9 +85,10 @@ public class ScheduleParserJob<T, TModifiedEntry> : IHostedService, IDisposable 
             repository.RemoveByKey(modifiedEntry.Key);
         }
 
-        await changeHandler.HandleChanges(previousLessons, lessons, _cancellationTokenSource.Token);
+        var existing = await changeHandler.HandleChanges(previousLessons, lessons, _cancellationTokenSource.Token);
 
         repository.AddRange(lessons);
+        repository.UpdateRange(existing);
         modifiedRepository.AddRange(modifiedEntries);
 
         await modifiedRepository.SaveChangesAsync(_cancellationTokenSource.Token);

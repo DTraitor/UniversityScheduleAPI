@@ -65,14 +65,12 @@ public class OccurrencesUpdaterJob : IHostedService, IDisposable, IAsyncDisposab
 
                 while (latestOccurrence != null && latestOccurrence < lesson.EndTime && latestOccurrence < limit)
                 {
-                    var startTime = TimeZoneInfo.ConvertTimeToUtc(latestOccurrence.Value, timeZone);
-
                     userLessonOccurrences.Add(new UserLessonOccurrence
                     {
                         LessonId = lesson.Id,
                         UserId = lesson.UserId,
-                        StartTime = startTime,
-                        EndTime = startTime.Add(lesson.Duration),
+                        StartTime = TimeZoneInfo.ConvertTimeToUtc(latestOccurrence.Value.Add(lesson.BeginTime)),
+                        EndTime = TimeZoneInfo.ConvertTimeToUtc(latestOccurrence.Value.Add(lesson.BeginTime).Add(lesson.Duration)),
                     });
 
                     latestOccurrence = lesson.RepeatType.GetNextOccurrence(latestOccurrence.Value, lesson.RepeatCount);

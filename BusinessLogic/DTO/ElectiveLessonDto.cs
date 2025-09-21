@@ -11,6 +11,6 @@ public record ElectiveLessonDto
 
     public int WeekNumber { get; set; }
     public DayOfWeek DayOfWeek { get; set; }
-    public TimeOnly StartTime { get; set; }
+    public TimeSpan StartTime { get; set; }
     public TimeSpan Length { get; set; }
 }

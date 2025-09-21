@@ -8,6 +8,7 @@ public record LessonDto
     public string? Location { get; set; }
     public bool Cancelled { get; set; }
 
-    public TimeOnly BeginTime { get; set; }
+    public TimeSpan BeginTime { get; set; }
     public TimeSpan Duration { get; set; }
+    public string TimeZoneId { get; set; }
 }

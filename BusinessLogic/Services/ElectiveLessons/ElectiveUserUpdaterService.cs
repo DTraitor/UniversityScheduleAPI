@@ -68,8 +68,8 @@ public class ElectiveUserUpdaterService : IUserLessonUpdaterService<ElectiveLess
                 ElectiveLessonsMapper.Map(
                         lessonsGroup,
                         electiveDays.FirstOrDefault(x => x.Id == lessonsGroup.Key),
-                        _options.Value.StartTime,
-                        _options.Value.EndTime,
+                        _options.Value.StartTime.ToUniversalTime(),
+                        _options.Value.EndTime.ToUniversalTime(),
                         timeZone)
                     .Select(x =>
                     {

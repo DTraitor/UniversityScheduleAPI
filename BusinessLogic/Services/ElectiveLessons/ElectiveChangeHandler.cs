@@ -33,10 +33,47 @@ public class ElectiveChangeHandler : IChangeHandler<ElectiveLesson>
         _logger = logger;
     }
 
-    public async Task HandleChanges(IEnumerable<ElectiveLesson> oldLessons, IEnumerable<ElectiveLesson> newLessons, CancellationToken token)
+    public async Task<IEnumerable<ElectiveLesson>> HandleChanges(IEnumerable<ElectiveLesson> oldLessons, ICollection<ElectiveLesson> newLessons, CancellationToken token)
     {
-        return;
-        //handle new lessons
-        throw new NotImplementedException();
+        Dictionary<int, Dictionary<string, Dictionary<string, int>>> oldLessonsDictionary = new();
+
+        foreach (var electiveLesson in oldLessons)
+        {
+            if (!oldLessonsDictionary.TryGetValue(electiveLesson.ElectiveLessonDayId, out var dayDict))
+            {
+                oldLessonsDictionary[electiveLesson.ElectiveLessonDayId] = dayDict = new();
+            }
+
+            if(!dayDict.TryGetValue(electiveLesson.Title, out var dictionary))
+            {
+                dayDict[electiveLesson.Title] = dictionary = new Dictionary<string, int>();
+            }
+
+            dictionary[electiveLesson.Type ?? ""] = electiveLesson.Id;
+        }
+
+        var existingLessons = new List<ElectiveLesson>();
+
+        foreach (var electiveLesson in newLessons)
+        {
+            if (oldLessonsDictionary.TryGetValue(electiveLesson.ElectiveLessonDayId, out var dayDict))
+            {
+                if (dayDict.TryGetValue(electiveLesson.Title, out var dictionary))
+                {
+                    if (dictionary.TryGetValue(electiveLesson.Type ?? "", out var id))
+                    {
+                        electiveLesson.Id = id;
+                        existingLessons.Add(electiveLesson);
+                    }
+                }
+            }
+        }
+
+        foreach (var existingLesson in existingLessons)
+        {
+            newLessons.Remove(existingLesson);
+        }
+
+        return existingLessons;
     }
 }

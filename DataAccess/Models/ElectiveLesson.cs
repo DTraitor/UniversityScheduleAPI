@@ -10,6 +10,6 @@ public class ElectiveLesson
     public string? Location { get; set; }
     public IEnumerable<string> Teacher { get; set; } = [];
 
-    public TimeOnly StartTime { get; set; }
+    public TimeSpan StartTime { get; set; }
     public TimeSpan Length { get; set; }
 }

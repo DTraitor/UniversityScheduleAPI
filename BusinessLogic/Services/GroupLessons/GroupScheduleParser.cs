@@ -15,15 +15,15 @@ public class GroupScheduleParser : IScheduleParser<GroupLesson>
         _logger = logger;
     }
 
-    private readonly List<TimeOnly> StartTimes = new()
+    private readonly List<TimeSpan> StartTimes = new()
     {
-        TimeOnly.Parse("8:00"),
-        TimeOnly.Parse("9:50"),
-        TimeOnly.Parse("11:40"),
-        TimeOnly.Parse("13:30"),
-        TimeOnly.Parse("15:20"),
-        TimeOnly.Parse("17:10"),
-        TimeOnly.Parse("19:00"),
+        TimeSpan.Parse("8:00"),
+        TimeSpan.Parse("9:50"),
+        TimeSpan.Parse("11:40"),
+        TimeSpan.Parse("13:30"),
+        TimeSpan.Parse("15:20"),
+        TimeSpan.Parse("17:10"),
+        TimeSpan.Parse("19:00"),
     };
 
     public bool HasHashChanged(HtmlDocument document, string oldHash, out string newHash)

@@ -43,6 +43,7 @@ public class ScheduleService : IScheduleService
             Cancelled = l.Cancelled,
             BeginTime = l.BeginTime,
             Duration = l.Duration,
+            TimeZoneId = l.TimeZoneId,
         });
     }
 }

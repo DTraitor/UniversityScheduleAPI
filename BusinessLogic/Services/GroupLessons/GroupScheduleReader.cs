@@ -31,7 +31,7 @@ public class GroupScheduleReader : IScheduleReader<GroupLesson, GroupLessonModif
         _logger = logger;
     }
 
-    public async Task<(IEnumerable<GroupLessonModified>, IEnumerable<GroupLesson>)> ReadSchedule(CancellationToken cancellationToken)
+    public async Task<(IEnumerable<GroupLessonModified>, ICollection<GroupLesson>)> ReadSchedule(CancellationToken cancellationToken)
     {
         var httpClient = _httpClientFactory.CreateClient();
         httpClient.BaseAddress = new Uri(_options.Value.ScheduleUrl);
@@ -102,7 +102,7 @@ public class GroupScheduleReader : IScheduleReader<GroupLesson, GroupLessonModif
             groupLesson.GroupId = parsedGroupsOriginalIds[groupLesson.GroupId].Id;
         }
 
-        return (groupsModifications, groupLessons);
+        return (groupsModifications, groupLessons.ToList());
     }
 
     private async Task<IEnumerable<GroupLesson>?> FetchGroupScheduleAsync(string href, Group group, CancellationToken stoppingToken)

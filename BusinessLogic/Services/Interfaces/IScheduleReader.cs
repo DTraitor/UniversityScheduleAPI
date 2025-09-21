@@ -5,5 +5,5 @@ namespace BusinessLogic.Services.Interfaces;
 
 public interface IScheduleReader<T, TModifiedEntry> where TModifiedEntry : IModifiedEntry
 {
-    Task<(IEnumerable<TModifiedEntry>, IEnumerable<T>)> ReadSchedule(CancellationToken cancellationToken);
+    Task<(IEnumerable<TModifiedEntry>, ICollection<T>)> ReadSchedule(CancellationToken cancellationToken);
 }

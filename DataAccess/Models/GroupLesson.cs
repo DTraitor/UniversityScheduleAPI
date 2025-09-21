@@ -10,7 +10,7 @@ public class GroupLesson
     public string? Location { get; set; }
     public IEnumerable<string> Teacher { get; set; } = [];
 
-    public TimeOnly StartTime { get; set; }
+    public TimeSpan StartTime { get; set; }
     public TimeSpan Length { get; set; }
 
     // false - first week

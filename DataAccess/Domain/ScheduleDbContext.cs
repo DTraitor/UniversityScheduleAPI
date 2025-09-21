@@ -28,4 +28,21 @@ public class ScheduleDbContext(DbContextOptions<ScheduleDbContext> options) : Db
     public DbSet<PersistentData> PersistentData { get; set; }
 
     public DbSet<User> Users { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<UserLesson>()
+            .Property(e => e.BeginTime)
+            .HasColumnType("interval");
+
+        modelBuilder.Entity<GroupLesson>()
+            .Property(e => e.StartTime)
+            .HasColumnType("interval");
+
+        modelBuilder.Entity<ElectiveLesson>()
+            .Property(e => e.StartTime)
+            .HasColumnType("interval");
+
+        base.OnModelCreating(modelBuilder);
+    }
 }

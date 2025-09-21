@@ -20,8 +20,8 @@ public class ElectiveScheduleParser : IScheduleParser<ElectiveLesson>
     {
         var dateTime = document.DocumentNode.SelectNodes("//h2")[1].InnerText;
         var matches = Regex.Match(dateTime, @"^.* (\d\d?:\d\d)-(\d\d?:\d\d)$");
-        var startTime = TimeOnly.Parse(matches.Groups[1].Value);
-        var endTime = TimeOnly.Parse(matches.Groups[2].Value);
+        var startTime = TimeSpan.Parse(matches.Groups[1].Value);
+        var endTime = TimeSpan.Parse(matches.Groups[2].Value);
         var length = endTime - startTime;
 
         List<ElectiveLesson>  electiveLessons = new List<ElectiveLesson>();
