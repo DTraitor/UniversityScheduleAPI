@@ -8,6 +8,7 @@ using DataAccess.Repositories;
 using DataAccess.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using API.Extensions;
+using BusinessLogic.Configuration;
 using DataAccess.Models;
 using DataAccess.Models.Internal;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -42,6 +43,12 @@ builder.Services.AddScheduleSource<ElectiveLesson, ElectiveLessonModified, Elect
 
 // Jobs
 builder.Services.AddHostedService<OccurrencesUpdaterJob>();
+
+// Configurations
+builder.Services.Configure<ElectiveScheduleParsingOptions>(
+    builder.Configuration.GetSection("ElectiveScheduleParsing"));
+builder.Services.Configure<GroupScheduleParsingOptions>(
+    builder.Configuration.GetSection("GroupScheduleParsing"));
 
 builder.Services.AddSwaggerGen();
 

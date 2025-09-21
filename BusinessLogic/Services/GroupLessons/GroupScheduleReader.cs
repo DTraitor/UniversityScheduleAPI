@@ -1,37 +1,40 @@
 ﻿using System.Collections.Concurrent;
+using BusinessLogic.Configuration;
 using BusinessLogic.Services.Interfaces;
 using DataAccess.Models;
 using DataAccess.Repositories.Interfaces;
 using HtmlAgilityPack;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace BusinessLogic.Services.GroupLessons;
 
 public class GroupScheduleReader : IScheduleReader<GroupLesson, GroupLessonModified>
 {
-    private const string ScheduleApi = "https://portal.nau.edu.ua";
-
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IGroupRepository  _groupRepository;
     private readonly IScheduleParser<GroupLesson> _groupLessonParser;
+    private readonly IOptions<GroupScheduleParsingOptions> _options;
     private readonly ILogger<GroupScheduleReader> _logger;
 
     public GroupScheduleReader(
         IHttpClientFactory httpClientFactory,
         IGroupRepository groupRepository,
         IScheduleParser<GroupLesson> groupLessonParser,
+        IOptions<GroupScheduleParsingOptions> options,
         ILogger<GroupScheduleReader> logger)
     {
         _httpClientFactory = httpClientFactory;
         _groupRepository = groupRepository;
         _groupLessonParser = groupLessonParser;
+        _options = options;
         _logger = logger;
     }
 
     public async Task<(IEnumerable<GroupLessonModified>, IEnumerable<GroupLesson>)> ReadSchedule(CancellationToken cancellationToken)
     {
         var httpClient = _httpClientFactory.CreateClient();
-        httpClient.BaseAddress = new Uri(ScheduleApi);
+        httpClient.BaseAddress = new Uri(_options.Value.ScheduleUrl);
 
         var html = await httpClient.GetStringAsync("/schedule/group/list", cancellationToken);
 
@@ -107,7 +110,7 @@ public class GroupScheduleReader : IScheduleReader<GroupLesson, GroupLessonModif
         try
         {
             var httpClient = _httpClientFactory.CreateClient();
-            httpClient.BaseAddress = new Uri(ScheduleApi);
+            httpClient.BaseAddress = new Uri(_options.Value.ScheduleUrl);
             var scheduleString = await httpClient.GetStringAsync(href, stoppingToken);
 
             var scheduleDoc = new HtmlDocument();
