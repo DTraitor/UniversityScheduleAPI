@@ -102,7 +102,7 @@ public class ElectiveService : IElectiveService
                     Teacher = x.Teacher,
                     StartTime = x.StartTime,
                     Length = x.Length,
-                    DayOfWeek = (DayOfWeek)(electiveDay.DayId - 1),
+                    DayOfWeek = (DayOfWeek)((electiveDay.DayId %) - 1),
                     WeekNumber = electiveDay.DayId / 7,
                 };
             });
