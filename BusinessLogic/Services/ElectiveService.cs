@@ -23,6 +23,7 @@ public class ElectiveService : IElectiveService
 
     private readonly IElectiveLessonDayRepository _dayRepository;
     private readonly IElectiveLessonRepository _lessonRepository;
+    private readonly IElectiveLessonDayRepository _electiveDayRepository;
     private readonly IElectedLessonRepository _electedRepository;
     private readonly IUserModifiedRepository _userModifiedRepository;
     private readonly IUserRepository _userRepository;
@@ -32,6 +33,7 @@ public class ElectiveService : IElectiveService
         IElectiveLessonDayRepository dayRepository,
         IElectiveLessonRepository lessonRepository,
         IElectedLessonRepository electedRepository,
+        IElectiveLessonDayRepository electiveDayRepository,
         IUserModifiedRepository userModifiedRepository,
         IUserRepository userRepository,
         ILogger<ElectiveService> logger)
@@ -40,6 +42,7 @@ public class ElectiveService : IElectiveService
         _lessonRepository = lessonRepository;
         _electedRepository = electedRepository;
         _userModifiedRepository = userModifiedRepository;
+        _electiveDayRepository = electiveDayRepository;
         _userRepository = userRepository;
         _logger = logger;
     }
@@ -84,17 +87,24 @@ public class ElectiveService : IElectiveService
         if (user == null)
             throw new KeyNotFoundException("User not found");
 
+        var electiveDays = await _electiveDayRepository.GetAllAsync();
         var elected = await _electedRepository.GetByUserId(user.Id);
         return (await _lessonRepository.GetByIdsAsync(elected.Select(x => x.ElectiveLessonId)))
-            .Join(elected, x => x.Id, y => y.ElectiveLessonId, (x, y) => new ElectiveLessonDto
+            .Join(elected, x => x.Id, y => y.ElectiveLessonId, (x, y) =>
             {
-                Id = y.Id,
-                Title = x.Title,
-                Type = x.Type,
-                Location = x.Location,
-                Teacher = x.Teacher,
-                StartTime = x.StartTime,
-                Length = x.Length,
+                var electiveDay = electiveDays.FirstOrDefault(z => z.Id == x.ElectiveLessonDayId);
+                return new ElectiveLessonDto
+                {
+                    Id = y.Id,
+                    Title = x.Title,
+                    Type = x.Type,
+                    Location = x.Location,
+                    Teacher = x.Teacher,
+                    StartTime = x.StartTime,
+                    Length = x.Length,
+                    DayOfWeek = (DayOfWeek)(electiveDay.DayId - 1),
+                    WeekNumber = electiveDay.DayId / 7,
+                };
             });
     }
 
