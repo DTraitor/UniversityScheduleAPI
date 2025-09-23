@@ -79,6 +79,9 @@ public class OccurrencesUpdaterJob : IHostedService, IDisposable, IAsyncDisposab
                 lesson.OccurrencesCalculatedTill = latestOccurrence == null? null : TimeZoneInfo.ConvertTimeToUtc(latestOccurrence.Value, timeZone);
             }
 
+            if(userLessonOccurrences.Count <= 0)
+                return;
+
             userLessonOccurenceRepository.AddRange(userLessonOccurrences);
             try
             {
