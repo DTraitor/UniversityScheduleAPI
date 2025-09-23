@@ -68,7 +68,7 @@ public class ElectiveLessonUpdaterService : ILessonUpdaterService<ElectiveLesson
 
             _userLessonRepository.AddRange(
                 ElectiveLessonsMapper.Map(
-                        electiveLessons.Where(x => userElectedLessons.Select(x => x.Id).Contains(x.Id)),
+                        electiveLessons.Where(x => userElectedLessons.Select(x => x.ElectiveLessonId).Contains(x.Id)),
                         electiveDay,
                         _options.Value.StartTime.ToUniversalTime(),
                         _options.Value.EndTime.ToUniversalTime(),
@@ -80,7 +80,6 @@ public class ElectiveLessonUpdaterService : ILessonUpdaterService<ElectiveLesson
                     }));
         }
 
-        await _userRepository.SaveChangesAsync();
         await _userLessonRepository.SaveChangesAsync();
         await _userLessonOccurenceRepository.SaveChangesAsync();
         await _electedRepository.SaveChangesAsync();
