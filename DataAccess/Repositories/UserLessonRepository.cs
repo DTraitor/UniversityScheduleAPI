@@ -86,7 +86,18 @@ public class UserLessonRepository : IUserLessonRepository
     public IEnumerable<int> RemoveByUserIdAndLessonSourceType(int userId, LessonSourceTypeEnum sourceType)
     {
         var lessons = _context.UserLessons.Where(ul => ul.UserId == userId && ul.LessonSourceType == sourceType);
-        _context.RemoveRange(lessons);
+        _context.UserLessons.RemoveRange(lessons);
+        return lessons.Select(x => x.Id);
+    }
+
+    public IEnumerable<int> RemoveByUserIdAndLessonSourceTypeAndLessonSourceId(int userId, LessonSourceTypeEnum sourceType,
+        int sourceId)
+    {
+        var lessons = _context.UserLessons.Where(ul =>
+            ul.UserId == userId &&
+            ul.LessonSourceType == sourceType &&
+            ul.LessonSourceId == sourceId);
+        _context.UserLessons.RemoveRange(lessons);
         return lessons.Select(x => x.Id);
     }
 

@@ -45,7 +45,8 @@ public class GroupLessonUpdaterService : ILessonUpdaterService<GroupLesson, Grou
 
         foreach (var user in users)
         {
-            var removed = _userLessonRepository.RemoveByUserIdAndLessonSourceType(user.Id, LessonSourceTypeEnum.Group);
+            var removed = _userLessonRepository.RemoveByUserIdAndLessonSourceTypeAndLessonSourceId(
+                user.Id, LessonSourceTypeEnum.Group, modifiedEntry.Key);
             _userLessonOccurenceRepository.ClearByLessonIds(removed);
         }
 

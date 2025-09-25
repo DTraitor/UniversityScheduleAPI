@@ -59,7 +59,8 @@ public class ElectiveLessonUpdaterService : ILessonUpdaterService<ElectiveLesson
 
         foreach (var user in users)
         {
-            var removed = _userLessonRepository.RemoveByUserIdAndLessonSourceType(user.Id, LessonSourceTypeEnum.Elective);
+            var removed = _userLessonRepository.RemoveByUserIdAndLessonSourceTypeAndLessonSourceId(
+                user.Id, LessonSourceTypeEnum.Elective, modifiedEntry.Key);
             _userLessonOccurenceRepository.ClearByLessonIds(removed);
 
             var userElectedLessons = await _electedRepository.GetByUserId(user.Id);

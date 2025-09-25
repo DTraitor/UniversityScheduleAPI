@@ -21,6 +21,7 @@ public class UserLesson
     public int RepeatCount { get; set; }
 
     public LessonSourceTypeEnum LessonSourceType { get; set; } =  LessonSourceTypeEnum.None;
+    public int LessonSourceId { get; set; }
 
     public DateTimeOffset StartTime { get; set; }
     public DateTimeOffset EndTime { get; set; }

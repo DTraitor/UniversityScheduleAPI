@@ -25,6 +25,7 @@ public static class ScheduleLessonsMapper
                 EndTime = end.ToUniversalTime(),
                 TimeZoneId = timeZone.Id,
                 LessonSourceType = LessonSourceTypeEnum.Group,
+                LessonSourceId = lesson.GroupId,
             };
         }
     }

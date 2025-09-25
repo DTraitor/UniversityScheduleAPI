@@ -86,6 +86,7 @@ public class OccurrencesUpdaterJob : IHostedService, IDisposable, IAsyncDisposab
             try
             {
                 userLessonRepository.SaveChanges();
+                userLessonOccurenceRepository.SaveChanges();
             }
             catch (DbUpdateConcurrencyException ex)
             {
@@ -115,8 +116,6 @@ public class OccurrencesUpdaterJob : IHostedService, IDisposable, IAsyncDisposab
                     }
                 }
             }
-
-            userLessonOccurenceRepository.SaveChanges();
         }
     }
 

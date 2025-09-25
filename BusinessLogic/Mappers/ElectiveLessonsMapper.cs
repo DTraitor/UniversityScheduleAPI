@@ -25,6 +25,7 @@ public static class ElectiveLessonsMapper
                 EndTime = end,
                 TimeZoneId = timeZone.Id,
                 LessonSourceType = LessonSourceTypeEnum.Elective,
+                LessonSourceId = lesson.ElectiveLessonDayId,
             };
         }
     }
