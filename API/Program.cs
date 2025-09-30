@@ -11,7 +11,6 @@ using API.Extensions;
 using BusinessLogic.Configuration;
 using DataAccess.Models;
 using DataAccess.Models.Internal;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,18 +19,20 @@ builder.Services.AddScoped<IScheduleService, ScheduleService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IGroupService, GroupService>();
 builder.Services.AddScoped<IElectiveService, ElectiveService>();
+builder.Services.AddScoped<IUserAlertService, UserAlertService>();
 
 // Repositories
-builder.Services.AddScoped<IPersistentDataRepository, PersistentDataRepository>();
 builder.Services.AddScoped<IUserModifiedRepository, UserModifiedRepository>();
-builder.Services.AddScoped<IRepository<ElectiveLessonModified>, ElectiveLessonModifiedRepository>();
+builder.Services.AddScoped<IPersistentDataRepository, PersistentDataRepository>();
 builder.Services.AddScoped<IRepository<GroupLessonModified>, GroupLessonModifiedRepository>();
-builder.Services.AddRepository<IGroupRepository, GroupRepository, Group>();
+builder.Services.AddScoped<IRepository<ElectiveLessonModified>, ElectiveLessonModifiedRepository>();
 builder.Services.AddRepository<IUserRepository, UserRepository, User>();
+builder.Services.AddRepository<IGroupRepository, GroupRepository, Group>();
+builder.Services.AddRepository<IUserAlertRepository, UserAlertRepository, UserAlert>();
 builder.Services.AddRepository<IUserLessonRepository, UserLessonRepository, UserLesson>();
-builder.Services.AddRepository<IUserLessonOccurenceRepository, UserLessonOccurenceRepository, UserLessonOccurrence>();
 builder.Services.AddRepository<IElectedLessonRepository, ElectedLessonRepository, ElectedLesson>();
 builder.Services.AddRepository<IElectiveLessonDayRepository, ElectiveLessonDayRepository, ElectiveLessonDay>();
+builder.Services.AddRepository<IUserLessonOccurenceRepository, UserLessonOccurenceRepository, UserLessonOccurrence>();
 builder.Services.AddKeyBasedRepository<IElectiveLessonRepository, ElectiveLessonRepository, ElectiveLesson>();
 builder.Services.AddKeyBasedRepository<IGroupLessonRepository, GroupLessonRepository, GroupLesson>();
 

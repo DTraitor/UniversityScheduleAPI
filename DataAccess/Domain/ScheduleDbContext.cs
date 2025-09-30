@@ -29,6 +29,8 @@ public class ScheduleDbContext(DbContextOptions<ScheduleDbContext> options) : Db
 
     public DbSet<User> Users { get; set; }
 
+    public DbSet<UserAlert> UserAlerts { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<UserLesson>()
