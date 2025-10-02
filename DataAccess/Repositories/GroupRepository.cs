@@ -118,4 +118,9 @@ public class GroupRepository : IGroupRepository
     {
         return await _context.Groups.FirstOrDefaultAsync(g => g.GroupName == groupName);
     }
+
+    public async Task<IEnumerable<Group>> GetByIdsAsync(IEnumerable<int> userIds, CancellationToken cancellationToken = default)
+    {
+        return await _context.Groups.Where(u => userIds.Contains(u.Id)).ToListAsync(cancellationToken);
+    }
 }

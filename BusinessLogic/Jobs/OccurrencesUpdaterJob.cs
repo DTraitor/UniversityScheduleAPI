@@ -1,5 +1,6 @@
 ﻿using BusinessLogic.Helpers;
 using DataAccess.Enums;
+using DataAccess.Models;
 using DataAccess.Models.Internal;
 using DataAccess.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -11,9 +12,44 @@ namespace BusinessLogic.Jobs;
 
 public class OccurrencesUpdaterJob : IHostedService, IDisposable, IAsyncDisposable
 {
-    private readonly DateTime _saturdayMoveStart = DateTime.Parse("2025-12-01T00:00:00.000000+02:00");
-    private readonly DateTime _saturdayMoveEnd = DateTime.Parse("2025-12-14T23:59:59.999999+02:00");
-    private readonly DateTime _saturdayMoveToStart = DateTime.Parse("2025-09-06T00:00:00.000000+03:00");
+    /// <summary>
+    /// Current date time -> moved date time
+    /// </summary>
+    private readonly Dictionary<DateTime, DateTime> _bachelorSaturdayMove = new()
+    {
+        { DateTime.Parse("2025-12-01T00:00:00.000000+02:00"), DateTime.Parse("2025-09-06T00:00:00.000000+03:00") },
+        { DateTime.Parse("2025-12-02T00:00:00.000000+02:00"), DateTime.Parse("2025-09-13T00:00:00.000000+03:00") },
+        { DateTime.Parse("2025-12-03T00:00:00.000000+02:00"), DateTime.Parse("2025-09-20T00:00:00.000000+03:00") },
+        { DateTime.Parse("2025-12-04T00:00:00.000000+02:00"), DateTime.Parse("2025-09-27T00:00:00.000000+03:00") },
+        { DateTime.Parse("2025-12-05T00:00:00.000000+02:00"), DateTime.Parse("2025-10-04T00:00:00.000000+03:00") },
+        { DateTime.Parse("2025-12-08T00:00:00.000000+02:00"), DateTime.Parse("2025-10-11T00:00:00.000000+03:00") },
+        { DateTime.Parse("2025-12-09T00:00:00.000000+02:00"), DateTime.Parse("2025-10-18T00:00:00.000000+03:00") },
+        { DateTime.Parse("2025-12-10T00:00:00.000000+02:00"), DateTime.Parse("2025-10-25T00:00:00.000000+03:00") },
+        { DateTime.Parse("2025-12-11T00:00:00.000000+02:00"), DateTime.Parse("2025-11-01T00:00:00.000000+02:00") },
+        { DateTime.Parse("2025-12-12T00:00:00.000000+02:00"), DateTime.Parse("2025-11-08T00:00:00.000000+02:00") },
+        { DateTime.Parse("2025-12-15T00:00:00.000000+02:00"), DateTime.Parse("2025-11-15T00:00:00.000000+02:00") },
+        { DateTime.Parse("2025-12-16T00:00:00.000000+02:00"), DateTime.Parse("2025-11-22T00:00:00.000000+02:00") },
+        { DateTime.Parse("2025-12-17T00:00:00.000000+02:00"), DateTime.Parse("2025-11-29T00:00:00.000000+02:00") },
+    };
+
+    /// <summary>
+    /// Current date time -> moved date time
+    /// </summary>
+    private readonly Dictionary<DateTime, DateTime> _mastersSaturdayMove = new()
+    {
+        { DateTime.Parse("2025-12-01T00:00:00.000000+02:00"), DateTime.Parse("2025-09-13T00:00:00.000000+03:00") },
+        { DateTime.Parse("2025-12-02T00:00:00.000000+02:00"), DateTime.Parse("2025-09-20T00:00:00.000000+03:00") },
+        { DateTime.Parse("2025-12-03T00:00:00.000000+02:00"), DateTime.Parse("2025-09-27T00:00:00.000000+03:00") },
+        { DateTime.Parse("2025-12-04T00:00:00.000000+02:00"), DateTime.Parse("2025-10-04T00:00:00.000000+03:00") },
+        { DateTime.Parse("2025-12-05T00:00:00.000000+02:00"), DateTime.Parse("2025-10-11T00:00:00.000000+03:00") },
+        { DateTime.Parse("2025-12-08T00:00:00.000000+02:00"), DateTime.Parse("2025-10-18T00:00:00.000000+03:00") },
+        { DateTime.Parse("2025-12-09T00:00:00.000000+02:00"), DateTime.Parse("2025-10-25T00:00:00.000000+03:00") },
+        { DateTime.Parse("2025-12-10T00:00:00.000000+02:00"), DateTime.Parse("2025-11-01T00:00:00.000000+02:00") },
+        { DateTime.Parse("2025-12-11T00:00:00.000000+02:00"), DateTime.Parse("2025-11-08T00:00:00.000000+02:00") },
+        { DateTime.Parse("2025-12-12T00:00:00.000000+02:00"), DateTime.Parse("2025-11-15T00:00:00.000000+02:00") },
+        { DateTime.Parse("2025-12-15T00:00:00.000000+02:00"), DateTime.Parse("2025-11-22T00:00:00.000000+02:00") },
+        { DateTime.Parse("2025-12-16T00:00:00.000000+02:00"), DateTime.Parse("2025-11-29T00:00:00.000000+02:00") },
+    };
 
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<OccurrencesUpdaterJob> _logger;
@@ -31,7 +67,7 @@ public class OccurrencesUpdaterJob : IHostedService, IDisposable, IAsyncDisposab
         _logger.LogInformation("OccurrencesUpdaterJob starting...");
 
         _timer = new Timer(
-            UpdateOccurrences,
+            ExecuteTimer,
             null,
             TimeSpan.Zero,
             TimeSpan.FromSeconds(2));
@@ -39,111 +75,130 @@ public class OccurrencesUpdaterJob : IHostedService, IDisposable, IAsyncDisposab
         return Task.CompletedTask;
     }
 
-    private void UpdateOccurrences(object? state)
+    private void ExecuteTimer(object? state)
     {
         lock (_executingLock)
         {
-            _logger.LogDebug("Updating lesson occurrences at: {time}", DateTimeOffset.UtcNow.ToString("o"));
+            UpdateOccurrences().GetAwaiter().GetResult();
+        }
+    }
 
-            using var scope = _serviceProvider.CreateScope();
+    private async Task UpdateOccurrences()
+    {
+        _logger.LogDebug("Updating lesson occurrences at: {time}", DateTimeOffset.UtcNow.ToString("o"));
 
-            var userLessonRepository = scope.ServiceProvider.GetRequiredService<IUserLessonRepository>();
-            var userLessonOccurenceRepository = scope.ServiceProvider.GetRequiredService<IUserLessonOccurenceRepository>();
+        using var scope = _serviceProvider.CreateScope();
 
-            var lessonsToUpdate = userLessonRepository.GetWithOccurrencesCalculatedDateLessThan(DateTimeOffset.UtcNow.AddDays(90))
-                .Where(x => x.OccurrencesCalculatedTill == null || x.OccurrencesCalculatedTill < x.EndTime);
+        var groupRepository = scope.ServiceProvider.GetRequiredService<IGroupRepository>();
+        var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+        var userLessonRepository = scope.ServiceProvider.GetRequiredService<IUserLessonRepository>();
+        var userLessonOccurenceRepository = scope.ServiceProvider.GetRequiredService<IUserLessonOccurenceRepository>();
 
-            List<UserLessonOccurrence> userLessonOccurrences = new List<UserLessonOccurrence>();
+        var lessonsToUpdate = userLessonRepository.GetWithOccurrencesCalculatedDateLessThan(DateTimeOffset.UtcNow.AddDays(90))
+            .Where(x => x.OccurrencesCalculatedTill == null || x.OccurrencesCalculatedTill < x.EndTime);
 
-            DateTimeOffset limit = DateTimeOffset.UtcNow.AddDays(180);
+        List<UserLessonOccurrence> userLessonOccurrences = new List<UserLessonOccurrence>();
 
-            foreach (var lesson in lessonsToUpdate)
+        DateTimeOffset limit = DateTimeOffset.UtcNow.AddDays(180);
+
+        var users = await userRepository.GetByIdsAsync(lessonsToUpdate.Select(x => x.UserId));
+        var groups = await groupRepository.GetByIdsAsync(users.Select(x => x.GroupId.Value));
+        var mastersSet = new HashSet<int>(groups.Where(x => x.GroupName[0] == 'М').Select(x => x.Id));
+
+        foreach (var (lesson, user) in lessonsToUpdate.Join(users, x => x.UserId, y => y.Id, (lesson, user) => new Tuple<UserLesson, User>(lesson, user)))
+        {
+            bool master = mastersSet.Contains(user.GroupId.Value);
+            TimeZoneInfo timeZone = TimeZoneInfo.FindSystemTimeZoneById(lesson.TimeZoneId);
+
+            DateTime? latestOccurrence;
+            if (lesson.OccurrencesCalculatedTill == null)
+                latestOccurrence = lesson.RepeatType == RepeatType.Never
+                    ? null
+                    : TimeZoneInfo.ConvertTime(lesson.StartTime, timeZone).DateTime;
+            else
+                latestOccurrence = lesson.RepeatType.GetNextOccurrence(
+                    TimeZoneInfo.ConvertTime(lesson.OccurrencesCalculatedTill.Value, timeZone).DateTime,
+                    lesson.RepeatCount);
+
+            while (latestOccurrence != null && latestOccurrence < lesson.EndTime && latestOccurrence < limit)
             {
-                TimeZoneInfo timeZone = TimeZoneInfo.FindSystemTimeZoneById(lesson.TimeZoneId);
-
-                DateTime? latestOccurrence;
-                if (lesson.OccurrencesCalculatedTill == null)
-                    latestOccurrence = lesson.RepeatType == RepeatType.Never ? null : TimeZoneInfo.ConvertTime(lesson.StartTime, timeZone).DateTime;
-                else
-                    latestOccurrence = lesson.RepeatType.GetNextOccurrence(TimeZoneInfo.ConvertTime(lesson.OccurrencesCalculatedTill.Value, timeZone).DateTime, lesson.RepeatCount);
-
-                while (latestOccurrence != null && latestOccurrence < lesson.EndTime && latestOccurrence < limit)
+                if (!HandleSaturdays(latestOccurrence.Value, lesson, master, out var occurence))
                 {
-                    if (!HandleSaturdays(latestOccurrence.Value, lesson, out var occurence))
+                    occurence = new UserLessonOccurrence
                     {
-                        occurence = new UserLessonOccurrence
-                        {
-                            LessonId = lesson.Id,
-                            UserId = lesson.UserId,
-                            StartTime = TimeZoneInfo.ConvertTimeToUtc(latestOccurrence.Value.Add(lesson.BeginTime)),
-                            EndTime = TimeZoneInfo.ConvertTimeToUtc(latestOccurrence.Value.Add(lesson.BeginTime).Add(lesson.Duration)),
-                        };
-                    }
-
-                    userLessonOccurrences.Add(occurence);
-
-                    latestOccurrence = lesson.RepeatType.GetNextOccurrence(latestOccurrence.Value, lesson.RepeatCount);
+                        LessonId = lesson.Id,
+                        UserId = lesson.UserId,
+                        StartTime = TimeZoneInfo.ConvertTimeToUtc(latestOccurrence.Value.Add(lesson.BeginTime)),
+                        EndTime = TimeZoneInfo.ConvertTimeToUtc(latestOccurrence.Value.Add(lesson.BeginTime)
+                            .Add(lesson.Duration)),
+                    };
                 }
 
-                lesson.OccurrencesCalculatedTill = latestOccurrence == null? null : TimeZoneInfo.ConvertTimeToUtc(latestOccurrence.Value, timeZone);
+                userLessonOccurrences.Add(occurence);
+
+                latestOccurrence = lesson.RepeatType.GetNextOccurrence(latestOccurrence.Value, lesson.RepeatCount);
             }
 
-            if(userLessonOccurrences.Count <= 0)
-                return;
+            lesson.OccurrencesCalculatedTill = latestOccurrence == null
+                ? null
+                : TimeZoneInfo.ConvertTimeToUtc(latestOccurrence.Value, timeZone);
+        }
 
-            userLessonOccurenceRepository.AddRange(userLessonOccurrences);
-            try
+        if(userLessonOccurrences.Count <= 0)
+            return;
+
+        userLessonOccurenceRepository.AddRange(userLessonOccurrences);
+        try
+        {
+            await userLessonRepository.SaveChangesAsync();
+            await userLessonOccurenceRepository.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            foreach (var entry in ex.Entries)
             {
-                userLessonRepository.SaveChanges();
-                userLessonOccurenceRepository.SaveChanges();
-            }
-            catch (DbUpdateConcurrencyException ex)
-            {
-                foreach (var entry in ex.Entries)
+                if (entry.Entity is UserLesson)
                 {
-                    if (entry.Entity is UserLesson)
-                    {
-                        var proposedValues = entry.CurrentValues;
-                        var databaseValues = entry.GetDatabaseValues();
+                    var proposedValues = entry.CurrentValues;
+                    var databaseValues = await entry.GetDatabaseValuesAsync();
 
-                        if (databaseValues == null)
-                        {
-                            userLessonOccurenceRepository.RemoveRange(userLessonOccurrences.Where(x => x.LessonId == proposedValues.GetValue<int>("Id")));
-                        }
-                        else
-                        {
-                            throw new NotSupportedException(
-                                "Don't know how to handle concurrency conflicts for "
-                                + entry.Metadata.Name + "When ");
-                        }
+                    if (databaseValues == null)
+                    {
+                        userLessonOccurenceRepository.RemoveRange(userLessonOccurrences.Where(x => x.LessonId == proposedValues.GetValue<int>("Id")));
                     }
                     else
                     {
                         throw new NotSupportedException(
                             "Don't know how to handle concurrency conflicts for "
-                            + entry.Metadata.Name);
+                            + entry.Metadata.Name + "When ");
                     }
+                }
+                else
+                {
+                    throw new NotSupportedException(
+                        "Don't know how to handle concurrency conflicts for "
+                        + entry.Metadata.Name);
                 }
             }
         }
     }
 
-    public bool HandleSaturdays(DateTime occurenceDate, UserLesson lesson, out UserLessonOccurrence? userLessonOccurrence)
+    private bool HandleSaturdays(DateTime occurenceDate, UserLesson lesson, bool master, out UserLessonOccurrence? userLessonOccurrence)
     {
+        var saturdayMoveDictionary = _bachelorSaturdayMove;
+        if (master)
+            saturdayMoveDictionary = _mastersSaturdayMove;
+
         userLessonOccurrence = null;
-        if (occurenceDate < _saturdayMoveStart || occurenceDate > _saturdayMoveEnd)
+        if (!saturdayMoveDictionary.TryGetValue(occurenceDate, out var movedDateTime))
             return false;
-
-        var diff = occurenceDate - _saturdayMoveStart;
-
-        var movedDate = _saturdayMoveToStart.AddDays(7 * (diff.Days));
 
         userLessonOccurrence = new UserLessonOccurrence
         {
             LessonId = lesson.Id,
             UserId = lesson.UserId,
-            StartTime = TimeZoneInfo.ConvertTimeToUtc(movedDate.Add(lesson.BeginTime)),
-            EndTime = TimeZoneInfo.ConvertTimeToUtc(movedDate.Add(lesson.BeginTime).Add(lesson.Duration)),
+            StartTime = TimeZoneInfo.ConvertTimeToUtc(movedDateTime.Add(lesson.BeginTime)),
+            EndTime = TimeZoneInfo.ConvertTimeToUtc(movedDateTime.Add(lesson.BeginTime).Add(lesson.Duration)),
         };
 
         return true;

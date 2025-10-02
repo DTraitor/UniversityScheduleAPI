@@ -102,6 +102,11 @@ public class GroupScheduleReader : IScheduleReader<GroupLesson, GroupLessonModif
             groupLesson.GroupId = parsedGroupsOriginalIds[groupLesson.GroupId].Id;
         }
 
+        foreach (var groupLessonModified in groupsModifications)
+        {
+            groupLessonModified.GroupId = parsedGroupsOriginalIds[groupLessonModified.GroupId].Id;
+        }
+
         return (groupsModifications, groupLessons.ToList());
     }
 
