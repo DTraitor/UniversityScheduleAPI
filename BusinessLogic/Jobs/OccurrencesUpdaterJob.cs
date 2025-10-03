@@ -30,8 +30,8 @@ public class OccurrencesUpdaterJob : IHostedService, IDisposable, IAsyncDisposab
         { DateTimeOffset.Parse("2025-12-15T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-11-15T00:00:00.000000+02:00") },
         { DateTimeOffset.Parse("2025-12-16T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-11-22T00:00:00.000000+02:00") },
         { DateTimeOffset.Parse("2025-12-17T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-11-29T00:00:00.000000+02:00") },
-        { DateTimeOffset.Parse("2025-12-18T00:00:00.000000+02:00"), DateTimeOffset.Parse("0001-01-01T00:00:00.000000+02:00") },
-        { DateTimeOffset.Parse("2025-12-19T00:00:00.000000+02:00"), DateTimeOffset.Parse("0001-01-01T00:00:00.000000+02:00") },
+        { DateTimeOffset.Parse("2025-12-18T00:00:00.000000+02:00"), DateTimeOffset.Parse("0002-01-01T00:00:00.000000+02:00") },
+        { DateTimeOffset.Parse("2025-12-19T00:00:00.000000+02:00"), DateTimeOffset.Parse("0002-01-01T00:00:00.000000+02:00") },
     };
 
     /// <summary>
@@ -39,11 +39,11 @@ public class OccurrencesUpdaterJob : IHostedService, IDisposable, IAsyncDisposab
     /// </summary>
     private readonly Dictionary<DateTimeOffset, DateTimeOffset> _mastersSaturdayMove = new()
     {
-        { DateTimeOffset.Parse("2025-09-01T00:00:00.000000+03:00"), DateTimeOffset.Parse("2025-09-13T00:00:00.000000+03:00") },
-        { DateTimeOffset.Parse("2025-09-02T00:00:00.000000+03:00"), DateTimeOffset.Parse("2025-09-13T00:00:00.000000+03:00") },
-        { DateTimeOffset.Parse("2025-09-03T00:00:00.000000+03:00"), DateTimeOffset.Parse("2025-09-13T00:00:00.000000+03:00") },
-        { DateTimeOffset.Parse("2025-09-04T00:00:00.000000+03:00"), DateTimeOffset.Parse("2025-09-13T00:00:00.000000+03:00") },
-        { DateTimeOffset.Parse("2025-09-05T00:00:00.000000+03:00"), DateTimeOffset.Parse("2025-09-13T00:00:00.000000+03:00") },
+        { DateTimeOffset.Parse("2025-09-01T00:00:00.000000+03:00"), DateTimeOffset.Parse("0002-01-01T00:00:00.000000+03:00") },
+        { DateTimeOffset.Parse("2025-09-02T00:00:00.000000+03:00"), DateTimeOffset.Parse("0002-01-01T00:00:00.000000+03:00") },
+        { DateTimeOffset.Parse("2025-09-03T00:00:00.000000+03:00"), DateTimeOffset.Parse("0002-01-01T00:00:00.000000+03:00") },
+        { DateTimeOffset.Parse("2025-09-04T00:00:00.000000+03:00"), DateTimeOffset.Parse("0002-01-01T00:00:00.000000+03:00") },
+        { DateTimeOffset.Parse("2025-09-05T00:00:00.000000+03:00"), DateTimeOffset.Parse("0002-01-01T00:00:00.000000+03:00") },
         { DateTimeOffset.Parse("2025-12-01T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-09-13T00:00:00.000000+03:00") },
         { DateTimeOffset.Parse("2025-12-02T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-09-20T00:00:00.000000+03:00") },
         { DateTimeOffset.Parse("2025-12-03T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-09-27T00:00:00.000000+03:00") },
@@ -56,9 +56,9 @@ public class OccurrencesUpdaterJob : IHostedService, IDisposable, IAsyncDisposab
         { DateTimeOffset.Parse("2025-12-12T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-11-15T00:00:00.000000+02:00") },
         { DateTimeOffset.Parse("2025-12-15T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-11-22T00:00:00.000000+02:00") },
         { DateTimeOffset.Parse("2025-12-16T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-11-29T00:00:00.000000+02:00") },
-        { DateTimeOffset.Parse("2025-12-17T00:00:00.000000+02:00"), DateTimeOffset.Parse("0001-01-01T00:00:00.000000+02:00") },
-        { DateTimeOffset.Parse("2025-12-18T00:00:00.000000+02:00"), DateTimeOffset.Parse("0001-01-01T00:00:00.000000+02:00") },
-        { DateTimeOffset.Parse("2025-12-19T00:00:00.000000+02:00"), DateTimeOffset.Parse("0001-01-01T00:00:00.000000+02:00") },
+        { DateTimeOffset.Parse("2025-12-17T00:00:00.000000+02:00"), DateTimeOffset.Parse("0002-01-01T00:00:00.000000+02:00") },
+        { DateTimeOffset.Parse("2025-12-18T00:00:00.000000+02:00"), DateTimeOffset.Parse("0002-01-01T00:00:00.000000+02:00") },
+        { DateTimeOffset.Parse("2025-12-19T00:00:00.000000+02:00"), DateTimeOffset.Parse("0002-01-01T00:00:00.000000+02:00") },
     };
 
     private readonly IServiceProvider _serviceProvider;
