@@ -15,40 +15,40 @@ public class OccurrencesUpdaterJob : IHostedService, IDisposable, IAsyncDisposab
     /// <summary>
     /// Current date time -> moved date time
     /// </summary>
-    private readonly Dictionary<DateTime, DateTime> _bachelorSaturdayMove = new()
+    private readonly Dictionary<DateTimeOffset, DateTimeOffset> _bachelorSaturdayMove = new()
     {
-        { DateTime.Parse("2025-12-01T00:00:00.000000+02:00"), DateTime.Parse("2025-09-06T00:00:00.000000+03:00") },
-        { DateTime.Parse("2025-12-02T00:00:00.000000+02:00"), DateTime.Parse("2025-09-13T00:00:00.000000+03:00") },
-        { DateTime.Parse("2025-12-03T00:00:00.000000+02:00"), DateTime.Parse("2025-09-20T00:00:00.000000+03:00") },
-        { DateTime.Parse("2025-12-04T00:00:00.000000+02:00"), DateTime.Parse("2025-09-27T00:00:00.000000+03:00") },
-        { DateTime.Parse("2025-12-05T00:00:00.000000+02:00"), DateTime.Parse("2025-10-04T00:00:00.000000+03:00") },
-        { DateTime.Parse("2025-12-08T00:00:00.000000+02:00"), DateTime.Parse("2025-10-11T00:00:00.000000+03:00") },
-        { DateTime.Parse("2025-12-09T00:00:00.000000+02:00"), DateTime.Parse("2025-10-18T00:00:00.000000+03:00") },
-        { DateTime.Parse("2025-12-10T00:00:00.000000+02:00"), DateTime.Parse("2025-10-25T00:00:00.000000+03:00") },
-        { DateTime.Parse("2025-12-11T00:00:00.000000+02:00"), DateTime.Parse("2025-11-01T00:00:00.000000+02:00") },
-        { DateTime.Parse("2025-12-12T00:00:00.000000+02:00"), DateTime.Parse("2025-11-08T00:00:00.000000+02:00") },
-        { DateTime.Parse("2025-12-15T00:00:00.000000+02:00"), DateTime.Parse("2025-11-15T00:00:00.000000+02:00") },
-        { DateTime.Parse("2025-12-16T00:00:00.000000+02:00"), DateTime.Parse("2025-11-22T00:00:00.000000+02:00") },
-        { DateTime.Parse("2025-12-17T00:00:00.000000+02:00"), DateTime.Parse("2025-11-29T00:00:00.000000+02:00") },
+        { DateTimeOffset.Parse("2025-12-01T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-09-06T00:00:00.000000+03:00") },
+        { DateTimeOffset.Parse("2025-12-02T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-09-13T00:00:00.000000+03:00") },
+        { DateTimeOffset.Parse("2025-12-03T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-09-20T00:00:00.000000+03:00") },
+        { DateTimeOffset.Parse("2025-12-04T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-09-27T00:00:00.000000+03:00") },
+        { DateTimeOffset.Parse("2025-12-05T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-10-04T00:00:00.000000+03:00") },
+        { DateTimeOffset.Parse("2025-12-08T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-10-11T00:00:00.000000+03:00") },
+        { DateTimeOffset.Parse("2025-12-09T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-10-18T00:00:00.000000+03:00") },
+        { DateTimeOffset.Parse("2025-12-10T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-10-25T00:00:00.000000+03:00") },
+        { DateTimeOffset.Parse("2025-12-11T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-11-01T00:00:00.000000+02:00") },
+        { DateTimeOffset.Parse("2025-12-12T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-11-08T00:00:00.000000+02:00") },
+        { DateTimeOffset.Parse("2025-12-15T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-11-15T00:00:00.000000+02:00") },
+        { DateTimeOffset.Parse("2025-12-16T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-11-22T00:00:00.000000+02:00") },
+        { DateTimeOffset.Parse("2025-12-17T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-11-29T00:00:00.000000+02:00") },
     };
 
     /// <summary>
     /// Current date time -> moved date time
     /// </summary>
-    private readonly Dictionary<DateTime, DateTime> _mastersSaturdayMove = new()
+    private readonly Dictionary<DateTimeOffset, DateTimeOffset> _mastersSaturdayMove = new()
     {
-        { DateTime.Parse("2025-12-01T00:00:00.000000+02:00"), DateTime.Parse("2025-09-13T00:00:00.000000+03:00") },
-        { DateTime.Parse("2025-12-02T00:00:00.000000+02:00"), DateTime.Parse("2025-09-20T00:00:00.000000+03:00") },
-        { DateTime.Parse("2025-12-03T00:00:00.000000+02:00"), DateTime.Parse("2025-09-27T00:00:00.000000+03:00") },
-        { DateTime.Parse("2025-12-04T00:00:00.000000+02:00"), DateTime.Parse("2025-10-04T00:00:00.000000+03:00") },
-        { DateTime.Parse("2025-12-05T00:00:00.000000+02:00"), DateTime.Parse("2025-10-11T00:00:00.000000+03:00") },
-        { DateTime.Parse("2025-12-08T00:00:00.000000+02:00"), DateTime.Parse("2025-10-18T00:00:00.000000+03:00") },
-        { DateTime.Parse("2025-12-09T00:00:00.000000+02:00"), DateTime.Parse("2025-10-25T00:00:00.000000+03:00") },
-        { DateTime.Parse("2025-12-10T00:00:00.000000+02:00"), DateTime.Parse("2025-11-01T00:00:00.000000+02:00") },
-        { DateTime.Parse("2025-12-11T00:00:00.000000+02:00"), DateTime.Parse("2025-11-08T00:00:00.000000+02:00") },
-        { DateTime.Parse("2025-12-12T00:00:00.000000+02:00"), DateTime.Parse("2025-11-15T00:00:00.000000+02:00") },
-        { DateTime.Parse("2025-12-15T00:00:00.000000+02:00"), DateTime.Parse("2025-11-22T00:00:00.000000+02:00") },
-        { DateTime.Parse("2025-12-16T00:00:00.000000+02:00"), DateTime.Parse("2025-11-29T00:00:00.000000+02:00") },
+        { DateTimeOffset.Parse("2025-12-01T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-09-13T00:00:00.000000+03:00") },
+        { DateTimeOffset.Parse("2025-12-02T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-09-20T00:00:00.000000+03:00") },
+        { DateTimeOffset.Parse("2025-12-03T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-09-27T00:00:00.000000+03:00") },
+        { DateTimeOffset.Parse("2025-12-04T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-10-04T00:00:00.000000+03:00") },
+        { DateTimeOffset.Parse("2025-12-05T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-10-11T00:00:00.000000+03:00") },
+        { DateTimeOffset.Parse("2025-12-08T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-10-18T00:00:00.000000+03:00") },
+        { DateTimeOffset.Parse("2025-12-09T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-10-25T00:00:00.000000+03:00") },
+        { DateTimeOffset.Parse("2025-12-10T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-11-01T00:00:00.000000+02:00") },
+        { DateTimeOffset.Parse("2025-12-11T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-11-08T00:00:00.000000+02:00") },
+        { DateTimeOffset.Parse("2025-12-12T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-11-15T00:00:00.000000+02:00") },
+        { DateTimeOffset.Parse("2025-12-15T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-11-22T00:00:00.000000+02:00") },
+        { DateTimeOffset.Parse("2025-12-16T00:00:00.000000+02:00"), DateTimeOffset.Parse("2025-11-29T00:00:00.000000+02:00") },
     };
 
     private readonly IServiceProvider _serviceProvider;
@@ -122,7 +122,7 @@ public class OccurrencesUpdaterJob : IHostedService, IDisposable, IAsyncDisposab
 
             while (latestOccurrence != null && latestOccurrence < lesson.EndTime && latestOccurrence < limit)
             {
-                if (!HandleSaturdays(latestOccurrence.Value, lesson, master, out var occurence))
+                if (!HandleSaturdays(latestOccurrence.Value, lesson, master, timeZone, out var occurence))
                 {
                     occurence = new UserLessonOccurrence
                     {
@@ -183,22 +183,22 @@ public class OccurrencesUpdaterJob : IHostedService, IDisposable, IAsyncDisposab
         }
     }
 
-    private bool HandleSaturdays(DateTime occurenceDate, UserLesson lesson, bool master, out UserLessonOccurrence? userLessonOccurrence)
+    private bool HandleSaturdays(DateTime occurenceDate, UserLesson lesson, bool master, TimeZoneInfo timeZone, out UserLessonOccurrence? userLessonOccurrence)
     {
         var saturdayMoveDictionary = _bachelorSaturdayMove;
         if (master)
             saturdayMoveDictionary = _mastersSaturdayMove;
 
         userLessonOccurrence = null;
-        if (!saturdayMoveDictionary.TryGetValue(occurenceDate, out var movedDateTime))
+        if (!saturdayMoveDictionary.TryGetValue(TimeZoneInfo.ConvertTimeToUtc(occurenceDate, timeZone), out var movedDateTime))
             return false;
 
         userLessonOccurrence = new UserLessonOccurrence
         {
             LessonId = lesson.Id,
             UserId = lesson.UserId,
-            StartTime = TimeZoneInfo.ConvertTimeToUtc(movedDateTime.Add(lesson.BeginTime)),
-            EndTime = TimeZoneInfo.ConvertTimeToUtc(movedDateTime.Add(lesson.BeginTime).Add(lesson.Duration)),
+            StartTime = movedDateTime.Add(lesson.BeginTime).ToUniversalTime(),
+            EndTime = movedDateTime.Add(lesson.BeginTime).Add(lesson.Duration).ToUniversalTime(),
         };
 
         return true;
