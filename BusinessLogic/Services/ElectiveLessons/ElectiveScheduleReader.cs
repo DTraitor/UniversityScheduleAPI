@@ -69,7 +69,6 @@ public class ElectiveScheduleReader : IScheduleReader<ElectiveLesson, ElectiveLe
                     {
                         DayId = i,
                         HourId = j,
-                        HashPage = "",
                     });
                 }
             }
@@ -158,10 +157,6 @@ public class ElectiveScheduleReader : IScheduleReader<ElectiveLesson, ElectiveLe
 
             var scheduleDoc = new HtmlDocument();
             scheduleDoc.LoadHtml(scheduleString);
-
-            if (!_lessonParser.HasHashChanged(scheduleDoc, day.HashPage, out var newHash))
-                return null;
-            day.HashPage = newHash;
 
             return _lessonParser.ReadLessons(scheduleDoc).Select(x =>
             {

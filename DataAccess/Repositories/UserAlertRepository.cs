@@ -69,7 +69,7 @@ public class UserAlertRepository : IUserAlertRepository
 
     public async Task<IEnumerable<UserAlert>> GetAllLimitAsync(int batchSize)
     {
-        return await _context.UserAlerts.Take(batchSize).ToListAsync();
+        return await _context.UserAlerts.OrderBy(x => x.Id).Take(batchSize).ToListAsync();
     }
 
     public void RemoveByIds(IEnumerable<int> alerts)

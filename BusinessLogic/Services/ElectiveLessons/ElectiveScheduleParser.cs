@@ -10,10 +10,8 @@ public class ElectiveScheduleParser : IScheduleParser<ElectiveLesson>
 {
     public bool HasHashChanged(HtmlDocument document, string oldHash, out string newHash)
     {
-        var schedule = document.DocumentNode.SelectSingleNode("//table[@class='schedule']");
-        newHash = Hashing.ComputeHash(schedule.InnerHtml);
-
-        return newHash != oldHash;
+        newHash = "";
+        return true;
     }
 
     public IEnumerable<ElectiveLesson> ReadLessons(HtmlDocument document)
