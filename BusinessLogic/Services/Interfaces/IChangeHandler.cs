@@ -2,5 +2,5 @@
 
 public interface IChangeHandler<T>
 {
-    Task<IEnumerable<T>> HandleChanges(IEnumerable<T> oldLessons, ICollection<T> newLessons, CancellationToken token);
+    Task HandleChanges(IEnumerable<T> oldLessons, ICollection<T> newLessons, CancellationToken token);
 }

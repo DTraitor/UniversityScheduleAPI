@@ -13,8 +13,24 @@ public class ElectiveScheduleReader : IScheduleReader<ElectiveLesson, ElectiveLe
 {
     private const string ScheduleLocation = "/schedule/pairs/elective?day_id={0}&hour_id={1}";
 
+    private readonly List<string> _electivesAsGroups = [
+        "https://portal.nau.edu.ua/schedule/group?id=4807",
+    ];
+
+    private readonly List<TimeSpan> _startTimes =
+    [
+        TimeSpan.Parse("8:00"),
+        TimeSpan.Parse("9:50"),
+        TimeSpan.Parse("11:40"),
+        TimeSpan.Parse("13:30"),
+        TimeSpan.Parse("15:20"),
+        TimeSpan.Parse("17:10"),
+        TimeSpan.Parse("19:00")
+    ];
+
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IScheduleParser<ElectiveLesson> _lessonParser;
+    private readonly IScheduleParser<GroupLesson> _groupParser;
     private readonly IRepository<ElectiveLessonDay> _electiveLessonDayRepository;
     private readonly IOptions<ElectiveScheduleParsingOptions> _options;
     private readonly ILogger<ElectiveScheduleReader> _logger;
@@ -22,6 +38,7 @@ public class ElectiveScheduleReader : IScheduleReader<ElectiveLesson, ElectiveLe
     public ElectiveScheduleReader(
         IHttpClientFactory httpClientFactory,
         IScheduleParser<ElectiveLesson> lessonParser,
+        IScheduleParser<GroupLesson> groupParser,
         IRepository<ElectiveLessonDay> electiveLessonDayRepository,
         IOptions<ElectiveScheduleParsingOptions> options,
         ILogger<ElectiveScheduleReader> logger)
@@ -29,6 +46,7 @@ public class ElectiveScheduleReader : IScheduleReader<ElectiveLesson, ElectiveLe
         _options = options;
         _httpClientFactory = httpClientFactory;
         _lessonParser = lessonParser;
+        _groupParser = groupParser;
         _electiveLessonDayRepository = electiveLessonDayRepository;
         _logger = logger;
     }
@@ -65,7 +83,7 @@ public class ElectiveScheduleReader : IScheduleReader<ElectiveLesson, ElectiveLe
         ConcurrentBag<ElectiveLesson> parsedLessons = new ConcurrentBag<ElectiveLesson>();
         ConcurrentBag<ElectiveLessonModified> lessonModifications = new ConcurrentBag<ElectiveLessonModified>();
 
-        await Parallel.ForEachAsync(currentElectiveDays, cancellationToken, async (elective, ct) =>
+        var electives = Parallel.ForEachAsync(currentElectiveDays, cancellationToken, async (elective, ct) =>
         {
             var lessons = await FetchElectiveScheduleAsync(string.Format(ScheduleLocation, elective.DayId, elective.HourId), elective, ct);
             if (lessons == null)
@@ -81,6 +99,49 @@ public class ElectiveScheduleReader : IScheduleReader<ElectiveLesson, ElectiveLe
                 ElectiveDayId = elective.Id,
             });
         });
+
+        var electivesAsGroup = Parallel.ForEachAsync(_electivesAsGroups, cancellationToken, async (group, ct) =>
+        {
+            var lessons = await FetchElectiveScheduleFromGroupAsync(group, ct);
+            foreach (var electiveLesson in lessons)
+            {
+                var dayId = (int)electiveLesson.DayOfWeek;
+
+                if (dayId == 0)
+                    dayId = 7;
+
+                if(electiveLesson.Week)
+                    dayId += 7;
+
+                var electiveDay = currentElectiveDays
+                    .Where(x => x.DayId == dayId)
+                    .FirstOrDefault(x => x.HourId == (_startTimes.IndexOf(electiveLesson.StartTime) + 1));
+
+                if (electiveDay == null)
+                {
+                    _logger.LogError("Couldn't find elective day of the lesson in elective group HREF: {Href}", group);
+                    return;
+                }
+
+                parsedLessons.Add(new()
+                {
+                    ElectiveLessonDayId = electiveDay.Id,
+                    Title = electiveLesson.Title,
+                    Type = electiveLesson.Type,
+                    Location = electiveLesson.Location,
+                    Teacher = electiveLesson.Teacher,
+                    StartTime = electiveLesson.StartTime,
+                    Length = electiveLesson.Length,
+                });
+
+                lessonModifications.Add(new()
+                {
+                    ElectiveDayId = electiveDay.Id,
+                });
+            }
+        });
+
+        await Task.WhenAll(electives, electivesAsGroup);
 
         await _electiveLessonDayRepository.SaveChangesAsync(cancellationToken);
 
@@ -111,6 +172,26 @@ public class ElectiveScheduleReader : IScheduleReader<ElectiveLesson, ElectiveLe
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error encountered when processing group HREF: {Href}", href);
+            throw;
+        }
+    }
+
+    private async Task<IEnumerable<GroupLesson>?> FetchElectiveScheduleFromGroupAsync(string href, CancellationToken stoppingToken)
+    {
+        try
+        {
+            var httpClient = _httpClientFactory.CreateClient();
+            httpClient.BaseAddress = new Uri(_options.Value.ScheduleUrl);
+            var scheduleString = await httpClient.GetStringAsync(href, stoppingToken);
+
+            var scheduleDoc = new HtmlDocument();
+            scheduleDoc.LoadHtml(scheduleString);
+
+            return _groupParser.ReadLessons(scheduleDoc);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error encountered when processing elective group HREF: {Href}", href);
             throw;
         }
     }

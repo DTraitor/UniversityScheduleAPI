@@ -85,14 +85,13 @@ public class ScheduleParserJob<T, TModifiedEntry> : IHostedService, IDisposable 
             repository.RemoveByKey(modifiedEntry.Key);
         }
 
-        var existing = await changeHandler.HandleChanges(previousLessons, lessons, _cancellationTokenSource.Token);
+        await changeHandler.HandleChanges(previousLessons, lessons, _cancellationTokenSource.Token);
 
         repository.AddRange(lessons);
-        repository.UpdateRange(existing);
         modifiedRepository.AddRange(modifiedEntries);
 
-        await modifiedRepository.SaveChangesAsync(_cancellationTokenSource.Token);
         await repository.SaveChangesAsync(_cancellationTokenSource.Token);
+        await modifiedRepository.SaveChangesAsync(_cancellationTokenSource.Token);
 
         _logger.LogInformation("Finished parsing schedule at {Time}", DateTimeOffset.UtcNow.ToString("o"));
 

@@ -18,6 +18,7 @@ public class ElectiveLessonUpdaterService : ILessonUpdaterService<ElectiveLesson
     private readonly IUserLessonRepository _userLessonRepository;
     private readonly IUserLessonOccurenceRepository _userLessonOccurenceRepository;
     private readonly IOptions<ElectiveScheduleParsingOptions> _options;
+    private readonly IUserAlertService _userAlertService;
     private readonly ILogger<ElectiveLessonUpdaterService> _logger;
 
     public ElectiveLessonUpdaterService(
@@ -28,6 +29,7 @@ public class ElectiveLessonUpdaterService : ILessonUpdaterService<ElectiveLesson
         IUserLessonRepository userLessonRepository,
         IUserLessonOccurenceRepository userLessonOccurenceRepository,
         IOptions<ElectiveScheduleParsingOptions> options,
+        IUserAlertService userAlertService,
         ILogger<ElectiveLessonUpdaterService> logger)
     {
         _dayRepository = dayRepository;
@@ -37,6 +39,7 @@ public class ElectiveLessonUpdaterService : ILessonUpdaterService<ElectiveLesson
         _userLessonRepository = userLessonRepository;
         _userLessonOccurenceRepository = userLessonOccurenceRepository;
         _options = options;
+        _userAlertService = userAlertService;
         _logger = logger;
     }
 
@@ -62,6 +65,17 @@ public class ElectiveLessonUpdaterService : ILessonUpdaterService<ElectiveLesson
             var removed = _userLessonRepository.RemoveByUserIdAndLessonSourceTypeAndLessonSourceId(
                 user.Id, LessonSourceTypeEnum.Elective, modifiedEntry.Key);
             _userLessonOccurenceRepository.ClearByLessonIds(removed);
+
+            foreach (var removedLesson in removedElected.Where(x => x.UserId == user.Id))
+            {
+                await _userAlertService.CreateUserAlert(user.Id, UserAlertType.ElectiveLessonRemoved, new()
+                {
+                    { "LessonName", removedLesson.Name },
+                    { "LessonType", removedLesson.Type ?? "" },
+                    { "LessonDay", electiveDay.DayId.ToString() },
+                    { "LessonStartTime", electiveDay.HourId.ToString() },
+                });
+            }
 
             var userElectedLessons = await _electedRepository.GetByUserId(user.Id);
             if(!userElectedLessons.Any())

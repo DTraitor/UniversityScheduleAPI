@@ -17,6 +17,7 @@ public class GroupLessonUpdaterService : ILessonUpdaterService<GroupLesson, Grou
     private readonly IUserLessonRepository _userLessonRepository;
     private readonly IUserLessonOccurenceRepository _userLessonOccurenceRepository;
     private readonly IOptions<GroupScheduleParsingOptions> _options;
+    private readonly IUserAlertService _userAlertService;
     private readonly ILogger<GroupLessonUpdaterService> _logger;
 
     public GroupLessonUpdaterService(
@@ -26,6 +27,7 @@ public class GroupLessonUpdaterService : ILessonUpdaterService<GroupLesson, Grou
         IUserLessonRepository userLessonRepository,
         IUserLessonOccurenceRepository userLessonOccurenceRepository,
         IOptions<GroupScheduleParsingOptions> options,
+        IUserAlertService userAlertService,
         ILogger<GroupLessonUpdaterService> logger)
     {
         _groupRepository = groupRepository;
@@ -34,6 +36,7 @@ public class GroupLessonUpdaterService : ILessonUpdaterService<GroupLesson, Grou
         _userLessonRepository = userLessonRepository;
         _userLessonOccurenceRepository = userLessonOccurenceRepository;
         _options = options;
+        _userAlertService = userAlertService;
         _logger = logger;
     }
 
@@ -57,10 +60,13 @@ public class GroupLessonUpdaterService : ILessonUpdaterService<GroupLesson, Grou
             {
                 user.GroupId = null;
                 _userRepository.Update(user);
+
+                await _userAlertService.CreateUserAlert(user.Id, UserAlertType.GroupRemoved, new()
+                {
+                    {"GroupName", group.GroupName},
+                    {"FacultyName", group.FacultyName},
+                });
             }
-            //TODO: Alert users
-            await _userRepository.SaveChangesAsync();
-            return;
         }
 
         TimeZoneInfo timeZone = TimeZoneInfo.FindSystemTimeZoneById(_options.Value.TimeZone);

@@ -82,6 +82,8 @@ public class UserService : IUserService
         await _userRepository.SaveChangesAsync();
 
         _userModifiedRepository.Add(user.Id, ProcessedByEnum.GroupLessons);
+        //Gotta recalculate occurrences as well to make sure saturdays are correct
+        _userModifiedRepository.Add(user.Id, ProcessedByEnum.ElectiveLessons);
         await _userModifiedRepository.SaveChangesAsync();
 
         return new UserDtoOutput
