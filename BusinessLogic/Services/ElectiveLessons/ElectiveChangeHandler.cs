@@ -44,6 +44,7 @@ public class ElectiveChangeHandler : IChangeHandler<ElectiveLesson>
                 {
                     if (dictionary.TryGetValue(electiveLesson.Type ?? "", out var lesson))
                     {
+                        electiveLesson.Id = lesson.Id;
                         lesson.Length = electiveLesson.Length;
                         lesson.Location = electiveLesson.Location;
                         lesson.Teacher = electiveLesson.Teacher;
@@ -54,7 +55,8 @@ public class ElectiveChangeHandler : IChangeHandler<ElectiveLesson>
             }
         }
 
-        foreach (var existingLesson in existingLessons)
+        var idsToRemove = existingLessons.Select(x => x.Id).ToHashSet();
+        foreach (var existingLesson in newLessons.Where(x => idsToRemove.Contains(x.Id)).ToList())
         {
             newLessons.Remove(existingLesson);
         }
