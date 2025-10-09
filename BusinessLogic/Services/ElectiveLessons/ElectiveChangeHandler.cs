@@ -15,9 +15,9 @@ public class ElectiveChangeHandler : IChangeHandler<ElectiveLesson>
         _logger = logger;
     }
 
-    public async Task HandleChanges(IEnumerable<ElectiveLesson> oldLessons, ICollection<ElectiveLesson> newLessons, CancellationToken token)
+    public async Task<IEnumerable<ElectiveLesson>> HandleChanges(IEnumerable<ElectiveLesson> oldLessons, ICollection<ElectiveLesson> newLessons, CancellationToken token)
     {
-        Dictionary<int, Dictionary<string, Dictionary<string, int>>> oldLessonsDictionary = new();
+        Dictionary<int, Dictionary<string, Dictionary<string, ElectiveLesson>>> oldLessonsDictionary = new();
 
         foreach (var electiveLesson in oldLessons)
         {
@@ -28,10 +28,10 @@ public class ElectiveChangeHandler : IChangeHandler<ElectiveLesson>
 
             if(!dayDict.TryGetValue(electiveLesson.Title, out var dictionary))
             {
-                dayDict[electiveLesson.Title] = dictionary = new Dictionary<string, int>();
+                dayDict[electiveLesson.Title] = dictionary = new Dictionary<string, ElectiveLesson>();
             }
 
-            dictionary[electiveLesson.Type ?? ""] = electiveLesson.Id;
+            dictionary[electiveLesson.Type ?? ""] = electiveLesson;
         }
 
         var existingLessons = new List<ElectiveLesson>();
@@ -42,13 +42,23 @@ public class ElectiveChangeHandler : IChangeHandler<ElectiveLesson>
             {
                 if (dayDict.TryGetValue(electiveLesson.Title, out var dictionary))
                 {
-                    if (dictionary.TryGetValue(electiveLesson.Type ?? "", out var id))
+                    if (dictionary.TryGetValue(electiveLesson.Type ?? "", out var lesson))
                     {
-                        electiveLesson.Id = id;
-                        existingLessons.Add(electiveLesson);
+                        lesson.Length = electiveLesson.Length;
+                        lesson.Location = electiveLesson.Location;
+                        lesson.Teacher = electiveLesson.Teacher;
+                        lesson.StartTime = electiveLesson.StartTime;
+                        existingLessons.Add(lesson);
                     }
                 }
             }
         }
+
+        foreach (var existingLesson in existingLessons)
+        {
+            newLessons.Remove(existingLesson);
+        }
+
+        return existingLessons;
     }
 }

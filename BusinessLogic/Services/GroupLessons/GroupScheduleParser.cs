@@ -79,7 +79,7 @@ public class GroupScheduleParser : IScheduleParser<GroupLesson>
                     {
                         Title = name.Replace("\r", string.Empty).Replace("\n", string.Empty).Trim(),
                         Type = activity?.Replace("\r", string.Empty).Replace("\n", string.Empty).Trim(),
-                        Location = room?.Replace("\r", string.Empty).Replace("\n", string.Empty).Trim(),
+                        Location = room?.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("ауд. ", string.Empty).Trim(),
                         Teacher = teachers,
 
                         StartTime = StartTimes[j],

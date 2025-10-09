@@ -47,7 +47,7 @@ public class ElectiveScheduleParser : IScheduleParser<ElectiveLesson>
             {
                 Title = values[0].InnerText.Replace("\r", string.Empty).Replace("\n", string.Empty).Trim(),
                 Type = values[1].InnerText.Replace("\r", string.Empty).Replace("\n", string.Empty).Trim(),
-                Location = values[3].InnerText.Replace("\r", string.Empty).Replace("\n", string.Empty).Trim(),
+                Location = values[3].InnerText.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("ауд. ", string.Empty).Trim(),
                 Teacher = teachers,
 
                 StartTime = startTime,
