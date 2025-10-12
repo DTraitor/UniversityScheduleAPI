@@ -155,26 +155,18 @@ public class ElectiveScheduleReader : IScheduleReader<ElectiveLesson, ElectiveLe
 
     private async Task<IEnumerable<ElectiveLesson>?> FetchElectiveScheduleAsync(string href, ElectiveLessonDay day, CancellationToken stoppingToken)
     {
-        try
-        {
-            var httpClient = _httpClientFactory.CreateClient();
-            httpClient.BaseAddress = new Uri(_options.Value.ScheduleUrl);
-            var scheduleString = await httpClient.GetStringAsync(href, stoppingToken);
+        var httpClient = _httpClientFactory.CreateClient();
+        httpClient.BaseAddress = new Uri(_options.Value.ScheduleUrl);
+        var scheduleString = await httpClient.GetStringAsync(href, stoppingToken);
 
-            var scheduleDoc = new HtmlDocument();
-            scheduleDoc.LoadHtml(scheduleString);
+        var scheduleDoc = new HtmlDocument();
+        scheduleDoc.LoadHtml(scheduleString);
 
-            return _lessonParser.ReadLessons(scheduleDoc).Select(x =>
-            {
-                x.ElectiveLessonDayId = day.Id;
-                return x;
-            });
-        }
-        catch (Exception ex)
+        return _lessonParser.ReadLessons(scheduleDoc).Select(x =>
         {
-            _logger.LogError(ex, "Error encountered when processing group HREF: {Href}", href);
-            throw;
-        }
+            x.ElectiveLessonDayId = day.Id;
+            return x;
+        });
     }
 
     private async Task<IEnumerable<GroupLesson>?> FetchElectiveScheduleFromGroupAsync(string href, CancellationToken stoppingToken)

@@ -86,9 +86,9 @@ public class ScheduleParserJob<T, TModifiedEntry> : IHostedService, IDisposable 
         {
             _logger.LogError(
                 ex.InnerExceptions.FirstOrDefault(),
-                "Error reading schedule at {Time}, {ParseServiceType}",
-                DateTimeOffset.UtcNow.ToString("o"),
-                nameof(T));
+                "Error reading schedule at {Time}",
+                DateTimeOffset.UtcNow.ToString("o")
+                );
 
             persistentData.Value = DateTimeOffset.UtcNow.AddHours(1).ToString("o");
             persistentDataRepository.SetData(persistentData);

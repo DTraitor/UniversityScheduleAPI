@@ -118,30 +118,22 @@ public class GroupScheduleReader : IScheduleReader<GroupLesson, GroupLessonModif
 
     private async Task<IEnumerable<GroupLesson>?> FetchGroupScheduleAsync(string href, Group group, CancellationToken stoppingToken)
     {
-        try
+        var httpClient = _httpClientFactory.CreateClient();
+        httpClient.BaseAddress = new Uri(_options.Value.ScheduleUrl);
+        var scheduleString = await httpClient.GetStringAsync(href, stoppingToken);
+
+        var scheduleDoc = new HtmlDocument();
+        scheduleDoc.LoadHtml(scheduleString);
+
+        if (!_groupLessonParser.HasHashChanged(scheduleDoc, group.SchedulePageHash, out var newHash))
+            return null;
+        group.SchedulePageHash = newHash;
+
+        return _groupLessonParser.ReadLessons(scheduleDoc).Select(x =>
         {
-            var httpClient = _httpClientFactory.CreateClient();
-            httpClient.BaseAddress = new Uri(_options.Value.ScheduleUrl);
-            var scheduleString = await httpClient.GetStringAsync(href, stoppingToken);
-
-            var scheduleDoc = new HtmlDocument();
-            scheduleDoc.LoadHtml(scheduleString);
-
-            if (!_groupLessonParser.HasHashChanged(scheduleDoc, group.SchedulePageHash, out var newHash))
-                return null;
-            group.SchedulePageHash = newHash;
-
-            return _groupLessonParser.ReadLessons(scheduleDoc).Select(x =>
-            {
-                x.GroupId = group.Id;
-                return x;
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error encountered when processing group HREF: {Href}", href);
-            throw;
-        }
+            x.GroupId = group.Id;
+            return x;
+        });
     }
 
     private ICollection<(Group, string)> ReadGroupsList(HtmlDocument document)
