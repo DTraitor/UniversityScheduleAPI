@@ -40,7 +40,12 @@ public class ScheduleService : IScheduleService
 
         try
         {
-            _usageMetricRepository.Add(new UsageMetric() { Timestamp = DateTimeOffset.UtcNow, ScheduleTime = dayBegin });
+            _usageMetricRepository.Add(new UsageMetric()
+            {
+                UserId = user.Id,
+                Timestamp = DateTimeOffset.UtcNow,
+                ScheduleTime = dayBegin,
+            });
             await _usageMetricRepository.SaveChangesAsync();
         }
         catch (Exception ex)
