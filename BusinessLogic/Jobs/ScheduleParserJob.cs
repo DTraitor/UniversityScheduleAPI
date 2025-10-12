@@ -76,7 +76,40 @@ public class ScheduleParserJob<T, TModifiedEntry> : IHostedService, IDisposable 
 
         _logger.LogInformation("Beginning daily parsing of the schedule at {Time}", DateTimeOffset.UtcNow.ToString("o"));
 
-        var (modifiedEntries, lessons) = await scheduleReader.ReadSchedule(_cancellationTokenSource.Token);
+        IEnumerable<TModifiedEntry> modifiedEntries;
+        ICollection<T> lessons;
+        try
+        {
+            (modifiedEntries, lessons) = await scheduleReader.ReadSchedule(_cancellationTokenSource.Token);
+        }
+        catch (AggregateException ex)
+        {
+            _logger.LogError(
+                ex.InnerExceptions.FirstOrDefault(),
+                "Error reading schedule at {Time}, {ParseServiceType}",
+                DateTimeOffset.UtcNow.ToString("o"),
+                nameof(T));
+
+            persistentData.Value = DateTimeOffset.UtcNow.AddHours(1).ToString("o");
+            persistentDataRepository.SetData(persistentData);
+            await persistentDataRepository.SaveChangesAsync(_cancellationTokenSource.Token);
+
+            return;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error reading schedule at {Time}, {ParseServiceType}",
+                DateTimeOffset.UtcNow.ToString("o"),
+                nameof(T));
+
+            persistentData.Value = DateTimeOffset.UtcNow.AddHours(1).ToString("o");
+            persistentDataRepository.SetData(persistentData);
+            await persistentDataRepository.SaveChangesAsync(_cancellationTokenSource.Token);
+
+            return;
+        }
 
         var previousLessons = await repository.GetAllAsync(_cancellationTokenSource.Token);
 
