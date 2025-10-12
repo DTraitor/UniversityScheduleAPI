@@ -48,7 +48,13 @@ public class GroupScheduleReader : IScheduleReader<GroupLesson, GroupLessonModif
         var allGroups = await _groupRepository.GetAllAsync(cancellationToken);
         var groupsLookup = allGroups.ToDictionary(g => g.GroupName, g => g);
 
-        await Parallel.ForEachAsync(groupsData, cancellationToken, async (groupData, ct) =>
+        var options = new ParallelOptions
+        {
+            MaxDegreeOfParallelism = 20,
+            CancellationToken = cancellationToken
+        };
+
+        await Parallel.ForEachAsync(groupsData, options, async (groupData, ct) =>
         {
             groupData.Item1.SchedulePageHash = groupsLookup.GetValueOrDefault(groupData.Item1.GroupName, new Group()).SchedulePageHash;
 

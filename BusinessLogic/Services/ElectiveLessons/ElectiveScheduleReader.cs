@@ -82,7 +82,13 @@ public class ElectiveScheduleReader : IScheduleReader<ElectiveLesson, ElectiveLe
         ConcurrentBag<ElectiveLesson> parsedLessons = new ConcurrentBag<ElectiveLesson>();
         ConcurrentBag<ElectiveLessonModified> lessonModifications = new ConcurrentBag<ElectiveLessonModified>();
 
-        var electives = Parallel.ForEachAsync(currentElectiveDays, cancellationToken, async (elective, ct) =>
+        var options = new ParallelOptions
+        {
+            MaxDegreeOfParallelism = 20,
+            CancellationToken = cancellationToken
+        };
+
+        var electives = Parallel.ForEachAsync(currentElectiveDays, options, async (elective, ct) =>
         {
             var lessons = await FetchElectiveScheduleAsync(string.Format(ScheduleLocation, elective.DayId, elective.HourId), elective, ct);
             if (lessons == null)
@@ -99,7 +105,7 @@ public class ElectiveScheduleReader : IScheduleReader<ElectiveLesson, ElectiveLe
             });
         });
 
-        var electivesAsGroup = Parallel.ForEachAsync(_electivesAsGroups, cancellationToken, async (group, ct) =>
+        var electivesAsGroup = Parallel.ForEachAsync(_electivesAsGroups, options, async (group, ct) =>
         {
             var lessons = await FetchElectiveScheduleFromGroupAsync(group, ct);
             foreach (var electiveLesson in lessons)
