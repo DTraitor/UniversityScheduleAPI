@@ -33,6 +33,7 @@ builder.Services.AddRepository<IUserLessonRepository, UserLessonRepository, User
 builder.Services.AddRepository<IElectedLessonRepository, ElectedLessonRepository, ElectedLesson>();
 builder.Services.AddRepository<IElectiveLessonDayRepository, ElectiveLessonDayRepository, ElectiveLessonDay>();
 builder.Services.AddRepository<IUserLessonOccurenceRepository, UserLessonOccurenceRepository, UserLessonOccurrence>();
+builder.Services.AddRepository<IUsageMetricRepository, UsageMetricRepository, UsageMetric>();
 builder.Services.AddKeyBasedRepository<IElectiveLessonRepository, ElectiveLessonRepository, ElectiveLesson>();
 builder.Services.AddKeyBasedRepository<IGroupLessonRepository, GroupLessonRepository, GroupLesson>();
 

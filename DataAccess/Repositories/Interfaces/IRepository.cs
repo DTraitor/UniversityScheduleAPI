@@ -6,7 +6,7 @@ public interface IRepository<T>
     void Update(T entity);
     void Delete(T entity);
     void AddRange(IEnumerable<T> entities);
-    void UpdateRange(IEnumerable<T> entity);
+    void UpdateRange(IEnumerable<T> entities);
     void RemoveRange(IEnumerable<T> entities);
     Task<T?> GetByIdAsync(int id);
     Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken = default);
