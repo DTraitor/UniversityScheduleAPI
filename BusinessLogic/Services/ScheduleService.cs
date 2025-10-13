@@ -38,20 +38,20 @@ public class ScheduleService : IScheduleService
         var occurrences = await _userLessonOccurenceRepository.GetByUserIdAndBetweenDateAsync(user.Id, dayBegin, dayBegin.AddDays(1));
         var lessons = await _userLessonRepository.GetByIdsAsync(occurrences.Select(x => x.LessonId));
 
-        try
-        {
-            _usageMetricRepository.Add(new UsageMetric()
-            {
-                UserId = user.Id,
-                Timestamp = DateTimeOffset.UtcNow,
-                ScheduleTime = dayBegin,
-            });
-            await _usageMetricRepository.SaveChangesAsync();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Something went wrong when adding a new usage metric");
-        }
+        //try
+        //{
+        //    _usageMetricRepository.Add(new UsageMetric()
+        //    {
+        //        UserId = user.Id,
+        //        Timestamp = DateTimeOffset.UtcNow,
+        //        ScheduleTime = dayBegin,
+        //    });
+        //    await _usageMetricRepository.SaveChangesAsync();
+        //}
+        //catch (Exception ex)
+        //{
+        //    _logger.LogError(ex, "Something went wrong when adding a new usage metric");
+        //}
 
         return lessons.Select(l => new LessonDto
         {
