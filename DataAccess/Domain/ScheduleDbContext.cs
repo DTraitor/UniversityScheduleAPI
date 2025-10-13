@@ -47,6 +47,27 @@ public class ScheduleDbContext(DbContextOptions<ScheduleDbContext> options) : Db
             .Property(e => e.StartTime)
             .HasColumnType("interval");
 
+        modelBuilder.Entity<UserModified>()
+            .HasIndex(e => new { e.Id, e.ToProcess });
+
+        modelBuilder.Entity<UserAlert>()
+            .HasIndex(e => e.Id);
+
+        modelBuilder.Entity<User>()
+            .HasIndex(e => e.Id);
+
+        modelBuilder.Entity<UserLessonOccurrence>()
+            .HasIndex(e => new { e.LessonId, e.UserId });
+
+        modelBuilder.Entity<UserLesson>()
+            .HasIndex(e => new { e.Id, e.UserId });
+
+        modelBuilder.Entity<GroupLesson>()
+            .HasIndex(e => new { e.Id, e.GroupId });
+
+        modelBuilder.Entity<ElectiveLesson>()
+            .HasIndex(e => new { e.Id, e.ElectiveLessonDayId });
+
         base.OnModelCreating(modelBuilder);
     }
 }

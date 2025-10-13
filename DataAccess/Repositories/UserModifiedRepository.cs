@@ -20,7 +20,7 @@ public class UserModifiedRepository : IUserModifiedRepository
 
     public async Task<IEnumerable<UserModified>> GetNotProcessed(ProcessedByEnum flag, CancellationToken cancellationToken = default)
     {
-        return await _context.UserModifications.Where(x => x.ToProcess == flag).ToListAsync(cancellationToken);
+        return await _context.UserModifications.Where(x => x.ToProcess == flag).Take(100).ToListAsync(cancellationToken);
     }
 
     public void Add(int userId, ProcessedByEnum toProcessBy)
