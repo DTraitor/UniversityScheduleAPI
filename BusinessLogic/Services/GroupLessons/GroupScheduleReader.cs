@@ -50,7 +50,7 @@ public class GroupScheduleReader : IScheduleReader<GroupLesson, GroupLessonModif
 
         var options = new ParallelOptions
         {
-            MaxDegreeOfParallelism = 5,
+            MaxDegreeOfParallelism = 10,
             CancellationToken = cancellationToken
         };
 
