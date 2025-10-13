@@ -55,7 +55,7 @@ builder.Services.Configure<GroupScheduleParsingOptions>(
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<ScheduleDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("ScheduleDBConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("ScheduleDBConnection"), o => o.CommandTimeout(60)));
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
