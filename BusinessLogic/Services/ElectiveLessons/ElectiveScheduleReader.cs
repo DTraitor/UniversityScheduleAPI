@@ -84,7 +84,7 @@ public class ElectiveScheduleReader : IScheduleReader<ElectiveLesson, ElectiveLe
 
         var options = new ParallelOptions
         {
-            MaxDegreeOfParallelism = 20,
+            MaxDegreeOfParallelism = 5,
             CancellationToken = cancellationToken
         };
 
