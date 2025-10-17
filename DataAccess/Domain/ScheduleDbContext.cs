@@ -50,11 +50,17 @@ public class ScheduleDbContext(DbContextOptions<ScheduleDbContext> options) : Db
         modelBuilder.Entity<UserModified>()
             .HasIndex(e => new { e.Id, e.ToProcess });
 
+        modelBuilder.Entity<ElectedLesson>()
+            .HasIndex(e => new { e.Id, e.UserId });
+
         modelBuilder.Entity<UserAlert>()
             .HasIndex(e => e.Id);
 
         modelBuilder.Entity<User>()
             .HasIndex(e => e.Id);
+
+        modelBuilder.Entity<User>()
+            .HasIndex(e => e.TelegramId);
 
         modelBuilder.Entity<UserLessonOccurrence>()
             .HasIndex(e => new { e.LessonId, e.UserId });
