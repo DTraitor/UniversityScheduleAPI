@@ -63,16 +63,16 @@ public class GroupLessonRepository : IGroupLessonRepository
         return await _context.GroupLessons.ToListAsync(cancellationToken);
     }
 
-    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
+    public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {
+        await _context.SaveChangesAsync(cancellationToken);
         _context.ExecuteFutureAction();
-        return await _context.SaveChangesAsync(cancellationToken);
     }
 
-    public int SaveChanges()
+    public void SaveChanges()
     {
+        _context.SaveChanges();
         _context.ExecuteFutureAction();
-        return _context.SaveChanges();
     }
 
     public async Task<IEnumerable<GroupLesson>> GetByGroupIdsAsync(IEnumerable<int> groupIds, CancellationToken stoppingToken)

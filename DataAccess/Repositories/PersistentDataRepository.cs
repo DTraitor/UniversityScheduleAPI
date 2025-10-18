@@ -35,8 +35,8 @@ public class PersistentDataRepository : IPersistentDataRepository
         return _context.PersistentData.FirstOrDefault(x => x.Key == key);
     }
 
-    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
+    public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {
-        return await _context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
     }
 }

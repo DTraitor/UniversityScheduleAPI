@@ -6,5 +6,5 @@ public interface IPersistentDataRepository
 {
     void SetData(PersistentData persistentData);
     PersistentData? GetData(string key);
-    Task<int> SaveChangesAsync(CancellationToken cancellationToken);
+    Task SaveChangesAsync(CancellationToken cancellationToken);
 }

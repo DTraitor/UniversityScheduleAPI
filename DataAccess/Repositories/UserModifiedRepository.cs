@@ -41,9 +41,9 @@ public class UserModifiedRepository : IUserModifiedRepository
         _context.FutureAction(x => x.BulkDelete(toRemove));
     }
 
-    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        await _context.SaveChangesAsync(cancellationToken);
         _context.ExecuteFutureAction();
-        return await _context.SaveChangesAsync(cancellationToken);
     }
 }

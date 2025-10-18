@@ -33,16 +33,16 @@ public class ElectiveLessonRepository : IElectiveLessonRepository
         return await _context.ElectiveLessons.ToListAsync(cancellationToken);
     }
 
-    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
+    public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {
+        await _context.SaveChangesAsync(cancellationToken);
         _context.ExecuteFutureAction();
-        return await _context.SaveChangesAsync(cancellationToken);
     }
 
-    public int SaveChanges()
+    public void SaveChanges()
     {
+        _context.SaveChanges();
         _context.ExecuteFutureAction();
-        return _context.SaveChanges();
     }
 
     public void Add(ElectiveLesson entity)

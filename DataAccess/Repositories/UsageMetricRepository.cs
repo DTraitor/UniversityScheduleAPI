@@ -57,15 +57,15 @@ public class UsageMetricRepository : IUsageMetricRepository
         return await _context.UsageMetrics.ToListAsync(cancellationToken);
     }
 
-    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        await _context.SaveChangesAsync(cancellationToken);
         _context.ExecuteFutureAction();
-        return await _context.SaveChangesAsync(cancellationToken);
     }
 
-    public int SaveChanges()
+    public void SaveChanges()
     {
+        _context.SaveChanges();
         _context.ExecuteFutureAction();
-        return _context.SaveChanges();
     }
 }

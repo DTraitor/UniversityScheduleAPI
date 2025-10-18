@@ -10,6 +10,6 @@ public interface IRepository<T>
     void RemoveRange(IEnumerable<T> entities);
     Task<T?> GetByIdAsync(int id);
     Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken = default);
-    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
-    int SaveChanges();
+    Task SaveChangesAsync(CancellationToken cancellationToken = default);
+    void SaveChanges();
 }

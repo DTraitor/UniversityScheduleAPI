@@ -9,5 +9,5 @@ public interface IUserModifiedRepository
     void Add(int userId, ProcessedByEnum toProcessBy);
     void AddProcessByAll(int userId);
     void RemoveProcessed(IEnumerable<UserModified> toRemove);
-    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+    Task SaveChangesAsync(CancellationToken cancellationToken = default);
 }
