@@ -59,11 +59,13 @@ public class UserAlertRepository : IUserAlertRepository
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        _context.ExecuteFutureAction();
         return await _context.SaveChangesAsync(cancellationToken);
     }
 
     public int SaveChanges()
     {
+        _context.ExecuteFutureAction();
         return _context.SaveChanges();
     }
 

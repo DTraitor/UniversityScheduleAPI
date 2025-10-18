@@ -64,11 +64,13 @@ public class GroupRepository : IGroupRepository
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
+        _context.ExecuteFutureAction();
         return _context.SaveChangesAsync(cancellationToken);
     }
 
     public int SaveChanges()
     {
+        _context.ExecuteFutureAction();
         return _context.SaveChanges();
     }
 

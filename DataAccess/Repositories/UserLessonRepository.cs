@@ -70,11 +70,13 @@ public class UserLessonRepository : IUserLessonRepository
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
+        _context.ExecuteFutureAction();
         return await _context.SaveChangesAsync(cancellationToken);
     }
 
     public int SaveChanges()
     {
+        _context.ExecuteFutureAction();
         return _context.SaveChanges();
     }
 
