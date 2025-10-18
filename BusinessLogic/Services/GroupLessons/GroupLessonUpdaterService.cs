@@ -57,12 +57,14 @@ public class GroupLessonUpdaterService : ILessonUpdaterService<GroupLesson, Grou
         foreach (var user in users.Where(x => groups.All(g => g.Id != x.Id)))
         {
             user.GroupId = null;
-            _userRepository.Update(user);
 
             _userAlertService.CreateUserAlert(user.Id, UserAlertType.GroupRemoved, new()
             {
                 {"GroupName", user.GroupName},
             });
+
+            user.GroupName = "";
+            _userRepository.Update(user);
         }
 
         var lessons = await _groupLessonRepository.GetByGroupIdsAsync(groupsIds);
