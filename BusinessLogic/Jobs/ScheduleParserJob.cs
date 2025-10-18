@@ -1,6 +1,6 @@
-﻿using BusinessLogic.Services.Interfaces;
+﻿using System.Collections.Concurrent;
+using BusinessLogic.Parsing.Interfaces;
 using DataAccess.Models;
-using DataAccess.Models.Interface;
 using DataAccess.Repositories.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -8,10 +8,10 @@ using Microsoft.Extensions.Logging;
 
 namespace BusinessLogic.Jobs;
 
-public class ScheduleParserJob<T, TModifiedEntry> : IHostedService, IDisposable where T : IEntityId where TModifiedEntry : IModifiedEntry
+public class ScheduleParserJob : IHostedService, IDisposable
 {
     private IServiceProvider _services;
-    private readonly ILogger<ScheduleParserJob<T, TModifiedEntry>> _logger;
+    private readonly ILogger<ScheduleParserJob> _logger;
 
     private Timer _timer;
     private CancellationTokenSource _cancellationTokenSource = new();
@@ -19,7 +19,7 @@ public class ScheduleParserJob<T, TModifiedEntry> : IHostedService, IDisposable 
 
     public ScheduleParserJob(
         IServiceProvider services,
-        ILogger<ScheduleParserJob<T, TModifiedEntry>> logger)
+        ILogger<ScheduleParserJob> logger)
     {
         _services = services;
         _logger = logger;
@@ -58,9 +58,9 @@ public class ScheduleParserJob<T, TModifiedEntry> : IHostedService, IDisposable 
         using var scope = _services.CreateScope();
 
         var persistentDataRepository = scope.ServiceProvider.GetRequiredService<IPersistentDataRepository>();
-        var persistentData = persistentDataRepository.GetData(typeof(T).Name) ?? new PersistentData
+        var persistentData = persistentDataRepository.GetData(nameof(LessonSource)) ?? new PersistentData
         {
-            Key = typeof(T).Name,
+            Key = nameof(LessonSource),
             Value = DateTimeOffset.UtcNow.ToString("o"),
         };
 
@@ -69,18 +69,48 @@ public class ScheduleParserJob<T, TModifiedEntry> : IHostedService, IDisposable 
             return;
         }
 
-        var scheduleReader = scope.ServiceProvider.GetRequiredService<IScheduleReader<T, TModifiedEntry>>();
-        var repository = scope.ServiceProvider.GetRequiredService<IRepository<T>>();
-        var modifiedRepository = scope.ServiceProvider.GetRequiredService<IRepository<TModifiedEntry>>();
-        var changeHandler = scope.ServiceProvider.GetRequiredService<IChangeHandler<T>>();
+        var scheduleReader = scope.ServiceProvider.GetRequiredService<IScheduleReader>();
+        var sourcesRepository = scope.ServiceProvider.GetRequiredService<ILessonSourceRepository>();
+        var repository = scope.ServiceProvider.GetRequiredService<ILessonEntryRepository>();
+        var modifiedRepository = scope.ServiceProvider.GetRequiredService<ILessonSourceModifiedRepository>();
+        var changeHandler = scope.ServiceProvider.GetRequiredService<IChangeHandler>();
 
         _logger.LogInformation("Beginning daily parsing of the schedule at {Time}", DateTimeOffset.UtcNow.ToString("o"));
 
-        IEnumerable<TModifiedEntry> modifiedEntries;
-        ICollection<T> lessons;
+        var previousLessons = await repository.GetAllAsync(_cancellationTokenSource.Token);
+
+        ConcurrentBag<int> updatedSources = new();
+        ConcurrentBag<LessonEntry> newEntries = new();
+
         try
         {
-            (modifiedEntries, lessons) = await scheduleReader.ReadSchedule(_cancellationTokenSource.Token);
+            var options = new ParallelOptions
+            {
+                MaxDegreeOfParallelism = 10,
+                CancellationToken = _cancellationTokenSource.Token
+            };
+
+            await Parallel.ForEachAsync(await sourcesRepository.GetAllAsync(), options, async (source, token) =>
+            {
+                ICollection<LessonEntry>? lessons;
+                try
+                {
+                    lessons = await scheduleReader.ReadSchedule(source, token);
+                    if (lessons == null)
+                        return;
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e, "Error while parsing schedule for source id: '{SourceId}'", source.Id);
+                    return;
+                }
+
+                updatedSources.Add(source.Id);
+                foreach (var lessonEntry in lessons)
+                {
+                    newEntries.Add(lessonEntry);
+                }
+            });
         }
         catch (AggregateException ex)
         {
@@ -88,7 +118,7 @@ public class ScheduleParserJob<T, TModifiedEntry> : IHostedService, IDisposable 
                 ex.InnerExceptions.FirstOrDefault(),
                 "Error reading schedule at {Time}",
                 DateTimeOffset.UtcNow.ToString("o")
-                );
+            );
 
             persistentData.Value = DateTimeOffset.UtcNow.AddHours(1).ToString("o");
             persistentDataRepository.SetData(persistentData);
@@ -102,7 +132,7 @@ public class ScheduleParserJob<T, TModifiedEntry> : IHostedService, IDisposable 
                 ex,
                 "Error reading schedule at {Time}, {ParseServiceType}",
                 DateTimeOffset.UtcNow.ToString("o"),
-                nameof(T));
+                nameof(LessonSource));
 
             persistentData.Value = DateTimeOffset.UtcNow.AddHours(1).ToString("o");
             persistentDataRepository.SetData(persistentData);
@@ -111,17 +141,18 @@ public class ScheduleParserJob<T, TModifiedEntry> : IHostedService, IDisposable 
             return;
         }
 
-        var previousLessons = await repository.GetAllAsync(_cancellationTokenSource.Token);
+        previousLessons = previousLessons.Where(x => updatedSources.Contains(x.SourceId)).ToList();
+        var currentLessons = newEntries.ToList();
 
-        var existing = await changeHandler.HandleChanges(previousLessons, lessons, _cancellationTokenSource.Token);
+        var existing = await changeHandler.HandleChanges(previousLessons, currentLessons, _cancellationTokenSource.Token);
 
         HashSet<int> existingHashset = new HashSet<int>(existing.Select(x => x.Id));
 
         repository.RemoveRange(previousLessons.Where(x => !existingHashset.Contains(x.Id)));
 
-        repository.AddRange(lessons);
+        repository.AddRange(currentLessons);
         repository.UpdateRange(existing);
-        modifiedRepository.AddRange(modifiedEntries);
+        modifiedRepository.AddRange(updatedSources.Select(x => new LessonSourceModified{ SourceId = x }));
 
         await repository.SaveChangesAsync(_cancellationTokenSource.Token);
         await modifiedRepository.SaveChangesAsync(_cancellationTokenSource.Token);

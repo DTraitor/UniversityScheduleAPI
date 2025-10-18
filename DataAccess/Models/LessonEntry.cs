@@ -10,7 +10,7 @@ public class LessonEntry : IEntityId
     public string Title { get; set; }
     public string? Type { get; set; }
     public string? Location { get; set; }
-    public int SubGroupId { get; set; }
+    public int SubGroupNumber { get; set; }
     public IEnumerable<string> Teachers { get; set; } = [];
 
     public TimeSpan StartTime { get; set; }

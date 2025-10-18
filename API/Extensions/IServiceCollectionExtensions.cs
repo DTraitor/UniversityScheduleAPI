@@ -7,26 +7,6 @@ namespace API.Extensions;
 
 public static class IServiceCollectionExtensions
 {
-    public static IServiceCollection AddScheduleSource<TLesson, TLessonModified, TParser, TReader, TUpdater, TUserUpdater, TChangeHandler>(this IServiceCollection services)
-        where TLesson: class, IEntityId
-        where TLessonModified: class, IModifiedEntry
-        where TParser: class, IScheduleParser<TLesson>
-        where TReader: class, IScheduleReader<TLesson, TLessonModified>
-        where TUpdater: class, ILessonUpdaterService<TLesson, TLessonModified>
-        where TUserUpdater: class, IUserLessonUpdaterService<TLesson>
-        where TChangeHandler: class, IChangeHandler<TLesson>
-    {
-        return services
-            .AddScoped<IScheduleParser<TLesson>, TParser>()
-            .AddScoped<IScheduleReader<TLesson, TLessonModified>, TReader>()
-            .AddScoped<ILessonUpdaterService<TLesson, TLessonModified>, TUpdater>()
-            .AddScoped<IUserLessonUpdaterService<TLesson>, TUserUpdater>()
-            .AddScoped<IChangeHandler<TLesson>, TChangeHandler>()
-            .AddHostedService<ScheduleParserJob<TLesson,TLessonModified>>()
-            .AddHostedService<LessonUpdaterJob<TLesson,TLessonModified>>()
-            .AddHostedService<UserLessonUpdaterJob<TLesson>>();
-    }
-
     public static IServiceCollection AddRepository<TInterface, TImplementation, TItem>(this IServiceCollection services)
         where TInterface : class, IRepository<TItem>
         where TImplementation : class, TInterface

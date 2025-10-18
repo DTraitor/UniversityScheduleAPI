@@ -21,6 +21,7 @@ public class ScheduleDbContext(DbContextOptions<ScheduleDbContext> options) : Db
 
     //Modifications
     public DbSet<UserModified> UserModifications { get; set; }
+    public DbSet<LessonSourceModified> LessonSourceModifications { get; set; }
     public DbSet<GroupLessonModified> GroupLessonModifications { get; set; }
     public DbSet<ElectiveLessonModified> ElectiveLessonModifications { get; set; }
 
