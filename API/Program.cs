@@ -37,6 +37,8 @@ builder.Services.AddRepository<IUserLessonOccurenceRepository, UserLessonOccuren
 builder.Services.AddRepository<IUsageMetricRepository, UsageMetricRepository, UsageMetric>();
 builder.Services.AddRepository<IElectiveLessonRepository, ElectiveLessonRepository, ElectiveLesson>();
 builder.Services.AddRepository<IGroupLessonRepository, GroupLessonRepository, GroupLesson>();
+builder.Services.AddRepository<ILessonSourceRepository, LessonSourceRepository, LessonSource>();
+builder.Services.AddRepository<ILessonEntryRepository, LessonEntryRepository, LessonEntry>();
 
 builder.Services.AddHttpClient();
 
