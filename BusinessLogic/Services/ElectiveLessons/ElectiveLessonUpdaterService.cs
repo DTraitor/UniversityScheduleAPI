@@ -69,7 +69,7 @@ public class ElectiveLessonUpdaterService : ILessonUpdaterService<ElectiveLesson
         foreach (var removedLesson in removedElected)
         {
             var electiveDay = electiveDays.FirstOrDefault(x => x.Id == removedLesson.Id);
-            await _userAlertService.CreateUserAlert(removedLesson.UserId, UserAlertType.ElectiveLessonRemoved, new()
+            _userAlertService.CreateUserAlert(removedLesson.UserId, UserAlertType.ElectiveLessonRemoved, new()
             {
                 { "LessonName", removedLesson.Name },
                 { "LessonType", removedLesson.Type ?? "" },

@@ -7,6 +7,6 @@ namespace BusinessLogic.Services.Interfaces;
 public interface IUserAlertService
 {
     Task<IEnumerable<UserAlertDto>> GetAlerts(int batchSize);
-    Task CreateUserAlert(int userId, UserAlertType type, Dictionary<string, string> options);
+    void CreateUserAlert(int userId, UserAlertType type, Dictionary<string, string> options);
     Task RemoveProcessedAlerts(IEnumerable<int> alerts);
 }

@@ -59,7 +59,7 @@ public class GroupLessonUpdaterService : ILessonUpdaterService<GroupLesson, Grou
             user.GroupId = null;
             _userRepository.Update(user);
 
-            await _userAlertService.CreateUserAlert(user.Id, UserAlertType.GroupRemoved, new()
+            _userAlertService.CreateUserAlert(user.Id, UserAlertType.GroupRemoved, new()
             {
                 {"GroupName", user.GroupName},
             });
