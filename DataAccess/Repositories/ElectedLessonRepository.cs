@@ -34,17 +34,17 @@ public class ElectedLessonRepository : IElectedLessonRepository
 
     public void AddRange(IEnumerable<ElectedLesson> entities)
     {
-        _context.ElectedLessons.AddRange(entities);
+        _context.FutureAction(x => x.BulkInsert(entities));
     }
 
     public void UpdateRange(IEnumerable<ElectedLesson> entity)
     {
-        _context.ElectedLessons.UpdateRange(entity);
+        _context.FutureAction(x => x.BulkUpdate(entity));
     }
 
     public void RemoveRange(IEnumerable<ElectedLesson> entities)
     {
-        _context.ElectedLessons.RemoveRange(entities);
+        _context.FutureAction(x => x.BulkDelete(entities));
     }
 
     public async Task<ElectedLesson?> GetByIdAsync(int id)

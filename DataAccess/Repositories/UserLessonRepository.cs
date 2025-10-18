@@ -45,17 +45,17 @@ public class UserLessonRepository : IUserLessonRepository
 
     public void AddRange(IEnumerable<UserLesson> entities)
     {
-        _context.UserLessons.AddRange(entities);
+        _context.FutureAction(x => x.BulkInsert(entities));
     }
 
     public void UpdateRange(IEnumerable<UserLesson> entity)
     {
-        _context.UserLessons.UpdateRange(entity);
+        _context.FutureAction(x => x.BulkUpdate(entity));
     }
 
     public void RemoveRange(IEnumerable<UserLesson> entities)
     {
-        _context.UserLessons.RemoveRange(entities);
+        _context.FutureAction(x => x.BulkDelete(entities));
     }
 
     public async Task<UserLesson?> GetByIdAsync(int id)

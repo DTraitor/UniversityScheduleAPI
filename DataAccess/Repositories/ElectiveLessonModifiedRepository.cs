@@ -34,17 +34,17 @@ public class ElectiveLessonModifiedRepository : IRepository<ElectiveLessonModifi
 
     public void AddRange(IEnumerable<ElectiveLessonModified> entities)
     {
-        _context.ElectiveLessonModifications.AddRange(entities);
+        _context.FutureAction(x => x.BulkInsert(entities));
     }
 
     public void UpdateRange(IEnumerable<ElectiveLessonModified> entity)
     {
-        _context.ElectiveLessonModifications.UpdateRange(entity);
+        _context.FutureAction(x => x.BulkUpdate(entity));
     }
 
     public void RemoveRange(IEnumerable<ElectiveLessonModified> entities)
     {
-        _context.ElectiveLessonModifications.RemoveRange(entities);
+        _context.FutureAction(x => x.BulkDelete(entities));
     }
 
     public async Task<ElectiveLessonModified?> GetByIdAsync(int id)

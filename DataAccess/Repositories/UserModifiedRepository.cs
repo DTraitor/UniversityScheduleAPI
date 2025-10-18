@@ -38,7 +38,7 @@ public class UserModifiedRepository : IUserModifiedRepository
 
     public void RemoveProcessed(IEnumerable<UserModified> toRemove)
     {
-        _context.UserModifications.RemoveRange(toRemove);
+        _context.FutureAction(x => x.BulkDelete(toRemove));
     }
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

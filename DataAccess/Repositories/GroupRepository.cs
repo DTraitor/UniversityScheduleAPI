@@ -44,22 +44,17 @@ public class GroupRepository : IGroupRepository
 
     public void AddRange(IEnumerable<Group> entities)
     {
-        _context.Groups.AddRange(entities);
+        _context.FutureAction(x => x.BulkInsert(entities));
     }
 
     public void UpdateRange(IEnumerable<Group> entity)
     {
-        _context.Groups.UpdateRange(entity);
+        _context.FutureAction(x => x.BulkUpdate(entity));
     }
 
     public void RemoveRange(IEnumerable<Group> toRemove)
     {
-        _context.Groups.RemoveRange(toRemove);
-    }
-
-    public async Task AddRangeAsync(IEnumerable<Group> toUpdate)
-    {
-        await _context.Groups.AddRangeAsync(toUpdate);
+        _context.FutureAction(x => x.BulkDelete(toRemove));
     }
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken)
@@ -72,25 +67,6 @@ public class GroupRepository : IGroupRepository
     {
         _context.ExecuteFutureAction();
         return _context.SaveChanges();
-    }
-
-    public void AddOrUpdate(Group group)
-    {
-        var existing = _context.Groups.Find(group.Id);
-
-        if (existing == null)
-        {
-            _context.Groups.Add(group);
-        }
-        else
-        {
-            _context.Entry(existing).CurrentValues.SetValues(group);
-        }
-    }
-
-    public void Remove(Group group)
-    {
-        _context.Groups.Remove(group);
     }
 
     public async Task<IEnumerable<string>> GetFacultyNamesAsync()

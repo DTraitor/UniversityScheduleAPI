@@ -34,17 +34,17 @@ public class GroupLessonModifiedRepository : IRepository<GroupLessonModified>
 
     public void AddRange(IEnumerable<GroupLessonModified> entities)
     {
-        _context.GroupLessonModifications.AddRange(entities);
+        _context.FutureAction(x => x.BulkInsert(entities));
     }
 
     public void UpdateRange(IEnumerable<GroupLessonModified> entity)
     {
-        _context.GroupLessonModifications.UpdateRange(entity);
+        _context.FutureAction(x => x.BulkUpdate(entity));
     }
 
     public void RemoveRange(IEnumerable<GroupLessonModified> entities)
     {
-        _context.GroupLessonModifications.RemoveRange(entities);
+        _context.FutureAction(x => x.BulkDelete(entities));
     }
 
     public async Task<GroupLessonModified?> GetByIdAsync(int id)

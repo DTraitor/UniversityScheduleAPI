@@ -34,17 +34,17 @@ public class ElectiveLessonDayRepository : IElectiveLessonDayRepository
 
     public void AddRange(IEnumerable<ElectiveLessonDay> entities)
     {
-        _context.ElectiveLessonDays.AddRange(entities);
+        _context.FutureAction(x => x.BulkInsert(entities));
     }
 
     public void UpdateRange(IEnumerable<ElectiveLessonDay> entity)
     {
-        _context.ElectiveLessonDays.UpdateRange(entity);
+        _context.FutureAction(x => x.BulkUpdate(entity));
     }
 
     public void RemoveRange(IEnumerable<ElectiveLessonDay> entities)
     {
-        _context.ElectiveLessonDays.RemoveRange(entities);
+        _context.FutureAction(x => x.BulkDelete(entities));
     }
 
     public async Task<ElectiveLessonDay?> GetByIdAsync(int id)

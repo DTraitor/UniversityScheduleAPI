@@ -61,17 +61,17 @@ public class ElectiveLessonRepository : IElectiveLessonRepository
 
     public void AddRange(IEnumerable<ElectiveLesson> lessons)
     {
-        _context.ElectiveLessons.AddRange(lessons);
+        _context.FutureAction(x => x.BulkInsert(lessons));
     }
 
     public void UpdateRange(IEnumerable<ElectiveLesson> entity)
     {
-        _context.ElectiveLessons.UpdateRange(entity);
+        _context.FutureAction(x => x.BulkUpdate(entity));
     }
 
     public void RemoveRange(IEnumerable<ElectiveLesson> lessons)
     {
-        _context.ElectiveLessons.RemoveRange(lessons);
+        _context.FutureAction(x => x.BulkDelete(lessons));
     }
 
     public async Task<IEnumerable<int>> GetUniqueLessonDaysAsync()

@@ -34,17 +34,17 @@ public class UsageMetricRepository : IUsageMetricRepository
 
     public void AddRange(IEnumerable<UsageMetric> entities)
     {
-        _context.UsageMetrics.AddRange(entities);
+        _context.FutureAction(x => x.BulkInsert(entities));
     }
 
     public void UpdateRange(IEnumerable<UsageMetric> entities)
     {
-        _context.UsageMetrics.UpdateRange(entities);
+        _context.FutureAction(x => x.BulkUpdate(entities));
     }
 
     public void RemoveRange(IEnumerable<UsageMetric> entities)
     {
-        _context.UsageMetrics.RemoveRange(entities);
+        _context.FutureAction(x => x.BulkDelete(entities));
     }
 
     public async Task<UsageMetric?> GetByIdAsync(int id)

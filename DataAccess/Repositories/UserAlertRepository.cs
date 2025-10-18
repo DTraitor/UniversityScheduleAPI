@@ -34,17 +34,17 @@ public class UserAlertRepository : IUserAlertRepository
 
     public void AddRange(IEnumerable<UserAlert> entities)
     {
-        _context.UserAlerts.AddRange(entities);
+        _context.FutureAction(x => x.BulkInsert(entities));
     }
 
     public void UpdateRange(IEnumerable<UserAlert> entities)
     {
-        _context.UserAlerts.UpdateRange(entities);
+        _context.FutureAction(x => x.BulkUpdate(entities));
     }
 
     public void RemoveRange(IEnumerable<UserAlert> entities)
     {
-        _context.UserAlerts.RemoveRange(entities);
+        _context.FutureAction(x => x.BulkDelete(entities));
     }
 
     public async Task<UserAlert?> GetByIdAsync(int id)

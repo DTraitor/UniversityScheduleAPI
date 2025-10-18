@@ -35,17 +35,17 @@ public class UserRepository : IUserRepository
 
     public void AddRange(IEnumerable<User> entities)
     {
-        _context.Users.AddRange(entities);
+        _context.FutureAction(x => x.BulkInsert(entities));
     }
 
     public void UpdateRange(IEnumerable<User> entity)
     {
-        _context.Users.UpdateRange(entity);
+        _context.FutureAction(x => x.BulkUpdate(entity));
     }
 
     public void RemoveRange(IEnumerable<User> entities)
     {
-        _context.Users.RemoveRange(entities);
+        _context.FutureAction(x => x.BulkDelete(entities));
     }
 
     public Task<User?> GetByIdAsync(int id)
