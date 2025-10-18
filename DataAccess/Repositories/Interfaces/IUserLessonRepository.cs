@@ -8,7 +8,7 @@ public interface IUserLessonRepository : IRepository<UserLesson>
 {
     Task AddRangeAsync(IEnumerable<UserLesson> lessons);
     Task<IEnumerable<UserLesson>> GetByIdsAsync(IEnumerable<int> ids);
-    IEnumerable<int> RemoveByUserIdAndLessonSourceType(int userId, LessonSourceTypeEnum sourceType);
-    IEnumerable<int> RemoveByUserIdAndLessonSourceTypeAndLessonSourceId(int userId, LessonSourceTypeEnum sourceType, int sourceId);
+    IEnumerable<int> RemoveByUserIdsAndLessonSourceType(IEnumerable<int> userIds, LessonSourceTypeEnum sourceType);
+    Task<IEnumerable<int>> RemoveByUserIdsAndLessonSourceTypeAndLessonSourceIds(IEnumerable<int> userIds, LessonSourceTypeEnum sourceType, IEnumerable<int> sourceId);
     IEnumerable<UserLesson> GetWithOccurrencesCalculatedDateLessThan(DateTimeOffset dateTime);
 }

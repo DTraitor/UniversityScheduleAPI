@@ -72,8 +72,8 @@ public class GroupLessonRepository : IGroupLessonRepository
         return _context.SaveChanges();
     }
 
-    public async Task<IEnumerable<GroupLesson>> GetByGroupIdAsync(int groupId, CancellationToken stoppingToken)
+    public async Task<IEnumerable<GroupLesson>> GetByGroupIdsAsync(IEnumerable<int> groupIds, CancellationToken stoppingToken)
     {
-        return await _context.GroupLessons.Where(sl => sl.GroupId == groupId).ToListAsync(stoppingToken);
+        return await _context.GroupLessons.Where(sl => groupIds.Contains(sl.GroupId)).ToListAsync(stoppingToken);
     }
 }

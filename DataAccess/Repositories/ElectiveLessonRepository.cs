@@ -85,9 +85,9 @@ public class ElectiveLessonRepository : IElectiveLessonRepository
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<ElectiveLesson>> GetByElectiveDayIdAsync(int electiveDayId)
+    public async Task<IEnumerable<ElectiveLesson>> GetByElectiveDayIdsAsync(IEnumerable<int> electiveDayIds)
     {
-        return await _context.ElectiveLessons.Where(x => x.ElectiveLessonDayId == electiveDayId).ToListAsync();
+        return await _context.ElectiveLessons.Where(x => electiveDayIds.Contains(x.ElectiveLessonDayId)).ToListAsync();
     }
 
     public async Task<IEnumerable<ElectiveLesson>> GetByIdsAsync(IEnumerable<int> ids)

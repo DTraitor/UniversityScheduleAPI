@@ -83,22 +83,22 @@ public class UserLessonRepository : IUserLessonRepository
         return await _context.UserLessons.Where(ul => ids.Contains(ul.Id)).ToListAsync();
     }
 
-    public IEnumerable<int> RemoveByUserIdAndLessonSourceType(int userId, LessonSourceTypeEnum sourceType)
+    public IEnumerable<int> RemoveByUserIdsAndLessonSourceType(IEnumerable<int> userIds, LessonSourceTypeEnum sourceType)
     {
-        var lessons = _context.UserLessons.Where(ul => ul.UserId == userId && ul.LessonSourceType == sourceType);
+        var lessons = _context.UserLessons.Where(ul => userIds.Contains(ul.UserId) && ul.LessonSourceType == sourceType);
         _context.UserLessons.RemoveRange(lessons);
         return lessons.Select(x => x.Id);
     }
 
-    public IEnumerable<int> RemoveByUserIdAndLessonSourceTypeAndLessonSourceId(int userId, LessonSourceTypeEnum sourceType,
-        int sourceId)
+    public async Task<IEnumerable<int>> RemoveByUserIdsAndLessonSourceTypeAndLessonSourceIds(IEnumerable<int> userIds, LessonSourceTypeEnum sourceType,
+        IEnumerable<int> sourceIds)
     {
         var lessons = _context.UserLessons.Where(ul =>
-            ul.UserId == userId &&
+            userIds.Contains(ul.UserId) &&
             ul.LessonSourceType == sourceType &&
-            ul.LessonSourceId == sourceId);
+            sourceIds.Contains(ul.LessonSourceId));
         _context.UserLessons.RemoveRange(lessons);
-        return lessons.Select(x => x.Id);
+        return await lessons.Select(x => x.Id).ToListAsync();
     }
 
     public IEnumerable<UserLesson> GetWithOccurrencesCalculatedDateLessThan(DateTimeOffset dateTime)

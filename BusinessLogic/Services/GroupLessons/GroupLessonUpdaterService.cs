@@ -40,42 +40,38 @@ public class GroupLessonUpdaterService : ILessonUpdaterService<GroupLesson, Grou
         _logger = logger;
     }
 
-    public async Task ProcessModifiedEntry(GroupLessonModified modifiedEntry)
+    public async Task ProcessModifiedEntry(IEnumerable<GroupLessonModified> modifiedEntries)
     {
-        var users = await _userRepository.GetByGroupIdAsync(modifiedEntry.Key);
+        var groupsIds = modifiedEntries.Select(x => x.Key).ToArray();
+        var users = await _userRepository.GetByGroupIdsAsync(modifiedEntries.Select(x => x.Key));
         if(!users.Any())
             return;
 
-        foreach (var user in users)
-        {
-            var removed = _userLessonRepository.RemoveByUserIdAndLessonSourceTypeAndLessonSourceId(
-                user.Id, LessonSourceTypeEnum.Group, modifiedEntry.Key);
-            _userLessonOccurenceRepository.ClearByLessonIds(removed);
-        }
+        var removed = await _userLessonRepository.RemoveByUserIdsAndLessonSourceTypeAndLessonSourceIds(
+            users.Select(x => x.Id), LessonSourceTypeEnum.Group, groupsIds);
+        _userLessonOccurenceRepository.ClearByLessonIds(removed);
 
-        var group = await _groupRepository.GetByIdAsync(modifiedEntry.Key);
-        if (group == null)
-        {
-            foreach (var user in users)
-            {
-                user.GroupId = null;
-                _userRepository.Update(user);
-
-                await _userAlertService.CreateUserAlert(user.Id, UserAlertType.GroupRemoved, new()
-                {
-                    {"GroupName", group.GroupName},
-                    {"FacultyName", group.FacultyName},
-                });
-            }
-        }
-
+        var groups = await _groupRepository.GetByIdsAsync(groupsIds);
         TimeZoneInfo timeZone = TimeZoneInfo.FindSystemTimeZoneById(_options.Value.TimeZone);
 
-        var lessons = await _groupLessonRepository.GetByGroupIdAsync(group.Id);
+        foreach (var user in users.Where(x => groups.All(g => g.Id != x.Id)))
+        {
+            user.GroupId = null;
+            _userRepository.Update(user);
+
+            await _userAlertService.CreateUserAlert(user.Id, UserAlertType.GroupRemoved, new()
+            {
+                {"GroupName", user.GroupName},
+            });
+        }
+
+        var lessons = await _groupLessonRepository.GetByGroupIdsAsync(groupsIds);
+
+
         foreach (var user in users)
         {
             _userLessonRepository.AddRange(
-                ScheduleLessonsMapper.Map(lessons, _options.Value.StartTime, _options.Value.EndTime, timeZone)
+                ScheduleLessonsMapper.Map(lessons.Where(x => x.GroupId == user.GroupId), _options.Value.StartTime, _options.Value.EndTime, timeZone)
                     .Select(x =>
                     {
                         x.UserId = user.Id;

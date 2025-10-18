@@ -58,12 +58,12 @@ public class UserLessonUpdaterJob<T> : IHostedService, IDisposable
         var modifiedRepository = scope.ServiceProvider.GetRequiredService<IUserModifiedRepository>();
         var lessonUpdater = scope.ServiceProvider.GetRequiredService<IUserLessonUpdaterService<T>>();
 
-        foreach (var modifiedEntries in (await modifiedRepository.GetNotProcessed(lessonUpdater.ProcessedBy, _cancellationTokenSource.Token)).GroupBy(x => x.Key))
-        {
-            await lessonUpdater.ProcessModifiedUser(modifiedEntries.First());
+        var toProcess =
+            (await modifiedRepository.GetNotProcessed(lessonUpdater.ProcessedBy, _cancellationTokenSource.Token));
 
-            modifiedRepository.RemoveProcessed(modifiedEntries);
-        }
+        await lessonUpdater.ProcessModifiedUser(toProcess.GroupBy(x => x.Key).Select(x => x.First()));
+
+        modifiedRepository.RemoveProcessed(toProcess);
 
         await modifiedRepository.SaveChangesAsync(_cancellationTokenSource.Token);
     }

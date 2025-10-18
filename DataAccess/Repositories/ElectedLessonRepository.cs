@@ -72,9 +72,14 @@ public class ElectedLessonRepository : IElectedLessonRepository
         return await _context.ElectedLessons.Where(x => x.UserId == userId).ToListAsync();
     }
 
-    public async Task<IEnumerable<ElectedLesson>> GetByElectiveDayIdAsync(int electiveDayId)
+    public async Task<IEnumerable<ElectedLesson>> GetByUserIds(IEnumerable<int> userIds)
     {
-        return await _context.ElectedLessons.Where(x => x.ElectiveLessonDayId == electiveDayId).ToListAsync();
+        return await _context.ElectedLessons.Where(x => userIds.Contains(x.UserId)).ToListAsync();
+    }
+
+    public async Task<IEnumerable<ElectedLesson>> GetByElectiveDayIdsAsync(IEnumerable<int> electiveDayIds)
+    {
+        return await _context.ElectedLessons.Where(x => electiveDayIds.Contains(x.ElectiveLessonDayId)).ToListAsync();
     }
 
     public async Task<IEnumerable<ElectedLesson>> GetByIdsAsync(IEnumerable<int> ids)

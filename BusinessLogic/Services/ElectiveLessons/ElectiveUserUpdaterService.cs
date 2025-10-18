@@ -40,20 +40,16 @@ public class ElectiveUserUpdaterService : IUserLessonUpdaterService<ElectiveLess
         _logger = logger;
     }
 
-    public async Task ProcessModifiedUser(UserModified modifiedUser)
+    public async Task ProcessModifiedUser(IEnumerable<UserModified> modifiedUsers)
     {
-        var user = await _userRepository.GetByIdAsync(modifiedUser.Key);
+        var users = await _userRepository.GetByIdsAsync(modifiedUsers.Select(x => x.Key));
 
-        if (user == null)
-        {
-            _logger.LogError($"User {modifiedUser.Key} doesn't exist.");
-            return;
-        }
-
-        var removed = _userLessonRepository.RemoveByUserIdAndLessonSourceType(user.Id, LessonSourceTypeEnum.Elective);
+        var removed = _userLessonRepository.RemoveByUserIdsAndLessonSourceType(
+            users.Select(x => x.Id),
+            LessonSourceTypeEnum.Elective);
         _userLessonOccurenceRepository.ClearByLessonIds(removed);
 
-        var electedLessons = await _electedRepository.GetByUserId(user.Id);
+        var electedLessons = await _electedRepository.GetByUserIds(users.Select(x => x.Id));
         if (!electedLessons.Any())
             return;
 
@@ -62,20 +58,25 @@ public class ElectiveUserUpdaterService : IUserLessonUpdaterService<ElectiveLess
 
         TimeZoneInfo timeZone = TimeZoneInfo.FindSystemTimeZoneById(_options.Value.TimeZone);
 
-        foreach (var lessonsGroup in electiveLessons.GroupBy(x => x.ElectiveLessonDayId))
+        foreach (var user in users)
         {
-            _userLessonRepository.AddRange(
-                ElectiveLessonsMapper.Map(
-                        lessonsGroup,
-                        electiveDays.FirstOrDefault(x => x.Id == lessonsGroup.Key),
-                        _options.Value.StartTime.ToUniversalTime(),
-                        _options.Value.EndTime.ToUniversalTime(),
-                        timeZone)
-                    .Select(x =>
-                    {
-                        x.UserId = user.Id;
-                        return x;
-                    }));
+            foreach (var lessonsGroup in electiveLessons.Where(x => electedLessons
+                         .Where(x => x.UserId == user.Id).Select(x => x.ElectiveLessonId).Contains(x.Id))
+                         .GroupBy(x => x.ElectiveLessonDayId))
+            {
+                _userLessonRepository.AddRange(
+                    ElectiveLessonsMapper.Map(
+                            lessonsGroup,
+                            electiveDays.FirstOrDefault(x => x.Id == lessonsGroup.Key),
+                            _options.Value.StartTime.ToUniversalTime(),
+                            _options.Value.EndTime.ToUniversalTime(),
+                            timeZone)
+                        .Select(x =>
+                        {
+                            x.UserId = user.Id;
+                            return x;
+                        }));
+            }
         }
 
         await _userLessonOccurenceRepository.SaveChangesAsync();

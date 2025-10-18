@@ -37,40 +37,29 @@ public class GroupLessonUserUpdaterService : IUserLessonUpdaterService<GroupLess
         _logger = logger;
     }
 
-    public async Task ProcessModifiedUser(UserModified modifiedUser)
+    public async Task ProcessModifiedUser(IEnumerable<UserModified> modifiedUsers)
     {
-        var user = await _userRepository.GetByIdAsync(modifiedUser.Key);
-
-        if (user == null)
-        {
-            _logger.LogError($"User {modifiedUser.Key} doesn't exist.");
-            return;
-        }
-
-        var removed = _userLessonRepository.RemoveByUserIdAndLessonSourceType(user.Id, LessonSourceTypeEnum.Group);
+        var users = await _userRepository.GetByIdsAsync(modifiedUsers.Select(u => u.UserId));
+        var removed = _userLessonRepository.RemoveByUserIdsAndLessonSourceType(users.Select(x => x.Id), LessonSourceTypeEnum.Group);
         _userLessonOccurenceRepository.ClearByLessonIds(removed);
 
-        if (user.GroupId == null)
-        {
-            await _userLessonOccurenceRepository.SaveChangesAsync();
-            await _userLessonRepository.SaveChangesAsync();
-            return;
-        }
+        users = users.Where(x => x.GroupId != null).ToList();
 
-        var group = await _groupRepository.GetByIdAsync(user.GroupId.Value);
-        if (group == null)
-            return;
+        var groups = await _groupRepository.GetByIdsAsync(users.Select(x => x.GroupId.Value));
 
         TimeZoneInfo timeZone = TimeZoneInfo.FindSystemTimeZoneById(_options.Value.TimeZone);
-        var lessons = await _groupLessonRepository.GetByGroupIdAsync(group.Id);
+        var lessons = await _groupLessonRepository.GetByGroupIdsAsync(groups.Select(x => x.Id));
 
-        _userLessonRepository.AddRange(
-            ScheduleLessonsMapper.Map(lessons, _options.Value.StartTime, _options.Value.EndTime, timeZone)
-            .Select(x =>
-            {
-                x.UserId = user.Id;
-                return x;
-            }));
+        foreach (var user in users)
+        {
+            _userLessonRepository.AddRange(
+                ScheduleLessonsMapper.Map(lessons.Where(x => x.GroupId == user.Id), _options.Value.StartTime, _options.Value.EndTime, timeZone)
+                    .Select(x =>
+                    {
+                        x.UserId = user.Id;
+                        return x;
+                    }));
+        }
 
         await _userLessonOccurenceRepository.SaveChangesAsync();
         await _userLessonRepository.SaveChangesAsync();

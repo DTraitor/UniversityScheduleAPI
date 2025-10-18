@@ -4,5 +4,5 @@ namespace DataAccess.Repositories.Interfaces;
 
 public interface IGroupLessonRepository : IKeyBasedRepository<GroupLesson>
 {
-    Task<IEnumerable<GroupLesson>> GetByGroupIdAsync(int groupId, CancellationToken stoppingToken = default);
+    Task<IEnumerable<GroupLesson>> GetByGroupIdsAsync(IEnumerable<int> groupIds, CancellationToken stoppingToken = default);
 }
