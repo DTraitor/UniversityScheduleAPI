@@ -50,7 +50,7 @@ namespace DataAccess.Migrations.ScheduleDb
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Id", "UserId");
+                    b.HasIndex("UserId");
 
                     b.ToTable("ElectedLessons");
                 });
@@ -88,7 +88,7 @@ namespace DataAccess.Migrations.ScheduleDb
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Id", "ElectiveLessonDayId");
+                    b.HasIndex("ElectiveLessonDayId");
 
                     b.ToTable("ElectiveLessons");
                 });
@@ -192,7 +192,7 @@ namespace DataAccess.Migrations.ScheduleDb
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Id", "GroupId");
+                    b.HasIndex("GroupId");
 
                     b.ToTable("GroupLessons");
                 });
@@ -274,7 +274,7 @@ namespace DataAccess.Migrations.ScheduleDb
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Id", "UserId");
+                    b.HasIndex("UserId");
 
                     b.ToTable("UserLessons");
                 });
@@ -300,6 +300,10 @@ namespace DataAccess.Migrations.ScheduleDb
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("LessonId");
+
+                    b.HasIndex("UserId");
 
                     b.HasIndex("LessonId", "UserId");
 
@@ -420,7 +424,7 @@ namespace DataAccess.Migrations.ScheduleDb
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Id", "ToProcess");
+                    b.HasIndex("ToProcess");
 
                     b.ToTable("UserModifications");
                 });
