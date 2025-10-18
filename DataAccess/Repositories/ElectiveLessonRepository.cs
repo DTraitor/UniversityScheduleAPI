@@ -17,12 +17,6 @@ public class ElectiveLessonRepository : IElectiveLessonRepository
         _logger = logger;
     }
 
-    public void RemoveByKey(int key)
-    {
-        var toRemove = _context.ElectiveLessons.Where(x => x.ElectiveLessonDayId == key).AsEnumerable();
-        _context.FutureAction(x => x.BulkDelete(toRemove));
-    }
-
     public async Task<ElectiveLesson?> GetByIdAsync(int id)
     {
         return await _context.ElectiveLessons.FirstOrDefaultAsync(x => x.Id == id);
@@ -35,14 +29,14 @@ public class ElectiveLessonRepository : IElectiveLessonRepository
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {
-        await _context.SaveChangesAsync(cancellationToken);
         _context.ExecuteFutureAction();
+        await _context.SaveChangesAsync(cancellationToken);
     }
 
     public void SaveChanges()
     {
-        _context.SaveChanges();
         _context.ExecuteFutureAction();
+        _context.SaveChanges();
     }
 
     public void Add(ElectiveLesson entity)

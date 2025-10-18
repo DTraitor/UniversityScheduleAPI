@@ -8,7 +8,7 @@ namespace API.Extensions;
 public static class IServiceCollectionExtensions
 {
     public static IServiceCollection AddScheduleSource<TLesson, TLessonModified, TParser, TReader, TUpdater, TUserUpdater, TChangeHandler>(this IServiceCollection services)
-        where TLesson: class
+        where TLesson: class, IEntityId
         where TLessonModified: class, IModifiedEntry
         where TParser: class, IScheduleParser<TLesson>
         where TReader: class, IScheduleReader<TLesson, TLessonModified>
@@ -33,16 +33,6 @@ public static class IServiceCollectionExtensions
     {
         return services
             .AddScoped<IRepository<TItem>, TImplementation>()
-            .AddScoped<TInterface, TImplementation>();
-    }
-
-    public static IServiceCollection AddKeyBasedRepository<TInterface, TImplementation, TItem>(this IServiceCollection services)
-        where TInterface : class, IRepository<TItem>
-        where TImplementation : class, TInterface, IKeyBasedRepository<TItem>
-    {
-        return services
-            .AddScoped<IRepository<TItem>, TImplementation>()
-            .AddScoped<IKeyBasedRepository<TItem>, TImplementation>()
             .AddScoped<TInterface, TImplementation>();
     }
 }

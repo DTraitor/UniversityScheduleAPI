@@ -1,6 +1,8 @@
-﻿namespace DataAccess.Models;
+﻿using DataAccess.Models.Interface;
 
-public class GroupLesson
+namespace DataAccess.Models;
+
+public class GroupLesson : IEntityId
 {
     public int Id { get; set; }
     public int GroupId { get; set; }

@@ -3,7 +3,7 @@ using DataAccess.Models.Interface;
 
 namespace DataAccess.Models;
 
-public class UserModified : IModifiedEntry
+public class UserModified : IModifiedEntry, IEntityId
 {
     public int Id { get; set; }
     public int UserId { get; set; }

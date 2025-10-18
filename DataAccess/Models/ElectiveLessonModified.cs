@@ -3,7 +3,7 @@ using DataAccess.Models.Interface;
 
 namespace DataAccess.Models;
 
-public class ElectiveLessonModified : IModifiedEntry
+public class ElectiveLessonModified : IModifiedEntry, IEntityId
 {
     public int Id { get; set; }
     public int ElectiveDayId { get; set; }

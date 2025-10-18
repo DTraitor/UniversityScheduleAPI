@@ -1,6 +1,8 @@
-﻿namespace DataAccess.Models;
+﻿using DataAccess.Models.Interface;
 
-public class ElectiveLessonDay
+namespace DataAccess.Models;
+
+public class ElectiveLessonDay : IEntityId
 {
     public int Id { get; set; }
     public int DayId { get; set; }

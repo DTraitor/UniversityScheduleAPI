@@ -1,6 +1,8 @@
-﻿namespace DataAccess.Models.Internal;
+﻿using DataAccess.Models.Interface;
 
-public class UserLessonOccurrence
+namespace DataAccess.Models.Internal;
+
+public class UserLessonOccurrence : IEntityId
 {
     public int Id { get; set; }
     public int LessonId { get; set; }

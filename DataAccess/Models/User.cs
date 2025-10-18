@@ -1,6 +1,8 @@
-﻿namespace DataAccess.Models;
+﻿using DataAccess.Models.Interface;
 
-public class User
+namespace DataAccess.Models;
+
+public class User : IEntityId
 {
     public int Id { get; set; }
     public long TelegramId { get; set; }

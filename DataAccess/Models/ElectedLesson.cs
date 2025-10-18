@@ -1,6 +1,8 @@
-﻿namespace DataAccess.Models;
+﻿using DataAccess.Models.Interface;
 
-public class ElectedLesson
+namespace DataAccess.Models;
+
+public class ElectedLesson : IEntityId
 {
     public int Id { get; set; }
     public int UserId { get; set; }

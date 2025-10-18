@@ -52,12 +52,6 @@ public class GroupLessonRepository : IGroupLessonRepository
         return await _context.GroupLessons.FirstOrDefaultAsync(x => x.GroupId == id);
     }
 
-    public void RemoveByKey(int key)
-    {
-        var toRemove = _context.GroupLessons.Where(l => l.GroupId == key).AsEnumerable();
-        _context.FutureAction(x => x.BulkDelete(toRemove));
-    }
-
     public async Task<IEnumerable<GroupLesson>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await _context.GroupLessons.ToListAsync(cancellationToken);

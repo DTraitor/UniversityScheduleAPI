@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace BusinessLogic.Jobs;
 
-public class ScheduleParserJob<T, TModifiedEntry> : IHostedService, IDisposable where TModifiedEntry : IModifiedEntry
+public class ScheduleParserJob<T, TModifiedEntry> : IHostedService, IDisposable where T : IEntityId where TModifiedEntry : IModifiedEntry
 {
     private IServiceProvider _services;
     private readonly ILogger<ScheduleParserJob<T, TModifiedEntry>> _logger;
@@ -70,7 +70,7 @@ public class ScheduleParserJob<T, TModifiedEntry> : IHostedService, IDisposable 
         }
 
         var scheduleReader = scope.ServiceProvider.GetRequiredService<IScheduleReader<T, TModifiedEntry>>();
-        var repository = scope.ServiceProvider.GetRequiredService<IKeyBasedRepository<T>>();
+        var repository = scope.ServiceProvider.GetRequiredService<IRepository<T>>();
         var modifiedRepository = scope.ServiceProvider.GetRequiredService<IRepository<TModifiedEntry>>();
         var changeHandler = scope.ServiceProvider.GetRequiredService<IChangeHandler<T>>();
 
@@ -113,12 +113,11 @@ public class ScheduleParserJob<T, TModifiedEntry> : IHostedService, IDisposable 
 
         var previousLessons = await repository.GetAllAsync(_cancellationTokenSource.Token);
 
-        foreach (var modifiedEntry in modifiedEntries)
-        {
-            repository.RemoveByKey(modifiedEntry.Key);
-        }
-
         var existing = await changeHandler.HandleChanges(previousLessons, lessons, _cancellationTokenSource.Token);
+
+        HashSet<int> existingHashset = new HashSet<int>(existing.Select(x => x.Id));
+
+        repository.RemoveRange(previousLessons.Where(x => !existingHashset.Contains(x.Id)));
 
         repository.AddRange(lessons);
         repository.UpdateRange(existing);

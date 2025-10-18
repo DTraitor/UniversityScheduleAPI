@@ -1,8 +1,9 @@
 ﻿using DataAccess.Enums;
+using DataAccess.Models.Interface;
 
 namespace DataAccess.Models.Internal;
 
-public class UserLesson
+public class UserLesson : IEntityId
 {
     public int Id { get; set; }
     public int UserId { get; set; }
