@@ -1,6 +1,7 @@
 ﻿using DataAccess.Domain;
 using DataAccess.Models.Internal;
 using DataAccess.Repositories.Interfaces;
+using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -34,17 +35,17 @@ public class UserLessonOccurenceRepository : IUserLessonOccurenceRepository
 
     public void AddRange(IEnumerable<UserLessonOccurrence> lessonOccurrences)
     {
-        _context.UserLessonOccurrences.AddRange(lessonOccurrences);
+        _context.FutureAction(x => x.BulkInsert(lessonOccurrences));
     }
 
     public void UpdateRange(IEnumerable<UserLessonOccurrence> entity)
     {
-        _context.UserLessonOccurrences.UpdateRange(entity);
+        _context.FutureAction(x => x.BulkUpdate(entity));
     }
 
     public void RemoveRange(IEnumerable<UserLessonOccurrence> entities)
     {
-        _context.UserLessonOccurrences.RemoveRange(entities);
+        _context.FutureAction(x => x.BulkDelete(entities));
     }
 
     public async Task<UserLessonOccurrence?> GetByIdAsync(int id)
@@ -59,16 +60,18 @@ public class UserLessonOccurenceRepository : IUserLessonOccurenceRepository
 
     public void ClearByLessonIds(IEnumerable<int> toRemove)
     {
-        _context.UserLessonOccurrences.RemoveRange(_context.UserLessonOccurrences.Where(x => toRemove.Contains(x.LessonId)));
+        _context.FutureAction(x => x.BulkDelete(x.UserLessonOccurrences.Where(y => toRemove.Contains(y.LessonId))));
     }
 
     public int SaveChanges()
     {
+        _context.ExecuteFutureAction();
         return _context.SaveChanges();
     }
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
+        _context.ExecuteFutureAction();
         return await _context.SaveChangesAsync(cancellationToken);
     }
 
