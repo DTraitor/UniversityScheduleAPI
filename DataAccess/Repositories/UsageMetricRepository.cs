@@ -59,8 +59,8 @@ public class UsageMetricRepository : IUsageMetricRepository
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        await _context.SaveChangesAsync(cancellationToken);
         _context.ExecuteFutureAction();
+        await _context.SaveChangesAsync(cancellationToken);
     }
 
     public void SaveChanges()

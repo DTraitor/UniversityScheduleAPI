@@ -59,14 +59,14 @@ public class UserAlertRepository : IUserAlertRepository
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        await _context.SaveChangesAsync(cancellationToken);
         _context.ExecuteFutureAction();
+        await _context.SaveChangesAsync(cancellationToken);
     }
 
     public void SaveChanges()
     {
-        _context.SaveChanges();
         _context.ExecuteFutureAction();
+        _context.SaveChanges();
     }
 
     public async Task<IEnumerable<UserAlert>> GetAllLimitAsync(int batchSize)

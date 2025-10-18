@@ -43,7 +43,7 @@ public class UserModifiedRepository : IUserModifiedRepository
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        await _context.SaveChangesAsync(cancellationToken);
         _context.ExecuteFutureAction();
+        await _context.SaveChangesAsync(cancellationToken);
     }
 }
