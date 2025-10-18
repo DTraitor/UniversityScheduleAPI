@@ -76,6 +76,7 @@ public class UserAlertRepository : IUserAlertRepository
 
     public void RemoveByIds(IEnumerable<int> alerts)
     {
-        _context.UserAlerts.RemoveRange(_context.UserAlerts.Where(x => alerts.Contains(x.Id)));
+        var toRemove = _context.UserAlerts.Where(x => alerts.Contains(x.Id)).AsEnumerable();
+        _context.FutureAction(x => x.BulkDelete(toRemove));
     }
 }

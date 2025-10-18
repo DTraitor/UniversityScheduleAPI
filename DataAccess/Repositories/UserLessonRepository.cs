@@ -18,16 +18,6 @@ public class UserLessonRepository : IUserLessonRepository
         _logger = logger;
     }
 
-    public async Task AddRangeAsync(IEnumerable<UserLesson> lessons)
-    {
-        await _context.UserLessons.AddRangeAsync(lessons);
-    }
-
-    public void ClearByUserId(int userId)
-    {
-        _context.UserLessons.RemoveRange(_context.UserLessons.Where(x => x.UserId == userId));
-    }
-
     public void Add(UserLesson entity)
     {
         _context.UserLessons.Add(entity);
@@ -88,7 +78,7 @@ public class UserLessonRepository : IUserLessonRepository
     public IEnumerable<int> RemoveByUserIdsAndLessonSourceType(IEnumerable<int> userIds, LessonSourceTypeEnum sourceType)
     {
         var lessons = _context.UserLessons.Where(ul => userIds.Contains(ul.UserId) && ul.LessonSourceType == sourceType);
-        _context.UserLessons.RemoveRange(lessons);
+        _context.FutureAction(x => x.BulkDelete(lessons));
         return lessons.Select(x => x.Id);
     }
 
@@ -99,7 +89,7 @@ public class UserLessonRepository : IUserLessonRepository
             userIds.Contains(ul.UserId) &&
             ul.LessonSourceType == sourceType &&
             sourceIds.Contains(ul.LessonSourceId));
-        _context.UserLessons.RemoveRange(lessons);
+        _context.FutureAction(x => x.BulkDelete(lessons));
         return await lessons.Select(x => x.Id).ToListAsync();
     }
 

@@ -54,7 +54,8 @@ public class GroupLessonRepository : IGroupLessonRepository
 
     public void RemoveByKey(int key)
     {
-        _context.GroupLessons.RemoveRange(_context.GroupLessons.Where(l => l.GroupId == key));
+        var toRemove = _context.GroupLessons.Where(l => l.GroupId == key).AsEnumerable();
+        _context.FutureAction(x => x.BulkDelete(toRemove));
     }
 
     public async Task<IEnumerable<GroupLesson>> GetAllAsync(CancellationToken cancellationToken = default)

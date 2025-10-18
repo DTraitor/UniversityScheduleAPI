@@ -19,7 +19,8 @@ public class ElectiveLessonRepository : IElectiveLessonRepository
 
     public void RemoveByKey(int key)
     {
-        _context.ElectiveLessons.RemoveRange(_context.ElectiveLessons.Where(x => x.ElectiveLessonDayId == key));
+        var toRemove = _context.ElectiveLessons.Where(x => x.ElectiveLessonDayId == key).AsEnumerable();
+        _context.FutureAction(x => x.BulkDelete(toRemove));
     }
 
     public async Task<ElectiveLesson?> GetByIdAsync(int id)

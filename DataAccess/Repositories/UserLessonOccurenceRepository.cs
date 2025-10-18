@@ -60,7 +60,8 @@ public class UserLessonOccurenceRepository : IUserLessonOccurenceRepository
 
     public void ClearByLessonIds(IEnumerable<int> toRemove)
     {
-        _context.FutureAction(x => x.BulkDelete(x.UserLessonOccurrences.Where(y => toRemove.Contains(y.LessonId))));
+        var entriesToRemove = _context.UserLessonOccurrences.Where(y => toRemove.Contains(y.LessonId)).AsEnumerable();
+        _context.FutureAction(x => x.BulkDelete(entriesToRemove));
     }
 
     public int SaveChanges()
