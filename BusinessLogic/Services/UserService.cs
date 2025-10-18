@@ -42,6 +42,7 @@ public class UserService : IUserService
         if (user != null)
         {
             user.GroupId = group.Id;
+            user.GroupName = group.GroupName;
             user = _userRepository.Update(user);
         }
         else
@@ -51,6 +52,7 @@ public class UserService : IUserService
                 TelegramId = userData.TelegramId,
                 GroupId = group.Id,
                 CreatedAt = DateTimeOffset.UtcNow,
+                GroupName = group.GroupName
             });
         }
 
