@@ -48,10 +48,10 @@ public class ScheduleDbContext(DbContextOptions<ScheduleDbContext> options) : Db
             .HasColumnType("interval");
 
         modelBuilder.Entity<UserModified>()
-            .HasIndex(e => new { e.Id, e.ToProcess });
+            .HasIndex(e => e.ToProcess );
 
         modelBuilder.Entity<ElectedLesson>()
-            .HasIndex(e => new { e.Id, e.UserId });
+            .HasIndex(e => e.UserId );
 
         modelBuilder.Entity<UserAlert>()
             .HasIndex(e => e.Id);
@@ -65,14 +65,20 @@ public class ScheduleDbContext(DbContextOptions<ScheduleDbContext> options) : Db
         modelBuilder.Entity<UserLessonOccurrence>()
             .HasIndex(e => new { e.LessonId, e.UserId });
 
+        modelBuilder.Entity<UserLessonOccurrence>()
+            .HasIndex(e => e.UserId );
+
+        modelBuilder.Entity<UserLessonOccurrence>()
+            .HasIndex(e => e.LessonId );
+
         modelBuilder.Entity<UserLesson>()
-            .HasIndex(e => new { e.Id, e.UserId });
+            .HasIndex(e => e.UserId );
 
         modelBuilder.Entity<GroupLesson>()
-            .HasIndex(e => new { e.Id, e.GroupId });
+            .HasIndex(e => e.GroupId );
 
         modelBuilder.Entity<ElectiveLesson>()
-            .HasIndex(e => new { e.Id, e.ElectiveLessonDayId });
+            .HasIndex(e => e.ElectiveLessonDayId );
 
         base.OnModelCreating(modelBuilder);
     }

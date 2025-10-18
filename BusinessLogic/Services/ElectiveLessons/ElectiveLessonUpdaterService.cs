@@ -45,25 +45,25 @@ public class ElectiveLessonUpdaterService : ILessonUpdaterService<ElectiveLesson
 
     public async Task ProcessModifiedEntry(IEnumerable<ElectiveLessonModified> modifiedEntry)
     {
-        List<int> ids = modifiedEntry.Select(x => x.Key).ToList();
+        List<int> dayIds = modifiedEntry.Select(x => x.Key).ToList();
 
-        var electedLessons = await _electedRepository.GetByElectiveDayIdsAsync(ids);
+        var electedLessons = await _electedRepository.GetByElectiveDayIdsAsync(dayIds);
         var users = await _userRepository.GetByIdsAsync(electedLessons.Select(x => x.UserId));
         if(!users.Any())
             return;
 
-        var electiveLessons = await _lessonRepository.GetByElectiveDayIdsAsync(ids);
+        var electiveLessons = await _lessonRepository.GetByElectiveDayIdsAsync(dayIds);
         HashSet<int> electiveLessonIds = new HashSet<int>(electiveLessons.Select(x => x.Id));
         var removedElected = electedLessons.Where(x => !electiveLessonIds.Contains(x.ElectiveLessonId)).ToList();
 
         _electedRepository.RemoveRange(removedElected);
 
-        var electiveDays = await _dayRepository.GetByIdsAsync(ids);
+        var electiveDays = await _dayRepository.GetByIdsAsync(dayIds);
 
         TimeZoneInfo timeZone = TimeZoneInfo.FindSystemTimeZoneById(_options.Value.TimeZone);
 
         var removed = await _userLessonRepository.RemoveByUserIdsAndLessonSourceTypeAndLessonSourceIds(
-            users.Select(x => x.Id), LessonSourceTypeEnum.Elective, ids);
+            users.Select(x => x.Id), LessonSourceTypeEnum.Elective, dayIds);
         _userLessonOccurenceRepository.ClearByLessonIds(removed);
 
         foreach (var removedLesson in removedElected)
@@ -81,9 +81,8 @@ public class ElectiveLessonUpdaterService : ILessonUpdaterService<ElectiveLesson
         foreach (var electiveLesson in electiveLessons.GroupBy(x => x.ElectiveLessonDayId))
         {
             var electiveDay = electiveDays.FirstOrDefault(x => x.Id == electiveLesson.Key);
-            var dayLessons = electiveLessons
-                .Where(x => x.ElectiveLessonDayId == electiveDay.Id)
-                .Where(x => electedLessons.Select(x => x.ElectiveLessonId).Contains(x.Id));
+            var dayLessons = electiveLesson
+                .Where(x => electedLessons.Select(y => y.ElectiveLessonId).Contains(x.Id));
 
             foreach (var user in users)
             {

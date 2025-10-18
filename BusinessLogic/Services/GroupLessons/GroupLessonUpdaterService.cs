@@ -79,6 +79,7 @@ public class GroupLessonUpdaterService : ILessonUpdaterService<GroupLesson, Grou
                     }));
         }
 
+        await _userRepository.SaveChangesAsync();
         await _userLessonOccurenceRepository.SaveChangesAsync();
         await _userLessonRepository.SaveChangesAsync();
     }
