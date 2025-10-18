@@ -36,7 +36,7 @@ public class UserAlertJob : IHostedService, IDisposable
             ExecuteTimer,
             null,
             TimeSpan.Zero,
-            TimeSpan.FromSeconds(30));
+            TimeSpan.FromSeconds(5));
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
@@ -62,8 +62,9 @@ public class UserAlertJob : IHostedService, IDisposable
 
         var alertRepository = scope.ServiceProvider.GetRequiredService<IUserAlertRepository>();
 
-        alertRepository.AddRange(_userAlertService.GetCachedAlerts());
-        _userAlertService.ClearCachedAlerts();
+        var alerts = _userAlertService.GetCachedAlerts();
+        alertRepository.AddRange(alerts);
+        _userAlertService.RemoveCachedAlerts(alerts);
 
         await alertRepository.SaveChangesAsync(_cancellationTokenSource.Token);
     }

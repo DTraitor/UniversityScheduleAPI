@@ -1,10 +1,10 @@
+using System.Collections.Generic;
 using BusinessLogic.DTO;
 using BusinessLogic.Services.Interfaces;
 using DataAccess.Enums;
 using DataAccess.Models;
 using DataAccess.Repositories.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace BusinessLogic.Services;
@@ -14,7 +14,7 @@ public class UserAlertService : IUserAlertService
     private IServiceProvider _services;
     private readonly ILogger<UserAlertService> _logger;
 
-    private List<UserAlert> _userAlerts = new();
+    private SynchronizedCollection<UserAlert> _userAlerts = new();
 
     public UserAlertService(IServiceProvider services, ILogger<UserAlertService> logger)
     {
@@ -77,11 +77,14 @@ public class UserAlertService : IUserAlertService
 
     public IEnumerable<UserAlert> GetCachedAlerts()
     {
-        return _userAlerts;
+        return _userAlerts.ToArray();
     }
 
-    public void ClearCachedAlerts()
+    public void RemoveCachedAlerts(IEnumerable<UserAlert> alerts)
     {
-        _userAlerts.Clear();
+        foreach (var alert in alerts)
+        {
+            _userAlerts.Remove(alert);
+        }
     }
 }

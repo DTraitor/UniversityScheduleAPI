@@ -10,5 +10,5 @@ public interface IUserAlertService
     void CreateUserAlert(int userId, UserAlertType type, Dictionary<string, string> options);
     Task RemoveProcessedAlerts(IEnumerable<int> alerts);
     IEnumerable<UserAlert> GetCachedAlerts();
-    void ClearCachedAlerts();
+    void RemoveCachedAlerts(IEnumerable<UserAlert> alerts);
 }
