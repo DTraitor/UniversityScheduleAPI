@@ -29,7 +29,7 @@ public class ElectiveLessonUpdaterService : ILessonUpdaterService<ElectiveLesson
         IUserLessonRepository userLessonRepository,
         IUserLessonOccurenceRepository userLessonOccurenceRepository,
         IOptions<ElectiveScheduleParsingOptions> options,
-        IUserAlertService userAlertService,
+        UserAlertService userAlertService,
         ILogger<ElectiveLessonUpdaterService> logger)
     {
         _dayRepository = dayRepository;

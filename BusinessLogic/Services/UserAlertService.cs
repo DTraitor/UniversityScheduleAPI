@@ -9,61 +9,17 @@ using Microsoft.Extensions.Logging;
 
 namespace BusinessLogic.Services;
 
-public class UserAlertService : IHostedService, IUserAlertService
+public class UserAlertService : IUserAlertService
 {
     private IServiceProvider _services;
     private readonly ILogger<UserAlertService> _logger;
 
-    private List<UserAlert> _userAlerts = new List<UserAlert>();
-
-    private Timer _timer;
-    private CancellationTokenSource _cancellationTokenSource = new();
-    private object _executingLock = new();
+    private List<UserAlert> _userAlerts = new();
 
     public UserAlertService(IServiceProvider services, ILogger<UserAlertService> logger)
     {
         _services = services;
         _logger = logger;
-    }
-
-    public async Task StartAsync(CancellationToken cancellationToken)
-    {
-        _logger.LogInformation("UserAlertService starting...");
-
-        _timer = new Timer(
-            ExecuteTimer,
-            null,
-            TimeSpan.Zero,
-            TimeSpan.FromSeconds(30));
-    }
-
-    public Task StopAsync(CancellationToken cancellationToken)
-    {
-        _logger.LogInformation("UserAlertService stopping...");
-
-        _cancellationTokenSource.Cancel();
-        _timer?.Change(Timeout.Infinite, 0);
-        return Task.CompletedTask;
-    }
-
-    private void ExecuteTimer(object? state)
-    {
-        lock (_executingLock)
-        {
-            PushAlerts().GetAwaiter().GetResult();
-        }
-    }
-
-    private async Task PushAlerts()
-    {
-        using var scope = _services.CreateScope();
-
-        var alertRepository = scope.ServiceProvider.GetRequiredService<IUserAlertRepository>();
-
-        alertRepository.AddRange(_userAlerts);
-        _userAlerts.Clear();
-
-        await alertRepository.SaveChangesAsync(_cancellationTokenSource.Token);
     }
 
     public async Task<IEnumerable<UserAlertDto>> GetAlerts(int batchSize)
@@ -117,5 +73,15 @@ public class UserAlertService : IHostedService, IUserAlertService
         {
             _logger.LogError(ex, "Error removing alerts.");
         }
+    }
+
+    public IEnumerable<UserAlert> GetCachedAlerts()
+    {
+        return _userAlerts;
+    }
+
+    public void ClearCachedAlerts()
+    {
+        _userAlerts.Clear();
     }
 }

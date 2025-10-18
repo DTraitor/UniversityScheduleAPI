@@ -19,7 +19,7 @@ builder.Services.AddScoped<IScheduleService, ScheduleService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IGroupService, GroupService>();
 builder.Services.AddScoped<IElectiveService, ElectiveService>();
-builder.Services.AddScoped<IUserAlertService, UserAlertService>();
+builder.Services.AddSingleton<IUserAlertService, UserAlertService>();
 builder.Services.AddSingleton<IUsageMetricService, UsageMetricService>();
 
 // Repositories
@@ -47,6 +47,7 @@ builder.Services.AddScheduleSource<ElectiveLesson, ElectiveLessonModified, Elect
 // Jobs
 builder.Services.AddHostedService<OccurrencesUpdaterJob>();
 builder.Services.AddHostedService<UserMetricJob>();
+builder.Services.AddHostedService<UserAlertJob>();
 
 // Configurations
 builder.Services.Configure<ElectiveScheduleParsingOptions>(
