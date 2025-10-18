@@ -14,14 +14,14 @@ public class GroupScheduleReader : IScheduleReader<GroupLesson, GroupLessonModif
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IGroupRepository  _groupRepository;
     private readonly IScheduleParser<GroupLesson> _groupLessonParser;
-    private readonly IOptions<GroupScheduleParsingOptions> _options;
+    private readonly IOptions<ScheduleParsingOptions> _options;
     private readonly ILogger<GroupScheduleReader> _logger;
 
     public GroupScheduleReader(
         IHttpClientFactory httpClientFactory,
         IGroupRepository groupRepository,
         IScheduleParser<GroupLesson> groupLessonParser,
-        IOptions<GroupScheduleParsingOptions> options,
+        IOptions<ScheduleParsingOptions> options,
         ILogger<GroupScheduleReader> logger)
     {
         _httpClientFactory = httpClientFactory;

@@ -9,6 +9,8 @@ using DataAccess.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using API.Extensions;
 using BusinessLogic.Configuration;
+using BusinessLogic.Parsing;
+using BusinessLogic.Parsing.Interfaces;
 using DataAccess.Models;
 using DataAccess.Models.Internal;
 
@@ -21,6 +23,9 @@ builder.Services.AddScoped<IGroupService, GroupService>();
 builder.Services.AddScoped<IElectiveService, ElectiveService>();
 builder.Services.AddSingleton<IUserAlertService, UserAlertService>();
 builder.Services.AddSingleton<IUsageMetricService, UsageMetricService>();
+builder.Services.AddSingleton<IScheduleReader, ScheduleReader>();
+builder.Services.AddSingleton<IScheduleParser, ScheduleParser>();
+builder.Services.AddSingleton<IChangeHandler, ChangeHandler>();
 
 // Repositories
 builder.Services.AddScoped<IUserModifiedRepository, UserModifiedRepository>();
@@ -39,22 +44,20 @@ builder.Services.AddRepository<IElectiveLessonRepository, ElectiveLessonReposito
 builder.Services.AddRepository<IGroupLessonRepository, GroupLessonRepository, GroupLesson>();
 builder.Services.AddRepository<ILessonSourceRepository, LessonSourceRepository, LessonSource>();
 builder.Services.AddRepository<ILessonEntryRepository, LessonEntryRepository, LessonEntry>();
+builder.Services.AddRepository<ILessonSourceModifiedRepository, LessonSourceModifiedRepositoryRepository, LessonSourceModified>();
 
 builder.Services.AddHttpClient();
-
-// Schedule sources
-builder.Services.AddScheduleSource<GroupLesson, GroupLessonModified, GroupScheduleParser, GroupScheduleReader, GroupLessonUpdaterService, GroupLessonUserUpdaterService, GroupChangeHandler>();
-builder.Services.AddScheduleSource<ElectiveLesson, ElectiveLessonModified, ElectiveScheduleParser, ElectiveScheduleReader, ElectiveLessonUpdaterService, ElectiveUserUpdaterService, ElectiveChangeHandler>();
 
 // Jobs
 builder.Services.AddHostedService<OccurrencesUpdaterJob>();
 builder.Services.AddHostedService<UserMetricJob>();
 builder.Services.AddHostedService<UserAlertJob>();
+builder.Services.AddHostedService<ScheduleParserJob>();
 
 // Configurations
 builder.Services.Configure<ElectiveScheduleParsingOptions>(
     builder.Configuration.GetSection("ElectiveScheduleParsing"));
-builder.Services.Configure<GroupScheduleParsingOptions>(
+builder.Services.Configure<ScheduleParsingOptions>(
     builder.Configuration.GetSection("GroupScheduleParsing"));
 
 builder.Services.AddSwaggerGen();

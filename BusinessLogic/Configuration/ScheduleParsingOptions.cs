@@ -1,6 +1,6 @@
 namespace BusinessLogic.Configuration;
 
-public class GroupScheduleParsingOptions
+public class ScheduleParsingOptions
 {
     public string ScheduleUrl { get; set; } = string.Empty;
     public DateTimeOffset StartTime { get; set; }

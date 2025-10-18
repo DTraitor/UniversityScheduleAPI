@@ -16,7 +16,7 @@ public class GroupLessonUpdaterService : ILessonUpdaterService<GroupLesson, Grou
     private readonly IUserRepository _userRepository;
     private readonly IUserLessonRepository _userLessonRepository;
     private readonly IUserLessonOccurenceRepository _userLessonOccurenceRepository;
-    private readonly IOptions<GroupScheduleParsingOptions> _options;
+    private readonly IOptions<ScheduleParsingOptions> _options;
     private readonly IUserAlertService _userAlertService;
     private readonly ILogger<GroupLessonUpdaterService> _logger;
 
@@ -26,7 +26,7 @@ public class GroupLessonUpdaterService : ILessonUpdaterService<GroupLesson, Grou
         IUserRepository userRepository,
         IUserLessonRepository userLessonRepository,
         IUserLessonOccurenceRepository userLessonOccurenceRepository,
-        IOptions<GroupScheduleParsingOptions> options,
+        IOptions<ScheduleParsingOptions> options,
         IUserAlertService userAlertService,
         ILogger<GroupLessonUpdaterService> logger)
     {
