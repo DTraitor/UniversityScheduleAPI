@@ -3,6 +3,6 @@
 public enum UserAlertType
 {
     None = 0,
-    GroupRemoved = 1,
-    ElectiveLessonRemoved = 2,
+    SourceRemoved = 1,
+    EntryRemoved = 2,
 }

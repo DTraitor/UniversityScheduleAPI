@@ -3,6 +3,7 @@ using BusinessLogic.Mappers;
 using BusinessLogic.Services.Interfaces;
 using DataAccess.Enums;
 using DataAccess.Models;
+using DataAccess.Models.Internal;
 using DataAccess.Repositories.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -66,68 +67,103 @@ public class LessonUpdaterService : ILessonUpdaterService
         if(!users.Any())
             return;
 
+        var removedBySource = await _userLessonRepository.RemoveByUserIdsAndLessonSourceTypeAndLessonSourceIds(
+            users.Select(x => x.Id),
+            SelectedLessonSourceType.Source,
+            selectedSources.Select(x => x.Id));
+
+        var removedByEntry = await _userLessonRepository.RemoveByUserIdsAndLessonSourceTypeAndLessonSourceIds(
+            users.Select(x => x.Id),
+            SelectedLessonSourceType.Source,
+            selectedEntries.Select(x => x.Id));
+
+        _userLessonOccurenceRepository.ClearByLessonIds(removedBySource.Union(removedByEntry));
+
         var sources = await _lessonSourceRepository.GetByIdsAsync(sourceIds);
         var entries = await _lessonEntryRepository.GetBySourceIdsAsync(sourceIds);
 
-        foreach (var user in users)
+        var existingSourceIds = sources.Select(x => x.Id).ToHashSet();
+        var existingEntriesIds = entries.Select(x => x.Id).ToHashSet();
+
+        foreach (var removedSource in selectedSources.Where(x => !existingSourceIds.Contains(x.Id)))
         {
-
-        }
-
-        var electiveLessons = await _lessonRepository.GetByElectiveDayIdsAsync(dayIds);
-        HashSet<int> electiveLessonIds = new HashSet<int>(electiveLessons.Select(x => x.Id));
-        var removedElected = electedLessons.Where(x => !electiveLessonIds.Contains(x.ElectiveLessonId)).ToList();
-
-        _electedRepository.RemoveRange(removedElected);
-
-        var electiveDays = await _dayRepository.GetByIdsAsync(dayIds);
-
-        TimeZoneInfo timeZone = TimeZoneInfo.FindSystemTimeZoneById(_options.Value.TimeZone);
-
-        var removed = await _userLessonRepository.RemoveByUserIdsAndLessonSourceTypeAndLessonSourceIds(
-            users.Select(x => x.Id), SelectedLessonSourceType.Elective, dayIds);
-        _userLessonOccurenceRepository.ClearByLessonIds(removed);
-
-        foreach (var removedLesson in removedElected)
-        {
-            var electiveDay = electiveDays.FirstOrDefault(x => x.Id == removedLesson.ElectiveLessonDayId);
-            _userAlertService.CreateUserAlert(removedLesson.UserId, UserAlertType.ElectiveLessonRemoved, new()
+            _userAlertService.CreateUserAlert(removedSource.UserId, UserAlertType.SourceRemoved, new()
             {
-                { "LessonName", removedLesson.Name },
-                { "LessonType", removedLesson.Type ?? "" },
-                { "LessonDay", electiveDay.DayId.ToString() },
-                { "LessonStartTime", electiveDay.HourId.ToString() },
+                { "LessonName", removedSource.SourceName },
             });
         }
 
-        foreach (var electiveLesson in electiveLessons.GroupBy(x => x.ElectiveLessonDayId))
+        foreach (var removedEntry in selectedEntries.Where(x => !existingEntriesIds.Contains(x.Id)))
         {
-            var electiveDay = electiveDays.FirstOrDefault(x => x.Id == electiveLesson.Key);
-            var dayLessons = electiveLesson
-                .Where(x => electedLessons.Select(y => y.ElectiveLessonId).Contains(x.Id));
-
-            foreach (var user in users)
+            _userAlertService.CreateUserAlert(removedEntry.UserId, UserAlertType.EntryRemoved, new()
             {
-                _userLessonRepository.AddRange(
-                    ElectiveLessonsMapper.Map(
-                            dayLessons.Where(
-                                x => electedLessons
-                                    .Where(x => x.UserId == user.Id)
-                                    .Select(x => x.ElectiveLessonId)
-                                    .Contains(x.Id)),
-                            electiveDay,
-                            _options.Value.StartTime.ToUniversalTime(),
-                            _options.Value.EndTime.ToUniversalTime(),
-                            timeZone)
-                        .Select(x =>
-                        {
-                            x.UserId = user.Id;
-                            return x;
-                        }));
+                { "LessonName", removedEntry.EntryName },
+                { "LessonType", removedEntry.Type ?? "" },
+                { "LessonStartTime", removedEntry.StartTime.ToString() },
+                { "LessonWeek", removedEntry.WeekNumber.ToString() },
+                { "LessonDay", removedEntry.DayOfWeek.ToString() },
+            });
+        }
+
+        Dictionary<int, List<SelectedLessonSource>> userIdToSelectedSources = selectedSources
+            .GroupBy(x => x.UserId)
+            .ToDictionary(s => s.Key, s => s.Select(x => x).ToList());
+        Dictionary<int, List<SelectedLessonEntry>> userIdToSelectedEntries = selectedEntries
+            .GroupBy(x => x.UserId)
+            .ToDictionary(s => s.Key, s => s.Select(x => x).ToList());
+
+        List<UserLesson> userLessons = new List<UserLesson>();
+
+        foreach (var user in users)
+        {
+            foreach (var selectedSource in userIdToSelectedSources[user.Id])
+            {
+                var source = sources.FirstOrDefault(x => x.Id == selectedSource.SourceId);
+
+                userLessons.AddRange(
+                    ScheduleLessonsMapper.Map(
+                        entries
+                            .Where(e => e.SourceId == source.Id)
+                            .Where(e => e.SubGroupNumber == selectedSource.SubGroupNumber || e.SubGroupNumber == -1)
+                            .ToList(),
+                        source.StartDate,
+                        source.EndDate,
+                        TimeZoneInfo.FindSystemTimeZoneById(source.TimeZone)
+                    ).Select(x =>
+                    {
+                        x.SelectedLessonSourceType = SelectedLessonSourceType.Source;
+                        x.LessonSourceId = selectedSource.Id;
+                        return x;
+                    })
+                );
+            }
+
+            foreach (var selectedEntry in userIdToSelectedEntries[user.Id].GroupBy(x => x.SourceId))
+            {
+                var entriesIds = selectedEntry.Select(x => x.EntryId).ToHashSet();
+                var source = sources.FirstOrDefault(x => x.Id == selectedEntry.Key);
+
+                userLessons.AddRange(
+                    ScheduleLessonsMapper.Map(
+                        entries
+                            .Where(e => entriesIds.Contains(e.Id))
+                            .ToList(),
+                        source.StartDate,
+                        source.EndDate,
+                        TimeZoneInfo.FindSystemTimeZoneById(source.TimeZone)
+                    ).Select(x =>
+                    {
+                        x.SelectedLessonSourceType = SelectedLessonSourceType.Entry;
+                        x.LessonSourceId = selectedEntry.Key;
+                        return x;
+                    })
+                );
             }
         }
 
-        await _userLessonRepository.SaveChangesAsync();
+        _userLessonRepository.AddRange(userLessons);
+
         await _userLessonOccurenceRepository.SaveChangesAsync();
+        await _userLessonRepository.SaveChangesAsync();
     }
 }
