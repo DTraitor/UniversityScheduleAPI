@@ -37,20 +37,20 @@ public class ElectiveService : IElectiveService
 
     public async Task<IEnumerable<ElectiveLessonDto>> GetLessons(string lessonName)
     {
-        var lessonSources = await _lessonSourceRepository.GetAllLimitAsync(11);
+        var lessonSources = await _lessonSourceRepository.GetByNameAndLimitAsync(lessonName, 11);
         if (lessonSources.Count() >= 11)
             throw new InvalidOperationException("Should be more specific");
 
         var entries = (await _lessonEntryRepository.GetBySourceIdsAsync(lessonSources.Select(x => x.Id)))
-            .GroupBy(x => x.SourceId);
+            .GroupBy(x => x.SourceId );
 
         return lessonSources.Select(x => new ElectiveLessonDto
         {
             Title = x.Name,
             SourceId = x.Id,
             Types = entries
-                .Where(y => y.Key == x.Id)
-                .Select(y => y.FirstOrDefault()?.Type ?? "")
+                .FirstOrDefault(y => y.Key == x.Id)?
+                .Select(y => y.Type)
                 .Distinct()
                 .ToList()
 
@@ -65,7 +65,9 @@ public class ElectiveService : IElectiveService
         if (lessonSource.SourceType != LessonSourceType.Elective)
             throw new InvalidOperationException("Lesson source type is not elective");
 
-        var entries = (await _lessonEntryRepository.GetBySourceIdAsync(lessonSourceId)).GroupBy(x => x.SubGroupNumber);
+        var entries = (await _lessonEntryRepository.GetBySourceIdAsync(lessonSourceId))
+            .Where(x => x.Type == lessonType)
+            .GroupBy(x => x.SubGroupNumber);
 
         return new ElectiveSubgroupsDto()
         {
@@ -89,6 +91,7 @@ public class ElectiveService : IElectiveService
             SourceId = lessonSourceId,
             LessonDays = entries.Select(x => new ElectiveLessonDayDto.ElectiveLessonSpecificDto
             {
+                Id = x.Id,
                 Type = x.Type,
                 DayOfWeek = x.DayOfWeek,
                 StartTime = x.StartTime,
@@ -114,6 +117,7 @@ public class ElectiveService : IElectiveService
             LessonSourceType = LessonSourceType.Elective,
             SourceId = lessonSourceId,
             SourceName = lessonSource.Name,
+            Type = lessonType,
             SubGroupNumber = subgroupNumber,
             UserId = user.Id,
         });
@@ -128,15 +132,15 @@ public class ElectiveService : IElectiveService
     {
         var user = await _userRepository.GetByTelegramIdAsync(telegramId);
         if (user == null)
-            throw new KeyNotFoundException("User not found");
+            return;
 
         var lessonSource = await _selectedLessonSourceRepository.GetByIdAsync(selectedSource);
         if (lessonSource == null)
-            throw new KeyNotFoundException("Lesson not found");
+            return;
         if (lessonSource.LessonSourceType != LessonSourceType.Elective)
             throw new InvalidOperationException("Lesson source type is not elective");
         if (lessonSource.UserId != user.Id)
-            throw new InvalidOperationException("User is not elective");
+            throw new InvalidOperationException("User is not elective owner");
 
         _selectedLessonSourceRepository.Delete(lessonSource);
         _userModifiedRepository.Add(user.Id);
@@ -160,7 +164,7 @@ public class ElectiveService : IElectiveService
         var entry = await _lessonEntryRepository.GetByIdAsync(lessonEntry);
         if (entry == null)
             throw new KeyNotFoundException("Selected entry not found");
-        if (entry.SourceId == lessonSourceId)
+        if (entry.SourceId != lessonSource.Id)
             throw new InvalidOperationException("Selected entry source not found");
 
         _selectedLessonEntryRepository.Add(new SelectedLessonEntry
@@ -185,13 +189,13 @@ public class ElectiveService : IElectiveService
     {
         var user = await _userRepository.GetByTelegramIdAsync(telegramId);
         if (user == null)
-            throw new KeyNotFoundException("User not found");
+            return;
 
         var lessonEntry = await _selectedLessonEntryRepository.GetByIdAsync(selectedEntry);
         if (lessonEntry == null)
-            throw new KeyNotFoundException("Lesson not found");
+            return;
         if (lessonEntry.UserId != user.Id)
-            throw new InvalidOperationException("User is not elective");
+            throw new InvalidOperationException("User is not elective owner");
 
         _selectedLessonEntryRepository.Delete(lessonEntry);
         _userModifiedRepository.Add(user.Id);
@@ -206,7 +210,7 @@ public class ElectiveService : IElectiveService
         if (user == null)
             throw new KeyNotFoundException("User not found");
 
-        var selectedSources = await _selectedLessonSourceRepository.GetByUserId(user.Id);
+        var selectedSources = (await _selectedLessonSourceRepository.GetByUserId(user.Id)).Where(x => x.LessonSourceType != LessonSourceType.Group);
         var selectedEntries = await _selectedLessonEntryRepository.GetByUserId(user.Id);
 
         return new ElectiveSelectedLessonDto
@@ -215,6 +219,7 @@ public class ElectiveService : IElectiveService
             {
                 Name = x.SourceName,
                 SelectedSourceId = x.Id,
+                Type = x.Type,
                 SubGroupNumber = x.SubGroupNumber,
             }),
             Entries = selectedEntries.Select(x => new ElectiveSelectedLessonDto.EntryDto

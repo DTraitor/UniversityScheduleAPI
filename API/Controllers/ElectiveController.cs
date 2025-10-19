@@ -19,53 +19,124 @@ public class ElectiveController : ControllerBase
     [HttpGet("days")]
     public async Task<IActionResult> GetPossibleDays([FromQuery] int lessonSourceId)
     {
-        return Ok(await _electiveService.GetPossibleDays(lessonSourceId));
+        try
+        {
+            return Ok(await _electiveService.GetPossibleDays(lessonSourceId));
+        }
+        catch (KeyNotFoundException e)
+        {
+            return NotFound(e.Message);
+        }
+        catch (InvalidOperationException e)
+        {
+            return BadRequest(e.Message);
+        }
     }
 
     [HttpGet("lessons")]
     public async Task<IActionResult> GetElectiveLessons([FromQuery] string partialLessonName)
     {
-        return Ok(await _electiveService.GetLessons(partialLessonName));
+        try
+        {
+            return Ok(await _electiveService.GetLessons(partialLessonName));
+        }
+        catch (InvalidOperationException e)
+        {
+            return BadRequest(e.Message);
+        }
     }
 
     [HttpGet("subgroups")]
     public async Task<IActionResult> GetLessonSubgroups([FromQuery] int lessonSourceId, [FromQuery] string lessonType)
     {
-        return Ok(await _electiveService.GetPossibleSubgroups(lessonSourceId, lessonType));
+        try
+        {
+            return Ok(await _electiveService.GetPossibleSubgroups(lessonSourceId, lessonType));
+        }
+        catch (KeyNotFoundException e)
+        {
+            return NotFound(e.Message);
+        }
+        catch (InvalidOperationException e)
+        {
+            return BadRequest(e.Message);
+        }
     }
-
 
     [HttpGet]
     public async Task<IActionResult> GetCurrentElectedLessons([FromQuery] long telegramId)
     {
-        return Ok(await _electiveService.GetUserLessons(telegramId));
+        try
+        {
+            return Ok(await _electiveService.GetUserLessons(telegramId));
+        }
+        catch (KeyNotFoundException e)
+        {
+            return NotFound(e.Message);
+        }
     }
 
     [HttpPost("source")]
     public async Task<IActionResult> CreateNewElectedLessonEntry([FromQuery] long telegramId, [FromQuery] int lessonSourceId, [FromQuery] string lessonType, [FromQuery] int subgroupNumber)
     {
-        await _electiveService.AddSelectedSource(telegramId, lessonSourceId, lessonType, subgroupNumber);
-        return Created();
+        try
+        {
+            await _electiveService.AddSelectedSource(telegramId, lessonSourceId, lessonType, subgroupNumber);
+            return Created();
+        }
+        catch (KeyNotFoundException e)
+        {
+            return NotFound(e.Message);
+        }
+        catch (InvalidOperationException e)
+        {
+            return BadRequest(e.Message);
+        }
     }
 
     [HttpDelete("source")]
     public async Task<IActionResult> RemoveElectedLessonSource([FromQuery] long telegramId, [FromQuery] int lessonId)
     {
-        await _electiveService.RemoveSelectedSource(telegramId, lessonId);
-        return Ok(true);
+        try
+        {
+            await _electiveService.RemoveSelectedSource(telegramId, lessonId);
+            return Ok(true);
+        }
+        catch (InvalidOperationException e)
+        {
+            return BadRequest(e.Message);
+        }
     }
 
     [HttpPost("entry")]
     public async Task<IActionResult> CreateNewElectedLessonEntry([FromQuery] long telegramId, [FromQuery] int lessonSourceId, [FromQuery] int lessonEntry)
     {
-        await _electiveService.AddSelectedEntry(telegramId, lessonSourceId, lessonEntry);
-        return Created();
+        try
+        {
+            await _electiveService.AddSelectedEntry(telegramId, lessonSourceId, lessonEntry);
+            return Created();
+        }
+        catch (KeyNotFoundException e)
+        {
+            return NotFound(e.Message);
+        }
+        catch (InvalidOperationException e)
+        {
+            return BadRequest(e.Message);
+        }
     }
 
     [HttpDelete("entry")]
     public async Task<IActionResult> RemoveElectedLessonEntry([FromQuery] long telegramId, [FromQuery] int lessonId)
     {
-        await _electiveService.RemoveSelectedEntry(telegramId, lessonId);
-        return Ok(true);
+        try
+        {
+            await _electiveService.RemoveSelectedEntry(telegramId, lessonId);
+            return Ok(true);
+        }
+        catch (InvalidOperationException e)
+        {
+            return BadRequest(e.Message);
+        }
     }
 }

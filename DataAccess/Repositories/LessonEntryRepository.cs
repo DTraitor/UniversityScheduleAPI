@@ -76,6 +76,6 @@ public class LessonEntryRepository : ILessonEntryRepository
 
     public async Task<IEnumerable<LessonEntry>> GetBySourceIdsAsync(IEnumerable<int> sourceIds)
     {
-        return await _context.LessonEntries.Where(x => sourceIds.Contains(x.Id)).ToListAsync();
+        return await _context.LessonEntries.Where(x => sourceIds.Contains(x.SourceId)).ToListAsync();
     }
 }

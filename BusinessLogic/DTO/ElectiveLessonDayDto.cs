@@ -7,6 +7,7 @@ public record ElectiveLessonDayDto
 
     public record ElectiveLessonSpecificDto
     {
+        public int Id { get; init; }
         public string? Type { get; init; }
         public bool WeekNumber { get; init; }
         public DayOfWeek DayOfWeek { get; init; }

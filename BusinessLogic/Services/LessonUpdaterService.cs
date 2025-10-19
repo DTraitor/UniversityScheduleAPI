@@ -74,8 +74,8 @@ public class LessonUpdaterService : ILessonUpdaterService
 
         var removedByEntry = await _userLessonRepository.RemoveByUserIdsAndLessonSourceTypeAndLessonSourceIds(
             users.Select(x => x.Id),
-            SelectedLessonSourceType.Source,
-            selectedEntries.Select(x => x.Id));
+            SelectedLessonSourceType.Entry,
+            selectedEntries.Select(x => x.SourceId));
 
         _userLessonOccurenceRepository.ClearByLessonIds(removedBySource.Union(removedByEntry));
 
@@ -87,10 +87,24 @@ public class LessonUpdaterService : ILessonUpdaterService
 
         foreach (var removedSource in selectedSources.Where(x => !existingSourceIds.Contains(x.Id)))
         {
-            _userAlertService.CreateUserAlert(removedSource.UserId, UserAlertType.SourceRemoved, new()
+            if (removedSource.LessonSourceType == LessonSourceType.Group)
             {
-                { "LessonName", removedSource.SourceName },
-            });
+                _userAlertService.CreateUserAlert(removedSource.UserId, UserAlertType.GroupRemoved, new()
+                {
+                    { "LessonName", removedSource.SourceName },
+                    { "SubGroupNumber", removedSource.SubGroupNumber.ToString() },
+                    { "LessonType", removedSource.Type ?? ""}
+                });
+            }
+            else
+            {
+                _userAlertService.CreateUserAlert(removedSource.UserId, UserAlertType.SourceRemoved, new()
+                {
+                    { "LessonName", removedSource.SourceName },
+                    { "SubGroupNumber", removedSource.SubGroupNumber.ToString() },
+                    { "LessonType", removedSource.Type ?? ""}
+                });
+            }
         }
 
         foreach (var removedEntry in selectedEntries.Where(x => !existingEntriesIds.Contains(x.Id)))
@@ -101,14 +115,19 @@ public class LessonUpdaterService : ILessonUpdaterService
                 { "LessonType", removedEntry.Type ?? "" },
                 { "LessonStartTime", removedEntry.StartTime.ToString() },
                 { "LessonWeek", removedEntry.WeekNumber.ToString() },
-                { "LessonDay", removedEntry.DayOfWeek.ToString() },
+                { "LessonDay", ((int)removedEntry.DayOfWeek).ToString() },
             });
         }
 
+        _selectedLessonSourceRepository.RemoveRange(selectedSources.Where(x => !existingSourceIds.Contains(x.Id)));
+        _selectedLessonEntryRepository.RemoveRange(selectedEntries.Where(x => !existingEntriesIds.Contains(x.Id)));
+
         Dictionary<int, List<SelectedLessonSource>> userIdToSelectedSources = selectedSources
+            .Where(x => existingSourceIds.Contains(x.Id))
             .GroupBy(x => x.UserId)
             .ToDictionary(s => s.Key, s => s.Select(x => x).ToList());
         Dictionary<int, List<SelectedLessonEntry>> userIdToSelectedEntries = selectedEntries
+            .Where(x => existingEntriesIds.Contains(x.Id))
             .GroupBy(x => x.UserId)
             .ToDictionary(s => s.Key, s => s.Select(x => x).ToList());
 
@@ -116,57 +135,71 @@ public class LessonUpdaterService : ILessonUpdaterService
 
         foreach (var user in users)
         {
-            foreach (var selectedSource in userIdToSelectedSources[user.Id])
+            if (userIdToSelectedSources.TryGetValue(user.Id, out var selectedSourcesDict))
             {
-                var source = sources.FirstOrDefault(x => x.Id == selectedSource.SourceId);
+                foreach (var selectedSource in selectedSourcesDict)
+                {
+                    var source = sources.FirstOrDefault(x => x.Id == selectedSource.SourceId);
 
-                var lessonsToMap = entries
-                    .Where(e => e.SourceId == source.Id);
+                    var lessonsToMap = entries
+                        .Where(e => e.SourceId == source.Id);
 
-                if (selectedSource.SubGroupNumber != -1)
-                    lessonsToMap = lessonsToMap
-                        .Where(e => e.SubGroupNumber == selectedSource.SubGroupNumber || e.SubGroupNumber == -1);
+                    if (selectedSource.SubGroupNumber != -1)
+                        lessonsToMap = lessonsToMap
+                            .Where(e => e.SubGroupNumber == selectedSource.SubGroupNumber || e.SubGroupNumber == -1);
 
-                userLessons.AddRange(
-                    ScheduleLessonsMapper.Map(
-                        lessonsToMap.ToList(),
-                        source.StartDate,
-                        source.EndDate,
-                        TimeZoneInfo.FindSystemTimeZoneById(source.TimeZone)
-                    ).Select(x =>
-                    {
-                        x.SelectedLessonSourceType = SelectedLessonSourceType.Source;
-                        x.LessonSourceId = selectedSource.Id;
-                        return x;
-                    })
-                );
+                    if (selectedSource.Type != null)
+                        lessonsToMap = lessonsToMap
+                            .Where(e => e.Type == selectedSource.Type);
+
+                    userLessons.AddRange(
+                        ScheduleLessonsMapper.Map(
+                            lessonsToMap.ToList(),
+                            source.StartDate,
+                            source.EndDate,
+                            TimeZoneInfo.FindSystemTimeZoneById(source.TimeZone)
+                        ).Select(x =>
+                        {
+                            x.UserId = user.Id;
+                            x.SelectedLessonSourceType = SelectedLessonSourceType.Source;
+                            x.LessonSourceId = selectedSource.Id;
+                            return x;
+                        })
+                    );
+                }
             }
 
-            foreach (var selectedEntry in userIdToSelectedEntries[user.Id].GroupBy(x => x.SourceId))
+            if (userIdToSelectedEntries.TryGetValue(user.Id, out var selectedEntriesDict))
             {
-                var entriesIds = selectedEntry.Select(x => x.EntryId).ToHashSet();
-                var source = sources.FirstOrDefault(x => x.Id == selectedEntry.Key);
+                foreach (var selectedEntry in selectedEntriesDict.GroupBy(x => x.SourceId))
+                {
+                    var entriesIds = selectedEntry.Select(x => x.EntryId).ToHashSet();
+                    var source = sources.FirstOrDefault(x => x.Id == selectedEntry.Key);
 
-                userLessons.AddRange(
-                    ScheduleLessonsMapper.Map(
-                        entries
-                            .Where(e => entriesIds.Contains(e.Id))
-                            .ToList(),
-                        source.StartDate,
-                        source.EndDate,
-                        TimeZoneInfo.FindSystemTimeZoneById(source.TimeZone)
-                    ).Select(x =>
-                    {
-                        x.SelectedLessonSourceType = SelectedLessonSourceType.Entry;
-                        x.LessonSourceId = selectedEntry.Key;
-                        return x;
-                    })
-                );
+                    userLessons.AddRange(
+                        ScheduleLessonsMapper.Map(
+                            entries
+                                .Where(e => entriesIds.Contains(e.Id))
+                                .ToList(),
+                            source.StartDate,
+                            source.EndDate,
+                            TimeZoneInfo.FindSystemTimeZoneById(source.TimeZone)
+                        ).Select(x =>
+                        {
+                            x.UserId = user.Id;
+                            x.SelectedLessonSourceType = SelectedLessonSourceType.Entry;
+                            x.LessonSourceId = selectedEntry.Key;
+                            return x;
+                        })
+                    );
+                }
             }
         }
 
         _userLessonRepository.AddRange(userLessons);
 
+        await _selectedLessonSourceRepository.SaveChangesAsync();
+        await _selectedLessonEntryRepository.SaveChangesAsync();
         await _userLessonOccurenceRepository.SaveChangesAsync();
         await _userLessonRepository.SaveChangesAsync();
     }

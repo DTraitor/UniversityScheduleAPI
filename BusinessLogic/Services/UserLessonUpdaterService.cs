@@ -69,52 +69,64 @@ public class UserLessonUpdaterService : IUserLessonUpdaterService
 
         foreach (var user in users)
         {
-            foreach (var selectedSource in userIdToSelectedSources[user.Id])
+            if (userIdToSelectedSources.TryGetValue(user.Id, out var selectedSourcesDict))
             {
-                var source = sources.FirstOrDefault(x => x.Id == selectedSource.SourceId);
+                foreach (var selectedSource in selectedSourcesDict)
+                {
+                    var source = sources.FirstOrDefault(x => x.Id == selectedSource.SourceId);
 
-                var lessonsToMap = entries
-                    .Where(e => e.SourceId == source.Id);
+                    var lessonsToMap = entries
+                        .Where(e => e.SourceId == source.Id);
 
-                if (selectedSource.SubGroupNumber != -1)
-                    lessonsToMap = lessonsToMap
-                        .Where(e => e.SubGroupNumber == selectedSource.SubGroupNumber || e.SubGroupNumber == -1);
+                    if (selectedSource.SubGroupNumber != -1)
+                        lessonsToMap = lessonsToMap
+                            .Where(e => e.SubGroupNumber == selectedSource.SubGroupNumber || e.SubGroupNumber == -1);
 
-                userLessons.AddRange(
-                    ScheduleLessonsMapper.Map(
+                    if (selectedSource.Type != null)
+                        lessonsToMap = lessonsToMap
+                            .Where(e => e.Type == selectedSource.Type);
+
+                    userLessons.AddRange(
+                        ScheduleLessonsMapper.Map(
                             lessonsToMap.ToList(),
                             source.StartDate,
                             source.EndDate,
                             TimeZoneInfo.FindSystemTimeZoneById(source.TimeZone)
                         ).Select(x =>
                         {
+                            x.UserId = user.Id;
                             x.SelectedLessonSourceType = SelectedLessonSourceType.Source;
                             x.LessonSourceId = selectedSource.Id;
                             return x;
                         })
                     );
+                }
             }
 
-            foreach (var selectedEntry in userIdToSelectedEntries[user.Id].GroupBy(x => x.SourceId))
+            if (userIdToSelectedEntries.TryGetValue(user.Id, out var selectedEntriesDict))
             {
-                var entriesIds = selectedEntry.Select(x => x.EntryId).ToHashSet();
-                var source = sources.FirstOrDefault(x => x.Id == selectedEntry.Key);
+                foreach (var selectedEntry in selectedEntriesDict.GroupBy(x => x.SourceId))
+                {
+                    var entriesIds = selectedEntry.Select(x => x.EntryId).ToHashSet();
+                    var source = sources.FirstOrDefault(x => x.Id == selectedEntry.Key);
 
-                userLessons.AddRange(
-                    ScheduleLessonsMapper.Map(
-                        entries
-                            .Where(e => entriesIds.Contains(e.Id))
-                            .ToList(),
-                        source.StartDate,
-                        source.EndDate,
-                        TimeZoneInfo.FindSystemTimeZoneById(source.TimeZone)
-                    ).Select(x =>
-                    {
-                        x.SelectedLessonSourceType = SelectedLessonSourceType.Entry;
-                        x.LessonSourceId = selectedEntry.Key;
-                        return x;
-                    })
-                );
+                    userLessons.AddRange(
+                        ScheduleLessonsMapper.Map(
+                            entries
+                                .Where(e => entriesIds.Contains(e.Id))
+                                .ToList(),
+                            source.StartDate,
+                            source.EndDate,
+                            TimeZoneInfo.FindSystemTimeZoneById(source.TimeZone)
+                        ).Select(x =>
+                        {
+                            x.UserId = user.Id;
+                            x.SelectedLessonSourceType = SelectedLessonSourceType.Entry;
+                            x.LessonSourceId = selectedEntry.Key;
+                            return x;
+                        })
+                    );
+                }
             }
         }
 

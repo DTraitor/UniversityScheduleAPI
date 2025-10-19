@@ -113,11 +113,11 @@ public class OccurrencesUpdaterJob : IHostedService, IDisposable, IAsyncDisposab
 
         var users = await userRepository.GetByIdsAsync(lessonsToUpdate.Select(x => x.UserId));
         var sources = await selectedLessonSourceRepository.GetByUserIdsAndSourceType(users.Select(x => x.Id), LessonSourceType.Group);
-                                                                 var mastersSet = new HashSet<int>(sources.Where(x => x.SourceName[0] == 'М').Select(x => x.Id));
+        var mastersSet = new HashSet<int>(sources.Where(x => x.SourceName[0] == 'М').Select(x => x.Id));
 
         foreach (var (lesson, user) in lessonsToUpdate.Join(users, x => x.UserId, y => y.Id, (lesson, user) => new Tuple<UserLesson, User>(lesson, user)))
         {
-            bool master = mastersSet.Contains(sources.FirstOrDefault(x => x.UserId == user.Id).Id);
+            bool master = mastersSet.Contains(sources.FirstOrDefault(x => x.UserId == user.Id)?.Id ?? -2);
             TimeZoneInfo timeZone = TimeZoneInfo.FindSystemTimeZoneById(lesson.TimeZoneId);
 
             DateTime? latestOccurrence;

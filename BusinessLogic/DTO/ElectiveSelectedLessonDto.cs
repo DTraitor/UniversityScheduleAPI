@@ -8,6 +8,7 @@ public record ElectiveSelectedLessonDto
     public record SourceDto
     {
         public string Name { get; init; }
+        public string? Type { get; init; }
         public int SelectedSourceId { get; init; }
         public int SubGroupNumber { get; init; }
     }
