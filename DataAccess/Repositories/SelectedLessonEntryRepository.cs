@@ -78,4 +78,9 @@ public class SelectedLessonEntryRepository : ISelectedLessonEntryRepository
     {
         return await _context.SelectedLessonEntries.Where(x => userIds.Contains(x.UserId)).ToListAsync();
     }
+
+    public async Task<IEnumerable<SelectedLessonEntry>> GetByUserId(int userId)
+    {
+        return await _context.SelectedLessonEntries.Where(x => x.UserId == userId).ToListAsync();
+    }
 }

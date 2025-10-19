@@ -43,6 +43,8 @@ public class UserAlertJob : IHostedService, IDisposable
     {
         _logger.LogInformation("UserAlertJob stopping...");
 
+        ExecuteTimer(null);
+
         _cancellationTokenSource.Cancel();
         _timer?.Change(Timeout.Infinite, 0);
         return Task.CompletedTask;

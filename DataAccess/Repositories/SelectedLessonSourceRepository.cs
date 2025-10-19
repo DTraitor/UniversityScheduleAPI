@@ -70,6 +70,11 @@ public class SelectedLessonSourceRepository : ISelectedLessonSourceRepository
         _context.SaveChanges();
     }
 
+    public async Task<IEnumerable<SelectedLessonSource>> GetByUserId(int userId)
+    {
+        return await _context.SelectedLessonSources.Where(x => x.UserId == userId).ToListAsync();
+    }
+
     public async Task<IEnumerable<SelectedLessonSource>> GetByUserIds(IEnumerable<int> userIds)
     {
         return await _context.SelectedLessonSources.Where(x => userIds.Contains(x.UserId)).ToListAsync();

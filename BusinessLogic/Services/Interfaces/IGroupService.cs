@@ -1,6 +1,4 @@
-﻿using BusinessLogic.DTO;
-
-namespace BusinessLogic.Services.Interfaces;
+﻿namespace BusinessLogic.Services.Interfaces;
 
 public interface IGroupService
 {

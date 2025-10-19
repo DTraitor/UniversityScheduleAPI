@@ -1,6 +1,7 @@
 ﻿using BusinessLogic.DTO;
 using BusinessLogic.Services.Interfaces;
 using DataAccess.Enums;
+using DataAccess.Models;
 using DataAccess.Repositories.Interfaces;
 using Microsoft.Extensions.Logging;
 
@@ -13,6 +14,7 @@ public class ElectiveService : IElectiveService
     private readonly ILessonSourceRepository _lessonSourceRepository;
     private readonly ILessonEntryRepository _lessonEntryRepository;
     private readonly ISelectedLessonSourceRepository _selectedLessonSourceRepository;
+    private readonly ISelectedLessonEntryRepository _selectedLessonEntryRepository;
     private readonly ILogger<ElectiveService> _logger;
 
     public ElectiveService(
@@ -20,6 +22,7 @@ public class ElectiveService : IElectiveService
         ISelectedLessonSourceRepository selectedLessonSourceRepository,
         ILessonEntryRepository lessonEntryRepository,
         IUserModifiedRepository userModifiedRepository,
+        ISelectedLessonEntryRepository selectedLessonEntryRepository,
         IUserRepository userRepository,
         ILogger<ElectiveService> logger)
     {
@@ -27,115 +30,9 @@ public class ElectiveService : IElectiveService
         _selectedLessonSourceRepository = selectedLessonSourceRepository;
         _userModifiedRepository = userModifiedRepository;
         _lessonEntryRepository = lessonEntryRepository;
+        _selectedLessonEntryRepository = selectedLessonEntryRepository;
         _userRepository = userRepository;
         _logger = logger;
-    }
-
-    public async Task<IEnumerable<ElectiveLessonDayDto>> GetPossibleDays()
-    {
-        var uniqueLessonDays = await _lessonRepository.GetUniqueLessonDaysAsync();
-        var allDays = await _dayRepository.GetByIdsAsync(uniqueLessonDays);
-
-        return allDays.Select(x => new ElectiveLessonDayDto
-        {
-            Id = x.Id,
-            WeekNumber = x.DayId / 7,
-            DayOfWeek = (DayOfWeek)(x.DayId % 7),
-            StartTime = StartTimes[x.HourId],
-        });
-    }
-
-    public async Task<IEnumerable<ElectiveLessonDto>> GetElectiveLessons(int electiveDayId, string partialLessonName)
-    {
-        var lessons = await _lessonRepository.GetByDayIdAndPartialNameAsync(electiveDayId, partialLessonName);
-        var days = await _dayRepository.GetByIdsAsync(lessons.Select(x => x.ElectiveLessonDayId));
-
-        return lessons
-            .Join(days, x => x.ElectiveLessonDayId, y => y.Id, (x, y) => new ElectiveLessonDto
-            {
-                Id = x.Id,
-                Title = x.Title,
-                Type = x.Type,
-                Location = x.Location,
-                Teacher = x.Teacher,
-                WeekNumber = y.DayId / 7,
-                DayOfWeek = (DayOfWeek)(y.DayId % 7),
-                StartTime = x.StartTime,
-                Length = x.Length,
-            });
-    }
-
-    public async Task<IEnumerable<ElectiveLessonDto>> GetCurrentLessons(long telegramId)
-    {
-        var user = await _userRepository.GetByTelegramIdAsync(telegramId);
-        if (user == null)
-            throw new KeyNotFoundException("User not found");
-
-        var electiveDays = await _electiveDayRepository.GetAllAsync();
-        var elected = await _electedRepository.GetByUserId(user.Id);
-        return (await _lessonRepository.GetByIdsAsync(elected.Select(x => x.ElectiveLessonId)))
-            .Join(elected, x => x.Id, y => y.ElectiveLessonId, (x, y) =>
-            {
-                var electiveDay = electiveDays.FirstOrDefault(z => z.Id == x.ElectiveLessonDayId);
-                return new ElectiveLessonDto
-                {
-                    Id = y.Id,
-                    Title = x.Title,
-                    Type = x.Type,
-                    Location = x.Location,
-                    Teacher = x.Teacher,
-                    StartTime = x.StartTime,
-                    Length = x.Length,
-                    DayOfWeek = (DayOfWeek)((electiveDay.DayId % 7) - 1),
-                    WeekNumber = electiveDay.DayId / 7,
-                };
-            });
-    }
-
-    public async Task CreateNewElectedLesson(CreateElectiveLessonDto newLessonDto)
-    {
-        var user = await _userRepository.GetByTelegramIdAsync(newLessonDto.TelegramId);
-        if (user == null)
-            throw new KeyNotFoundException("User not found");
-
-        var lesson = await _lessonRepository.GetByIdAsync(newLessonDto.ElectiveLessonId);
-        if (lesson == null)
-            throw new KeyNotFoundException("Lesson not found");
-
-        ElectedLesson newLesson = new ElectedLesson
-        {
-            UserId = user.Id,
-            Name = lesson.Title,
-            Type = lesson.Type,
-            ElectiveLessonDayId = lesson.ElectiveLessonDayId,
-            ElectiveLessonId = lesson.Id,
-        };
-
-        _electedRepository.Add(newLesson);
-        await _electedRepository.SaveChangesAsync();
-
-        _userModifiedRepository.Add(user.Id, ProcessedByEnum.ElectiveLessons);
-        await _userModifiedRepository.SaveChangesAsync();
-    }
-
-    public async Task RemoveElectedLesson(long telegramId, int lessonId)
-    {
-        var user = await _userRepository.GetByTelegramIdAsync(telegramId);
-        if (user == null)
-            throw new KeyNotFoundException("User not found");
-
-        var lesson = await _electedRepository.GetByIdAsync(lessonId);
-        if (lesson == null)
-            return;
-
-        if(lesson.UserId != user.Id)
-            throw new InvalidOperationException("Lesson doesn't belong to the user");
-
-        _electedRepository.Delete(lesson);
-        await _electedRepository.SaveChangesAsync();
-
-        _userModifiedRepository.Add(user.Id, ProcessedByEnum.ElectiveLessons);
-        await _userModifiedRepository.SaveChangesAsync();
     }
 
     public async Task<IEnumerable<ElectiveLessonDto>> GetLessons(string lessonName)
@@ -177,32 +74,158 @@ public class ElectiveService : IElectiveService
         };
     }
 
-    public async Task<IEnumerable<ElectiveLessonDayDto>> GetPossibleDays(int lessonSourceId)
+    public async Task<ElectiveLessonDayDto> GetPossibleDays(int lessonSourceId)
     {
+        var lessonSource = await _lessonSourceRepository.GetByIdAsync(lessonSourceId);
+        if (lessonSource == null)
+            throw new KeyNotFoundException("Lesson not found");
+        if (lessonSource.SourceType != LessonSourceType.Elective)
+            throw new InvalidOperationException("Lesson source type is not elective");
+
+        var entries = await _lessonEntryRepository.GetBySourceIdAsync(lessonSourceId);
+
+        return new ElectiveLessonDayDto
+        {
+            SourceId = lessonSourceId,
+            LessonDays = entries.Select(x => new ElectiveLessonDayDto.ElectiveLessonSpecificDto
+            {
+                Type = x.Type,
+                DayOfWeek = x.DayOfWeek,
+                StartTime = x.StartTime,
+                WeekNumber = x.Week
+            })
+        };
     }
 
     public async Task AddSelectedSource(long telegramId, int lessonSourceId, string lessonType, int subgroupNumber)
     {
-        throw new NotImplementedException();
+        var user = await _userRepository.GetByTelegramIdAsync(telegramId);
+        if (user == null)
+            throw new KeyNotFoundException("User not found");
+
+        var lessonSource = await _lessonSourceRepository.GetByIdAsync(lessonSourceId);
+        if (lessonSource == null)
+            throw new KeyNotFoundException("Lesson not found");
+        if (lessonSource.SourceType != LessonSourceType.Elective)
+            throw new InvalidOperationException("Lesson source type is not elective");
+
+        _selectedLessonSourceRepository.Add(new SelectedLessonSource
+        {
+            LessonSourceType = LessonSourceType.Elective,
+            SourceId = lessonSourceId,
+            SourceName = lessonSource.Name,
+            SubGroupNumber = subgroupNumber,
+            UserId = user.Id,
+        });
+
+        _userModifiedRepository.Add(user.Id);
+
+        await _selectedLessonSourceRepository.SaveChangesAsync();
+        await _userModifiedRepository.SaveChangesAsync();
     }
 
     public async Task RemoveSelectedSource(long telegramId, int selectedSource)
     {
-        throw new NotImplementedException();
+        var user = await _userRepository.GetByTelegramIdAsync(telegramId);
+        if (user == null)
+            throw new KeyNotFoundException("User not found");
+
+        var lessonSource = await _selectedLessonSourceRepository.GetByIdAsync(selectedSource);
+        if (lessonSource == null)
+            throw new KeyNotFoundException("Lesson not found");
+        if (lessonSource.LessonSourceType != LessonSourceType.Elective)
+            throw new InvalidOperationException("Lesson source type is not elective");
+        if (lessonSource.UserId != user.Id)
+            throw new InvalidOperationException("User is not elective");
+
+        _selectedLessonSourceRepository.Delete(lessonSource);
+        _userModifiedRepository.Add(user.Id);
+
+        await _selectedLessonSourceRepository.SaveChangesAsync();
+        await _userModifiedRepository.SaveChangesAsync();
     }
 
     public async Task AddSelectedEntry(long telegramId, int lessonSourceId, int lessonEntry)
     {
-        throw new NotImplementedException();
+        var user = await _userRepository.GetByTelegramIdAsync(telegramId);
+        if (user == null)
+            throw new KeyNotFoundException("User not found");
+
+        var lessonSource = await _lessonSourceRepository.GetByIdAsync(lessonSourceId);
+        if (lessonSource == null)
+            throw new KeyNotFoundException("Lesson not found");
+        if (lessonSource.SourceType != LessonSourceType.Elective)
+            throw new InvalidOperationException("Lesson source type is not elective");
+
+        var entry = await _lessonEntryRepository.GetByIdAsync(lessonEntry);
+        if (entry == null)
+            throw new KeyNotFoundException("Selected entry not found");
+        if (entry.SourceId == lessonSourceId)
+            throw new InvalidOperationException("Selected entry source not found");
+
+        _selectedLessonEntryRepository.Add(new SelectedLessonEntry
+        {
+            EntryId = entry.Id,
+            SourceId = lessonSourceId,
+            EntryName = lessonSource.Name,
+            Type = entry.Type,
+            WeekNumber = entry.Week,
+            DayOfWeek = entry.DayOfWeek,
+            StartTime = entry.StartTime,
+            UserId = user.Id,
+        });
+
+        _userModifiedRepository.Add(user.Id);
+
+        await _selectedLessonEntryRepository.SaveChangesAsync();
+        await _userModifiedRepository.SaveChangesAsync();
     }
 
     public async Task RemoveSelectedEntry(long telegramId, int selectedEntry)
     {
-        throw new NotImplementedException();
+        var user = await _userRepository.GetByTelegramIdAsync(telegramId);
+        if (user == null)
+            throw new KeyNotFoundException("User not found");
+
+        var lessonEntry = await _selectedLessonEntryRepository.GetByIdAsync(selectedEntry);
+        if (lessonEntry == null)
+            throw new KeyNotFoundException("Lesson not found");
+        if (lessonEntry.UserId != user.Id)
+            throw new InvalidOperationException("User is not elective");
+
+        _selectedLessonEntryRepository.Delete(lessonEntry);
+        _userModifiedRepository.Add(user.Id);
+
+        await _selectedLessonEntryRepository.SaveChangesAsync();
+        await _userModifiedRepository.SaveChangesAsync();
     }
 
-    public async Task<IEnumerable<ElectiveSelectedLessonDto>> GetUserLessons(long telegramId)
+    public async Task<ElectiveSelectedLessonDto> GetUserLessons(long telegramId)
     {
-        throw new NotImplementedException();
+        var user = await _userRepository.GetByTelegramIdAsync(telegramId);
+        if (user == null)
+            throw new KeyNotFoundException("User not found");
+
+        var selectedSources = await _selectedLessonSourceRepository.GetByUserId(user.Id);
+        var selectedEntries = await _selectedLessonEntryRepository.GetByUserId(user.Id);
+
+        return new ElectiveSelectedLessonDto
+        {
+            Sources = selectedSources.Select(x => new ElectiveSelectedLessonDto.SourceDto
+            {
+                Name = x.SourceName,
+                SelectedSourceId = x.Id,
+                SubGroupNumber = x.SubGroupNumber,
+            }),
+            Entries = selectedEntries.Select(x => new ElectiveSelectedLessonDto.EntryDto
+            {
+                DayOfWeek = x.DayOfWeek,
+                EntryName = x.EntryName,
+                SelectedEntryId = x.Id,
+                Type = x.Type,
+                StartTime = x.StartTime,
+                WeekNumber = x.WeekNumber,
+            })
+        };
     }
 }
