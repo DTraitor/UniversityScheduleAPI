@@ -19,7 +19,6 @@ public class ChangeHandler : IChangeHandler
             x => (x.SourceId, x.Week, x.DayOfWeek, x.StartTime, x.SubGroupNumber, x.Title, x.Type ?? string.Empty),
             x => x);
 
-
         var existingLessons = new List<LessonEntry>();
 
         foreach (var entry in newLessons)

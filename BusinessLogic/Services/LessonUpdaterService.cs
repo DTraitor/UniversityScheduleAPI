@@ -85,7 +85,7 @@ public class LessonUpdaterService : ILessonUpdaterService
         var existingSourceIds = sources.Select(x => x.Id).ToHashSet();
         var existingEntriesIds = entries.Select(x => x.Id).ToHashSet();
 
-        foreach (var removedSource in selectedSources.Where(x => !existingSourceIds.Contains(x.Id)))
+        foreach (var removedSource in selectedSources.Where(x => !existingSourceIds.Contains(x.SourceId)))
         {
             if (removedSource.LessonSourceType == LessonSourceType.Group)
             {
@@ -107,7 +107,7 @@ public class LessonUpdaterService : ILessonUpdaterService
             }
         }
 
-        foreach (var removedEntry in selectedEntries.Where(x => !existingEntriesIds.Contains(x.Id)))
+        foreach (var removedEntry in selectedEntries.Where(x => !existingEntriesIds.Contains(x.SourceId)))
         {
             _userAlertService.CreateUserAlert(removedEntry.UserId, UserAlertType.EntryRemoved, new()
             {

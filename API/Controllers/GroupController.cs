@@ -20,4 +20,10 @@ public class GroupController : ControllerBase
     {
         return Ok(await _groupService.GroupExists(groupName));
     }
+
+    [HttpGet("subgroups")]
+    public async Task<IActionResult> GetSubgroups([FromQuery] long telegramId)
+    {
+        return Ok(await _groupService.GetSubgroups(telegramId));
+    }
 }

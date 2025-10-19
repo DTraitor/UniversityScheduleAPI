@@ -53,55 +53,58 @@ public class ScheduleParser : IScheduleParser
 
                 for (int k = 0; k < pair.Count; k++)
                 {
-                    var lesson = pair[k].SelectSingleNode(".//div[@class='pair  vertical']");
-                    if (lesson == null)
+                    var lessonsNodes = pair[k].SelectNodes(".//div[@class='pair  vertical']");
+                    if (lessonsNodes == null)
                         continue;
 
-                    string name = lesson.SelectSingleNode(".//div[@class='subject']")?.InnerText;
-                    string? activity = lesson.SelectSingleNode(".//div[@class='activity-tag']")?.InnerText;
-                    string? room = lesson.SelectSingleNode(".//div[@class='room']")?.InnerText;
-
-                    int subgroupNumber = -1;
-
-                    var subgroupNode = lesson.SelectSingleNode(".//div[@class='subgroup']");
-                    if (subgroupNode != null)
+                    foreach (var lesson in lessonsNodes)
                     {
-                        subgroupNumber = int.Parse(subgroupNode.InnerText.Replace("Підгрупа ", string.Empty));
-                    }
-                    else
-                    {
-                        subgroupNode = lesson.SelectSingleNode(".//div[@class='activity-tag']/span");
+                        string name = lesson.SelectSingleNode(".//div[@class='subject']")?.InnerText;
+                        string? activity = lesson.SelectSingleNode(".//div[@class='activity-tag']")?.InnerText;
+                        string? room = lesson.SelectSingleNode(".//div[@class='room']")?.InnerText;
 
+                        int subgroupNumber = -1;
+
+                        var subgroupNode = lesson.SelectSingleNode(".//div[@class='subgroup']");
                         if (subgroupNode != null)
                         {
-                            subgroupNumber = int.Parse(subgroupNode.InnerText);
+                            subgroupNumber = int.Parse(subgroupNode.InnerText.Replace("Підгрупа ", string.Empty));
                         }
+                        else
+                        {
+                            subgroupNode = lesson.SelectSingleNode(".//div[@class='activity-tag']/span");
+
+                            if (subgroupNode != null)
+                            {
+                                subgroupNumber = int.Parse(subgroupNode.InnerText);
+                            }
+                        }
+
+                        var teacherNodes = lesson.SelectNodes(".//div[@class='teacher']/a");
+                        List<string> teachers = [];
+
+                        if (teacherNodes != null)
+                        {
+                            teachers = teacherNodes
+                            .Select(n => n.InnerText.Replace("\r", string.Empty).Replace("\n", string.Empty).Trim())
+                            .ToList();
+                        }
+
+                        scheduleLessons.Add(new LessonEntry
+                        {
+                            Title = name.Replace("\r", string.Empty).Replace("\n", string.Empty).Trim(),
+                            Type = activity?.Replace("\r", string.Empty).Replace("\n", string.Empty).Trim(),
+                            Location = room?.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("ауд. ", string.Empty).Trim(),
+                            Teachers = teachers,
+                            SubGroupNumber = subgroupNumber,
+
+                            StartTime = beginTime,
+                            Length = duration,
+
+                            Week = weekNumber,
+                            DayOfWeek = k == 7 ? DayOfWeek.Sunday : (DayOfWeek)k+1,
+                        });
                     }
-
-                    var teacherNodes = lesson.SelectNodes(".//div[@class='teacher']/a");
-                    List<string> teachers = [];
-
-                    if (teacherNodes != null)
-                    {
-                        teachers = teacherNodes
-                        .Select(n => n.InnerText.Replace("\r", string.Empty).Replace("\n", string.Empty).Trim())
-                        .ToList();
-                    }
-
-                    scheduleLessons.Add(new LessonEntry
-                    {
-                        Title = name.Replace("\r", string.Empty).Replace("\n", string.Empty).Trim(),
-                        Type = activity?.Replace("\r", string.Empty).Replace("\n", string.Empty).Trim(),
-                        Location = room?.Replace("\r", string.Empty).Replace("\n", string.Empty).Replace("ауд. ", string.Empty).Trim(),
-                        Teachers = teachers,
-                        SubGroupNumber = subgroupNumber,
-
-                        StartTime = beginTime,
-                        Length = duration,
-
-                        Week = weekNumber,
-                        DayOfWeek = k == 7 ? DayOfWeek.Sunday : (DayOfWeek)k+1,
-                    });
                 }
             }
         }
