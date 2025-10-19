@@ -112,12 +112,12 @@ public class OccurrencesUpdaterJob : IHostedService, IDisposable, IAsyncDisposab
         DateTimeOffset limit = DateTimeOffset.UtcNow.AddDays(180);
 
         var users = await userRepository.GetByIdsAsync(lessonsToUpdate.Select(x => x.UserId));
-        var groups = await groupRepository.GetByIdsAsync(users.Select(x => x.GroupId.Value));
+        var groups = await groupRepository.GetByIdsAsync(users.Select(x => x.GroupId ?? -1).Distinct());
         var mastersSet = new HashSet<int>(groups.Where(x => x.GroupName[0] == 'М').Select(x => x.Id));
 
         foreach (var (lesson, user) in lessonsToUpdate.Join(users, x => x.UserId, y => y.Id, (lesson, user) => new Tuple<UserLesson, User>(lesson, user)))
         {
-            bool master = mastersSet.Contains(user.GroupId.Value);
+            bool master = mastersSet.Contains(user.GroupId ?? -1);
             TimeZoneInfo timeZone = TimeZoneInfo.FindSystemTimeZoneById(lesson.TimeZoneId);
 
             DateTime? latestOccurrence;
