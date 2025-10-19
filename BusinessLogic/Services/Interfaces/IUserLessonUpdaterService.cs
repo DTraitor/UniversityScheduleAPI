@@ -3,9 +3,7 @@ using DataAccess.Models;
 
 namespace BusinessLogic.Services.Interfaces;
 
-public interface IUserLessonUpdaterService<T>
+public interface IUserLessonUpdaterService
 {
     public Task ProcessModifiedUser(IEnumerable<UserModified> modifiedUser);
-
-    public ProcessedByEnum ProcessedBy { get; }
 }

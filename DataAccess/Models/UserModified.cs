@@ -3,11 +3,8 @@ using DataAccess.Models.Interface;
 
 namespace DataAccess.Models;
 
-public class UserModified : IModifiedEntry, IEntityId
+public class UserModified : IEntityId
 {
     public int Id { get; set; }
     public int UserId { get; set; }
-    public ProcessedByEnum ToProcess { get; set; }
-
-    public int Key => UserId;
 }

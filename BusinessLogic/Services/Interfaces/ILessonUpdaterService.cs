@@ -1,8 +1,8 @@
-﻿using DataAccess.Models.Interface;
+﻿using DataAccess.Models;
 
 namespace BusinessLogic.Services.Interfaces;
 
-public interface ILessonUpdaterService<T, in TModifiedEntry> where TModifiedEntry : IModifiedEntry
+public interface ILessonUpdaterService
 {
-    Task ProcessModifiedEntry(IEnumerable<TModifiedEntry> modifiedEntry);
+    Task ProcessModifiedEntry(IEnumerable<LessonSourceModified> modifiedEntry);
 }

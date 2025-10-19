@@ -63,16 +63,6 @@ public class UserRepository : IUserRepository
         return _context.Users.Update(user).Entity;
     }
 
-    public async Task<IEnumerable<User>> GetByGroupIdsAsync(IEnumerable<int> groupIds, CancellationToken cancellationToken = default)
-    {
-        return await _context.Users.Where(u => u.GroupId.HasValue && groupIds.Contains(u.GroupId.Value)).ToListAsync(cancellationToken);
-    }
-
-    public async Task<IEnumerable<User>> GetByGroupIdAsync(int groupId, CancellationToken cancellationToken = default)
-    {
-        return await _context.Users.Where(u => u.GroupId.HasValue && u.GroupId.Value == groupId).ToListAsync(cancellationToken);
-    }
-
     public async Task<IEnumerable<User>> GetByIdsAsync(IEnumerable<int> userIds, CancellationToken cancellationToken = default)
     {
         return await _context.Users.Where(u => userIds.Contains(u.Id)).ToListAsync(cancellationToken);

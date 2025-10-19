@@ -75,19 +75,19 @@ public class UserLessonRepository : IUserLessonRepository
         return await _context.UserLessons.Where(ul => ids.Contains(ul.Id)).ToListAsync();
     }
 
-    public IEnumerable<int> RemoveByUserIdsAndLessonSourceType(IEnumerable<int> userIds, LessonSourceTypeEnum sourceType)
+    public IEnumerable<int> RemoveByUserIds(IEnumerable<int> userIds)
     {
-        var lessons = _context.UserLessons.Where(ul => userIds.Contains(ul.UserId) && ul.LessonSourceType == sourceType);
+        var lessons = _context.UserLessons.Where(ul => userIds.Contains(ul.UserId)).ToArray();
         _context.FutureAction(x => x.BulkDelete(lessons));
         return lessons.Select(x => x.Id);
     }
 
-    public async Task<IEnumerable<int>> RemoveByUserIdsAndLessonSourceTypeAndLessonSourceIds(IEnumerable<int> userIds, LessonSourceTypeEnum sourceType,
+    public async Task<IEnumerable<int>> RemoveByUserIdsAndLessonSourceTypeAndLessonSourceIds(IEnumerable<int> userIds, SelectedLessonSourceType sourceType,
         IEnumerable<int> sourceIds)
     {
         var lessons = _context.UserLessons.Where(ul =>
             userIds.Contains(ul.UserId) &&
-            ul.LessonSourceType == sourceType &&
+            ul.SelectedLessonSourceType == sourceType &&
             sourceIds.Contains(ul.LessonSourceId));
         _context.FutureAction(x => x.BulkDelete(lessons));
         return await lessons.Select(x => x.Id).ToListAsync();

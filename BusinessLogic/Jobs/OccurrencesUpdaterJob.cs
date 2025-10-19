@@ -99,7 +99,7 @@ public class OccurrencesUpdaterJob : IHostedService, IDisposable, IAsyncDisposab
 
         using var scope = _serviceProvider.CreateScope();
 
-        var groupRepository = scope.ServiceProvider.GetRequiredService<IGroupRepository>();
+        var selectedLessonSourceRepository = scope.ServiceProvider.GetRequiredService<ISelectedLessonSourceRepository>();
         var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
         var userLessonRepository = scope.ServiceProvider.GetRequiredService<IUserLessonRepository>();
         var userLessonOccurenceRepository = scope.ServiceProvider.GetRequiredService<IUserLessonOccurenceRepository>();
@@ -112,12 +112,12 @@ public class OccurrencesUpdaterJob : IHostedService, IDisposable, IAsyncDisposab
         DateTimeOffset limit = DateTimeOffset.UtcNow.AddDays(180);
 
         var users = await userRepository.GetByIdsAsync(lessonsToUpdate.Select(x => x.UserId));
-        var groups = await groupRepository.GetByIdsAsync(users.Select(x => x.GroupId.Value));
-        var mastersSet = new HashSet<int>(groups.Where(x => x.GroupName[0] == 'М').Select(x => x.Id));
+        var sources = await selectedLessonSourceRepository.GetByUserIdsAndSourceType(users.Select(x => x.Id), LessonSourceType.Group);
+        var mastersSet = new HashSet<int>(sources.Where(x => x.SourceName[0] == 'М').Select(x => x.Id));
 
         foreach (var (lesson, user) in lessonsToUpdate.Join(users, x => x.UserId, y => y.Id, (lesson, user) => new Tuple<UserLesson, User>(lesson, user)))
         {
-            bool master = mastersSet.Contains(user.GroupId.Value);
+            bool master = mastersSet.Contains(sources.FirstOrDefault(x => x.UserId == user.Id).Id);
             TimeZoneInfo timeZone = TimeZoneInfo.FindSystemTimeZoneById(lesson.TimeZoneId);
 
             DateTime? latestOccurrence;

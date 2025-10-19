@@ -12,18 +12,18 @@ public class UserService : IUserService
 {
     private readonly IUserModifiedRepository _userModifiedRepository;
     private readonly IUserRepository _userRepository;
-    private readonly IGroupRepository _groupRepository;
+    private readonly ILessonSourceRepository _lessonSourceRepository;
     private readonly ILogger<UserService> _logger;
 
     public UserService(
         IUserModifiedRepository userModifiedRepository,
         IUserRepository userRepository,
-        IGroupRepository groupRepository,
+        ILessonSourceRepository lessonSourceRepository,
         ILogger<UserService> logger)
     {
         _userModifiedRepository = userModifiedRepository;
         _userRepository = userRepository;
-        _groupRepository = groupRepository;
+        _lessonSourceRepository = lessonSourceRepository;
         _logger = logger;
     }
 

@@ -6,10 +6,10 @@ using Microsoft.Extensions.Logging;
 
 namespace BusinessLogic.Jobs;
 
-public class UserLessonUpdaterJob<T> : IHostedService, IDisposable
+public class UserLessonUpdaterJob : IHostedService, IDisposable
 {
     private IServiceProvider _services;
-    private readonly ILogger<UserLessonUpdaterJob<T>> _logger;
+    private readonly ILogger<UserLessonUpdaterJob> _logger;
 
     private Timer _timer;
     private CancellationTokenSource _cancellationTokenSource = new();
@@ -17,7 +17,7 @@ public class UserLessonUpdaterJob<T> : IHostedService, IDisposable
 
     public UserLessonUpdaterJob(
         IServiceProvider services,
-        ILogger<UserLessonUpdaterJob<T>> logger)
+        ILogger<UserLessonUpdaterJob> logger)
     {
         _services = services;
         _logger = logger;
@@ -56,12 +56,12 @@ public class UserLessonUpdaterJob<T> : IHostedService, IDisposable
         using var scope = _services.CreateScope();
 
         var modifiedRepository = scope.ServiceProvider.GetRequiredService<IUserModifiedRepository>();
-        var lessonUpdater = scope.ServiceProvider.GetRequiredService<IUserLessonUpdaterService<T>>();
+        var lessonUpdater = scope.ServiceProvider.GetRequiredService<IUserLessonUpdaterService>();
 
         var toProcess =
-            (await modifiedRepository.GetNotProcessed(lessonUpdater.ProcessedBy, _cancellationTokenSource.Token));
+            (await modifiedRepository.GetNotProcessed(_cancellationTokenSource.Token));
 
-        await lessonUpdater.ProcessModifiedUser(toProcess.GroupBy(x => x.Key).Select(x => x.First()));
+        await lessonUpdater.ProcessModifiedUser(toProcess.GroupBy(x => x.UserId).Select(x => x.First()));
 
         modifiedRepository.RemoveProcessed(toProcess);
 

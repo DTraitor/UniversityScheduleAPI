@@ -1,7 +1,5 @@
 using BusinessLogic.Jobs;
 using BusinessLogic.Services;
-using BusinessLogic.Services.ElectiveLessons;
-using BusinessLogic.Services.GroupLessons;
 using BusinessLogic.Services.Interfaces;
 using DataAccess.Domain;
 using DataAccess.Repositories;
@@ -21,6 +19,8 @@ builder.Services.AddScoped<IScheduleService, ScheduleService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IGroupService, GroupService>();
 builder.Services.AddScoped<IElectiveService, ElectiveService>();
+builder.Services.AddScoped<IUserLessonUpdaterService, UserLessonUpdaterService>();
+builder.Services.AddScoped<ILessonUpdaterService, LessonUpdaterService>();
 builder.Services.AddSingleton<IUserAlertService, UserAlertService>();
 builder.Services.AddSingleton<IUsageMetricService, UsageMetricService>();
 builder.Services.AddSingleton<IScheduleReader, ScheduleReader>();
@@ -30,21 +30,16 @@ builder.Services.AddSingleton<IChangeHandler, ChangeHandler>();
 // Repositories
 builder.Services.AddScoped<IUserModifiedRepository, UserModifiedRepository>();
 builder.Services.AddScoped<IPersistentDataRepository, PersistentDataRepository>();
-builder.Services.AddScoped<IRepository<GroupLessonModified>, GroupLessonModifiedRepository>();
-builder.Services.AddScoped<IRepository<ElectiveLessonModified>, ElectiveLessonModifiedRepository>();
 builder.Services.AddRepository<IUserRepository, UserRepository, User>();
-builder.Services.AddRepository<IGroupRepository, GroupRepository, Group>();
 builder.Services.AddRepository<IUserAlertRepository, UserAlertRepository, UserAlert>();
 builder.Services.AddRepository<IUserLessonRepository, UserLessonRepository, UserLesson>();
-builder.Services.AddRepository<IElectedLessonRepository, ElectedLessonRepository, ElectedLesson>();
-builder.Services.AddRepository<IElectiveLessonDayRepository, ElectiveLessonDayRepository, ElectiveLessonDay>();
 builder.Services.AddRepository<IUserLessonOccurenceRepository, UserLessonOccurenceRepository, UserLessonOccurrence>();
 builder.Services.AddRepository<IUsageMetricRepository, UsageMetricRepository, UsageMetric>();
-builder.Services.AddRepository<IElectiveLessonRepository, ElectiveLessonRepository, ElectiveLesson>();
-builder.Services.AddRepository<IGroupLessonRepository, GroupLessonRepository, GroupLesson>();
 builder.Services.AddRepository<ILessonSourceRepository, LessonSourceRepository, LessonSource>();
 builder.Services.AddRepository<ILessonEntryRepository, LessonEntryRepository, LessonEntry>();
 builder.Services.AddRepository<ILessonSourceModifiedRepository, LessonSourceModifiedRepositoryRepository, LessonSourceModified>();
+builder.Services.AddRepository<ISelectedLessonSourceRepository, SelectedLessonSourceRepository, SelectedLessonSource>();
+builder.Services.AddRepository<ISelectedLessonEntryRepository, SelectedLessonEntryRepository, SelectedLessonEntry>();
 
 builder.Services.AddHttpClient();
 
@@ -53,6 +48,8 @@ builder.Services.AddHostedService<OccurrencesUpdaterJob>();
 builder.Services.AddHostedService<UserMetricJob>();
 builder.Services.AddHostedService<UserAlertJob>();
 builder.Services.AddHostedService<ScheduleParserJob>();
+builder.Services.AddHostedService<LessonUpdaterJob>();
+builder.Services.AddHostedService<UserLessonUpdaterJob>();
 
 // Configurations
 builder.Services.Configure<ElectiveScheduleParsingOptions>(

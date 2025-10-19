@@ -24,7 +24,7 @@ public static class ElectiveLessonsMapper
                 StartTime = begin.AddDays(day.DayId-1),
                 EndTime = end,
                 TimeZoneId = timeZone.Id,
-                LessonSourceType = LessonSourceTypeEnum.Elective,
+                SelectedLessonSourceType = SelectedLessonSourceType.Elective,
                 LessonSourceId = lesson.ElectiveLessonDayId,
             };
         }

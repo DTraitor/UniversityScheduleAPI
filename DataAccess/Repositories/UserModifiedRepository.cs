@@ -18,22 +18,14 @@ public class UserModifiedRepository : IUserModifiedRepository
         _logger = logger;
     }
 
-    public async Task<IEnumerable<UserModified>> GetNotProcessed(ProcessedByEnum flag, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<UserModified>> GetNotProcessed(CancellationToken cancellationToken = default)
     {
-        return await _context.UserModifications.Where(x => x.ToProcess == flag).Take(100).ToListAsync(cancellationToken);
+        return await _context.UserModifications.Take(100).ToListAsync(cancellationToken);
     }
 
-    public void Add(int userId, ProcessedByEnum toProcessBy)
+    public void Add(int userId)
     {
-        _context.Add(new UserModified { UserId = userId, ToProcess = toProcessBy });
-    }
-
-    public void AddProcessByAll(int userId)
-    {
-        foreach (ProcessedByEnum value in Enum.GetValues(typeof(ProcessedByEnum)))
-        {
-            _context.Add(new UserModified { UserId = userId, ToProcess = value });
-        }
+        _context.Add(new UserModified { UserId = userId });
     }
 
     public void RemoveProcessed(IEnumerable<UserModified> toRemove)

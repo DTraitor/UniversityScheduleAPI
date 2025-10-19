@@ -7,34 +7,37 @@ using DataAccess.Repositories.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace BusinessLogic.Services.ElectiveLessons;
+namespace BusinessLogic.Services;
 
-public class ElectiveLessonUpdaterService : ILessonUpdaterService<ElectiveLesson, ElectiveLessonModified>
+public class LessonUpdaterService : ILessonUpdaterService
 {
-    private readonly IElectiveLessonDayRepository _dayRepository;
-    private readonly IElectiveLessonRepository _lessonRepository;
-    private readonly IElectedLessonRepository _electedRepository;
+    private readonly ILessonSourceRepository _lessonSourceRepository;
+    private readonly ILessonEntryRepository  _lessonEntryRepository;
+    private readonly ISelectedLessonSourceRepository _selectedLessonSourceRepository;
+    private readonly ISelectedLessonEntryRepository _selectedLessonEntryRepository;
     private readonly IUserRepository _userRepository;
     private readonly IUserLessonRepository _userLessonRepository;
     private readonly IUserLessonOccurenceRepository _userLessonOccurenceRepository;
     private readonly IOptions<ElectiveScheduleParsingOptions> _options;
     private readonly IUserAlertService _userAlertService;
-    private readonly ILogger<ElectiveLessonUpdaterService> _logger;
+    private readonly ILogger<LessonUpdaterService> _logger;
 
-    public ElectiveLessonUpdaterService(
-        IElectiveLessonDayRepository dayRepository,
-        IElectiveLessonRepository lessonRepository,
-        IElectedLessonRepository electedRepository,
+    public LessonUpdaterService(
+        ILessonSourceRepository lessonSourceRepository,
+        ILessonEntryRepository lessonEntryRepository,
+        ISelectedLessonSourceRepository selectedLessonSourceRepository,
+        ISelectedLessonEntryRepository selectedLessonEntryRepository,
         IUserRepository userRepository,
         IUserLessonRepository userLessonRepository,
         IUserLessonOccurenceRepository userLessonOccurenceRepository,
         IOptions<ElectiveScheduleParsingOptions> options,
         IUserAlertService userAlertService,
-        ILogger<ElectiveLessonUpdaterService> logger)
+        ILogger<LessonUpdaterService> logger)
     {
-        _dayRepository = dayRepository;
-        _lessonRepository = lessonRepository;
-        _electedRepository = electedRepository;
+        _lessonSourceRepository = lessonSourceRepository;
+        _lessonEntryRepository = lessonEntryRepository;
+        _selectedLessonSourceRepository = selectedLessonSourceRepository;
+        _selectedLessonEntryRepository = selectedLessonEntryRepository;
         _userRepository = userRepository;
         _userLessonRepository = userLessonRepository;
         _userLessonOccurenceRepository = userLessonOccurenceRepository;
@@ -43,14 +46,33 @@ public class ElectiveLessonUpdaterService : ILessonUpdaterService<ElectiveLesson
         _logger = logger;
     }
 
-    public async Task ProcessModifiedEntry(IEnumerable<ElectiveLessonModified> modifiedEntry)
+    public async Task ProcessModifiedEntry(IEnumerable<LessonSourceModified> modifiedEntry)
     {
-        List<int> dayIds = modifiedEntry.Select(x => x.Key).ToList();
+        HashSet<int> modifiedSourceIds = modifiedEntry.Select(x => x.SourceId).ToHashSet();
+        var selectedSources = await _selectedLessonSourceRepository.GetBySourceIds(modifiedSourceIds);
+        var selectedEntries = await _selectedLessonEntryRepository.GetBySourceIds(modifiedSourceIds);
 
-        var electedLessons = await _electedRepository.GetByElectiveDayIdsAsync(dayIds);
-        var users = await _userRepository.GetByIdsAsync(electedLessons.Select(x => x.UserId));
+        var sourceIds = selectedSources
+            .Select(x => x.SourceId)
+            .Union(selectedEntries.Select(x => x.SourceId))
+            .ToHashSet();
+
+        var users = await _userRepository.GetByIdsAsync(
+            selectedSources
+                .Select(x => x.UserId)
+                .Union(selectedEntries.Select(x => x.UserId))
+            );
+
         if(!users.Any())
             return;
+
+        var sources = await _lessonSourceRepository.GetByIdsAsync(sourceIds);
+        var entries = await _lessonEntryRepository.GetBySourceIdsAsync(sourceIds);
+
+        foreach (var user in users)
+        {
+
+        }
 
         var electiveLessons = await _lessonRepository.GetByElectiveDayIdsAsync(dayIds);
         HashSet<int> electiveLessonIds = new HashSet<int>(electiveLessons.Select(x => x.Id));
@@ -63,7 +85,7 @@ public class ElectiveLessonUpdaterService : ILessonUpdaterService<ElectiveLesson
         TimeZoneInfo timeZone = TimeZoneInfo.FindSystemTimeZoneById(_options.Value.TimeZone);
 
         var removed = await _userLessonRepository.RemoveByUserIdsAndLessonSourceTypeAndLessonSourceIds(
-            users.Select(x => x.Id), LessonSourceTypeEnum.Elective, dayIds);
+            users.Select(x => x.Id), SelectedLessonSourceType.Elective, dayIds);
         _userLessonOccurenceRepository.ClearByLessonIds(removed);
 
         foreach (var removedLesson in removedElected)
@@ -107,6 +129,5 @@ public class ElectiveLessonUpdaterService : ILessonUpdaterService<ElectiveLesson
 
         await _userLessonRepository.SaveChangesAsync();
         await _userLessonOccurenceRepository.SaveChangesAsync();
-        await _electedRepository.SaveChangesAsync();
     }
 }

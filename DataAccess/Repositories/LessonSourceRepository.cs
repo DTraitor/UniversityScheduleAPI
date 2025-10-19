@@ -68,4 +68,9 @@ public class LessonSourceRepository : ILessonSourceRepository
         _context.ExecuteFutureAction();
         _context.SaveChanges();
     }
+
+    public async Task<IEnumerable<LessonSource>> GetByIdsAsync(IEnumerable<int> ids)
+    {
+        return await _context.LessonSources.Where(x => ids.Contains(x.Id)).ToListAsync();
+    }
 }

@@ -8,10 +8,10 @@ using Microsoft.Extensions.Logging;
 
 namespace BusinessLogic.Jobs;
 
-public class LessonUpdaterJob<T, TModifiedEntry> : IHostedService, IDisposable where TModifiedEntry : IModifiedEntry
+public class LessonUpdaterJob : IHostedService, IDisposable
 {
     private IServiceProvider _services;
-    private readonly ILogger<LessonUpdaterJob<T, TModifiedEntry>> _logger;
+    private readonly ILogger<LessonUpdaterJob> _logger;
 
     private Timer _timer;
     private CancellationTokenSource _cancellationTokenSource = new();
@@ -19,7 +19,7 @@ public class LessonUpdaterJob<T, TModifiedEntry> : IHostedService, IDisposable w
 
     public LessonUpdaterJob(
         IServiceProvider services,
-        ILogger<LessonUpdaterJob<T, TModifiedEntry>> logger)
+        ILogger<LessonUpdaterJob> logger)
     {
         _services = services;
         _logger = logger;
@@ -57,13 +57,13 @@ public class LessonUpdaterJob<T, TModifiedEntry> : IHostedService, IDisposable w
     {
         using var scope = _services.CreateScope();
 
-        var modifiedRepository = scope.ServiceProvider.GetRequiredService<IRepository<TModifiedEntry>>();
-        var lessonUpdater = scope.ServiceProvider.GetRequiredService<ILessonUpdaterService<T, TModifiedEntry>>();
+        var modifiedRepository = scope.ServiceProvider.GetRequiredService<ILessonSourceModifiedRepository>();
+        var lessonUpdater = scope.ServiceProvider.GetRequiredService<ILessonUpdaterService>();
 
         var toProcess =
             (await modifiedRepository.GetAllAsync(_cancellationTokenSource.Token));
 
-        await lessonUpdater.ProcessModifiedEntry(toProcess.GroupBy(x => x.Key).Select(x => x.First()));
+        await lessonUpdater.ProcessModifiedEntry(toProcess.GroupBy(x => x.SourceId).Select(x => x.First()));
 
         modifiedRepository.RemoveRange(toProcess);
 
