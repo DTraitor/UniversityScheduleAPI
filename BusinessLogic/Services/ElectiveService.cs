@@ -1,5 +1,6 @@
 ﻿using BusinessLogic.DTO;
 using BusinessLogic.Services.Interfaces;
+using DataAccess.Enums;
 using DataAccess.Repositories.Interfaces;
 using Microsoft.Extensions.Logging;
 
@@ -10,12 +11,14 @@ public class ElectiveService : IElectiveService
     private readonly IUserModifiedRepository _userModifiedRepository;
     private readonly IUserRepository _userRepository;
     private readonly ILessonSourceRepository _lessonSourceRepository;
+    private readonly ILessonEntryRepository _lessonEntryRepository;
     private readonly ISelectedLessonSourceRepository _selectedLessonSourceRepository;
     private readonly ILogger<ElectiveService> _logger;
 
     public ElectiveService(
         ILessonSourceRepository lessonSourceRepository,
         ISelectedLessonSourceRepository selectedLessonSourceRepository,
+        ILessonEntryRepository lessonEntryRepository,
         IUserModifiedRepository userModifiedRepository,
         IUserRepository userRepository,
         ILogger<ElectiveService> logger)
@@ -23,6 +26,7 @@ public class ElectiveService : IElectiveService
         _lessonSourceRepository = lessonSourceRepository;
         _selectedLessonSourceRepository = selectedLessonSourceRepository;
         _userModifiedRepository = userModifiedRepository;
+        _lessonEntryRepository = lessonEntryRepository;
         _userRepository = userRepository;
         _logger = logger;
     }
@@ -136,17 +140,45 @@ public class ElectiveService : IElectiveService
 
     public async Task<IEnumerable<ElectiveLessonDto>> GetLessons(string lessonName)
     {
-        throw new NotImplementedException();
+        var lessonSources = await _lessonSourceRepository.GetAllLimitAsync(11);
+        if (lessonSources.Count() >= 11)
+            throw new InvalidOperationException("Should be more specific");
+
+        var entries = (await _lessonEntryRepository.GetBySourceIdsAsync(lessonSources.Select(x => x.Id)))
+            .GroupBy(x => x.SourceId);
+
+        return lessonSources.Select(x => new ElectiveLessonDto
+        {
+            Title = x.Name,
+            SourceId = x.Id,
+            Types = entries
+                .Where(y => y.Key == x.Id)
+                .Select(y => y.FirstOrDefault()?.Type ?? "")
+                .Distinct()
+                .ToList()
+
+        });
     }
 
-    public async Task<IEnumerable<ElectiveSubgroupsDto>> GetPossibleSubgroups(int lessonSourceId, string lessonType)
+    public async Task<ElectiveSubgroupsDto> GetPossibleSubgroups(int lessonSourceId, string lessonType)
     {
-        throw new NotImplementedException();
+        var lessonSource = await _lessonSourceRepository.GetByIdAsync(lessonSourceId);
+        if (lessonSource == null)
+            throw new KeyNotFoundException("Lesson not found");
+        if (lessonSource.SourceType != LessonSourceType.Elective)
+            throw new InvalidOperationException("Lesson source type is not elective");
+
+        var entries = (await _lessonEntryRepository.GetBySourceIdAsync(lessonSourceId)).GroupBy(x => x.SubGroupNumber);
+
+        return new ElectiveSubgroupsDto()
+        {
+            LessonSourceId = lessonSourceId,
+            PossibleSubgroups = entries.Select(z => z.Key).Distinct().Append(-1)
+        };
     }
 
     public async Task<IEnumerable<ElectiveLessonDayDto>> GetPossibleDays(int lessonSourceId)
     {
-        throw new NotImplementedException();
     }
 
     public async Task AddSelectedSource(long telegramId, int lessonSourceId, string lessonType, int subgroupNumber)
@@ -169,7 +201,7 @@ public class ElectiveService : IElectiveService
         throw new NotImplementedException();
     }
 
-    public async Task<IEnumerable<ElectiveLessonDto>> GetUserLessons(long telegramId)
+    public async Task<IEnumerable<ElectiveSelectedLessonDto>> GetUserLessons(long telegramId)
     {
         throw new NotImplementedException();
     }

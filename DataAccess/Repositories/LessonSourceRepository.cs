@@ -75,6 +75,11 @@ public class LessonSourceRepository : ILessonSourceRepository
         return await _context.LessonSources.FirstOrDefaultAsync(x => x.SourceType == lessonSourceType && x.Name == name);
     }
 
+    public async Task<IEnumerable<LessonSource>> GetAllLimitAsync(int limit)
+    {
+        return await _context.LessonSources.Take(limit).ToListAsync();
+    }
+
     public async Task<IEnumerable<LessonSource>> GetByIdsAsync(IEnumerable<int> ids)
     {
         return await _context.LessonSources.Where(x => ids.Contains(x.Id)).ToListAsync();
