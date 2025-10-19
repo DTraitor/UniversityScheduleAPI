@@ -80,6 +80,43 @@ namespace DataAccess.Migrations.ScheduleDb
                     ON ls.""Name"" = g.""GroupName"";
                 ");
 
+            migrationBuilder.Sql(@"
+                INSERT INTO public.""SelectedLessonEntries"" (
+                    ""UserId"",
+                    ""SourceId"",
+                    ""EntryId"",
+                    ""EntryName"",
+                    ""Type"",
+                    ""WeekNumber"",
+                    ""DayOfWeek"",
+                    ""StartTime""
+                )
+                SELECT
+                    u.""Id"" AS ""UserId"",
+                    le.""SourceId"",
+                    le.""Id"" AS ""EntryId"",
+                    le.""Title"" AS ""EntryName"",
+                    le.""Type"",
+                    le.""Week"" AS ""WeekNumber"",
+                    le.""DayOfWeek"",
+                    le.""StartTime""
+                FROM public.""Users"" u
+                JOIN public.""ElectedLessons"" e
+                    ON e.""UserId"" = u.""Id""
+                JOIN public.""ElectiveLessonDays"" ed
+                    ON e.""ElectiveLessonDayId"" = ed.""Id""
+                JOIN ""ElectiveLessons"" el
+                    ON e.""ElectiveLessonId"" = el.""Id""
+                JOIN public.""LessonSources"" ls
+                    ON ls.""Name"" = e.""Name""
+                JOIN public.""LessonEntries"" le
+                    ON le.""SourceId"" = ls.""Id""
+                        and le.""Type"" = el.""Type""
+                        and le.""DayOfWeek"" = ed.""DayId"" % 7
+                        and le.""Week"" = ((ed.""DayId"" / 7) >= 1)
+                        and le.""StartTime"" = el.""StartTime"";
+                ");
+
             migrationBuilder.DropTable(
                 name: "ElectedLessons");
 
