@@ -120,12 +120,16 @@ public class LessonUpdaterService : ILessonUpdaterService
             {
                 var source = sources.FirstOrDefault(x => x.Id == selectedSource.SourceId);
 
+                var lessonsToMap = entries
+                    .Where(e => e.SourceId == source.Id);
+
+                if (selectedSource.SubGroupNumber != -1)
+                    lessonsToMap = lessonsToMap
+                        .Where(e => e.SubGroupNumber == selectedSource.SubGroupNumber || e.SubGroupNumber == -1);
+
                 userLessons.AddRange(
                     ScheduleLessonsMapper.Map(
-                        entries
-                            .Where(e => e.SourceId == source.Id)
-                            .Where(e => e.SubGroupNumber == selectedSource.SubGroupNumber || e.SubGroupNumber == -1)
-                            .ToList(),
+                        lessonsToMap.ToList(),
                         source.StartDate,
                         source.EndDate,
                         TimeZoneInfo.FindSystemTimeZoneById(source.TimeZone)

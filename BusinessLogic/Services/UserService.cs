@@ -1,5 +1,4 @@
 ﻿using BusinessLogic.DTO;
-using BusinessLogic.Enums;
 using BusinessLogic.Services.Interfaces;
 using DataAccess.Enums;
 using DataAccess.Models;
@@ -13,17 +12,20 @@ public class UserService : IUserService
     private readonly IUserModifiedRepository _userModifiedRepository;
     private readonly IUserRepository _userRepository;
     private readonly ILessonSourceRepository _lessonSourceRepository;
+    private readonly ISelectedLessonSourceRepository _selectedLessonSourceRepository;
     private readonly ILogger<UserService> _logger;
 
     public UserService(
         IUserModifiedRepository userModifiedRepository,
         IUserRepository userRepository,
         ILessonSourceRepository lessonSourceRepository,
+        ISelectedLessonSourceRepository selectedLessonSourceRepository,
         ILogger<UserService> logger)
     {
         _userModifiedRepository = userModifiedRepository;
         _userRepository = userRepository;
         _lessonSourceRepository = lessonSourceRepository;
+        _selectedLessonSourceRepository = selectedLessonSourceRepository;
         _logger = logger;
     }
 
@@ -34,38 +36,29 @@ public class UserService : IUserService
 
     public async Task<UserDtoOutput> CreateUser(UserDtoInput userData)
     {
-        var group = await _groupRepository.GetByNameAsync(userData.GroupName);
+        var group = await _lessonSourceRepository.GetByNameAndSourceTypeAsync(userData.GroupName, LessonSourceType.Group);
         if (group == null)
             throw new KeyNotFoundException("No group with such name found.");
 
         var user = await _userRepository.GetByTelegramIdAsync(userData.TelegramId);
-        if (user != null)
+        if (user == null)
         {
-            user.GroupId = group.Id;
-            user.GroupName = group.GroupName;
-            user = _userRepository.Update(user);
-        }
-        else
-        {
-            user = await _userRepository.AddAsync(new User
+            user = new User
             {
                 TelegramId = userData.TelegramId,
-                GroupId = group.Id,
                 CreatedAt = DateTimeOffset.UtcNow,
-                GroupName = group.GroupName
-            });
+            };
+
+            _userRepository.Add(user);
         }
 
-        await _userRepository.SaveChangesAsync();
+        await UpdateUserGroup(user, userData);
 
-        _userModifiedRepository.Add(user.Id, ProcessedByEnum.GroupLessons);
-        await _userModifiedRepository.SaveChangesAsync();
+        await _userRepository.SaveChangesAsync();
 
         return new UserDtoOutput
         {
             Id = user.Id,
-            GroupId = user.GroupId,
-            ElectiveStatus = ElectiveStatusEnum.None,
         };
     }
 
@@ -75,24 +68,51 @@ public class UserService : IUserService
         if (user == null)
             throw new KeyNotFoundException("No user with such telegram id.");
 
-        var group = await _groupRepository.GetByNameAsync(userData.GroupName);
-        if (group == null)
-            throw new KeyNotFoundException("No group with such name found.");
-
-        user.GroupId = group.Id;
-        var result = _userRepository.Update(user);
-        await _userRepository.SaveChangesAsync();
-
-        _userModifiedRepository.Add(user.Id, ProcessedByEnum.GroupLessons);
-        //Gotta recalculate occurrences as well to make sure saturdays are correct
-        _userModifiedRepository.Add(user.Id, ProcessedByEnum.ElectiveLessons);
-        await _userModifiedRepository.SaveChangesAsync();
+        await UpdateUserGroup(user, userData);
 
         return new UserDtoOutput
         {
-            Id = result.Id,
-            GroupId = result.GroupId,
-            ElectiveStatus = ElectiveStatusEnum.None,
+            Id = user.Id,
         };
+    }
+
+    private async Task UpdateUserGroup(User user, UserDtoInput userData)
+    {
+        var group = await _lessonSourceRepository.GetByNameAndSourceTypeAsync(userData.GroupName, LessonSourceType.Group);
+        if (group == null)
+            throw new KeyNotFoundException("No group with such name found.");
+
+        var selectedGroup
+            = (await _selectedLessonSourceRepository.GetByUserIdAndSourceType(user.Id, LessonSourceType.Group)).FirstOrDefault();
+
+        if (selectedGroup == null)
+        {
+            selectedGroup = new SelectedLessonSource()
+            {
+                UserId = user.Id,
+                SourceId = group.Id,
+                SubGroupNumber = userData.SubGroup,
+                LessonSourceType = LessonSourceType.Group,
+                SourceName = group.Name,
+            };
+
+            _selectedLessonSourceRepository.Add(selectedGroup);
+            _userModifiedRepository.Add(user.Id);
+
+            await _selectedLessonSourceRepository.SaveChangesAsync();
+            await _userModifiedRepository.SaveChangesAsync();
+
+            return;
+        }
+
+        selectedGroup.SourceId = group.Id;
+        selectedGroup.SubGroupNumber = userData.SubGroup;
+        selectedGroup.SourceName = group.Name;
+
+        _selectedLessonSourceRepository.Update(selectedGroup);
+        _userModifiedRepository.Add(user.Id);
+
+        await _selectedLessonSourceRepository.SaveChangesAsync();
+        await _userModifiedRepository.SaveChangesAsync();
     }
 }

@@ -7,5 +7,6 @@ public interface ISelectedLessonSourceRepository : IRepository<SelectedLessonSou
 {
     Task<IEnumerable<SelectedLessonSource>> GetByUserIds(IEnumerable<int> userIds);
     Task<IEnumerable<SelectedLessonSource>> GetBySourceIds(IEnumerable<int> sourceIds);
+    Task<IEnumerable<SelectedLessonSource>> GetByUserIdAndSourceType(int userId, LessonSourceType lessonSourceType);
     Task<IEnumerable<SelectedLessonSource>> GetByUserIdsAndSourceType(IEnumerable<int> userIds, LessonSourceType lessonSourceType);
 }

@@ -20,16 +20,4 @@ public class GroupController : ControllerBase
     {
         return Ok(await _groupService.GroupExists(groupName));
     }
-
-    [HttpGet("faculties")]
-    public async Task<IActionResult> GetFaculties()
-    {
-        return Ok(await _groupService.GetFacultiesAsync());
-    }
-
-    [HttpGet("degree")]
-    public async Task<IActionResult> GetGroupByDegree([FromQuery] string facultyName, [FromQuery] bool bachelor)
-    {
-        return Ok(await _groupService.GetGroupByDegreeAsync(facultyName, bachelor));
-    }
 }

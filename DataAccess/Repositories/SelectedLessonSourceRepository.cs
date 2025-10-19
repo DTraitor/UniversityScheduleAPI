@@ -75,6 +75,18 @@ public class SelectedLessonSourceRepository : ISelectedLessonSourceRepository
         return await _context.SelectedLessonSources.Where(x => userIds.Contains(x.UserId)).ToListAsync();
     }
 
+    public async Task<IEnumerable<SelectedLessonSource>> GetBySourceIds(IEnumerable<int> sourceIds)
+    {
+        return await _context.SelectedLessonSources.Where(x => sourceIds.Contains(x.SourceId)).ToListAsync();
+    }
+
+    public async Task<IEnumerable<SelectedLessonSource>> GetByUserIdAndSourceType(int userId, LessonSourceType lessonSourceType)
+    {
+        return await _context.SelectedLessonSources
+            .Where(x => x.UserId == userId && x.LessonSourceType == lessonSourceType)
+            .ToListAsync();
+    }
+
     public async Task<IEnumerable<SelectedLessonSource>> GetByUserIdsAndSourceType(IEnumerable<int> userIds, LessonSourceType lessonSourceType)
     {
         return await _context.SelectedLessonSources

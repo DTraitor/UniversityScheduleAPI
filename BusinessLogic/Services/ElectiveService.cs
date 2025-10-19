@@ -1,7 +1,5 @@
 ﻿using BusinessLogic.DTO;
 using BusinessLogic.Services.Interfaces;
-using DataAccess.Enums;
-using DataAccess.Models;
 using DataAccess.Repositories.Interfaces;
 using Microsoft.Extensions.Logging;
 
@@ -9,40 +7,22 @@ namespace BusinessLogic.Services;
 
 public class ElectiveService : IElectiveService
 {
-    private readonly List<TimeSpan> StartTimes = new()
-    {
-        TimeSpan.Parse("0:00"),
-        TimeSpan.Parse("8:00"),
-        TimeSpan.Parse("9:50"),
-        TimeSpan.Parse("11:40"),
-        TimeSpan.Parse("13:30"),
-        TimeSpan.Parse("15:20"),
-        TimeSpan.Parse("17:10"),
-        TimeSpan.Parse("19:00"),
-    };
-
-    private readonly IElectiveLessonDayRepository _dayRepository;
-    private readonly IElectiveLessonRepository _lessonRepository;
-    private readonly IElectiveLessonDayRepository _electiveDayRepository;
-    private readonly IElectedLessonRepository _electedRepository;
     private readonly IUserModifiedRepository _userModifiedRepository;
     private readonly IUserRepository _userRepository;
+    private readonly ILessonSourceRepository _lessonSourceRepository;
+    private readonly ISelectedLessonSourceRepository _selectedLessonSourceRepository;
     private readonly ILogger<ElectiveService> _logger;
 
     public ElectiveService(
-        IElectiveLessonDayRepository dayRepository,
-        IElectiveLessonRepository lessonRepository,
-        IElectedLessonRepository electedRepository,
-        IElectiveLessonDayRepository electiveDayRepository,
+        ILessonSourceRepository lessonSourceRepository,
+        ISelectedLessonSourceRepository selectedLessonSourceRepository,
         IUserModifiedRepository userModifiedRepository,
         IUserRepository userRepository,
         ILogger<ElectiveService> logger)
     {
-        _dayRepository = dayRepository;
-        _lessonRepository = lessonRepository;
-        _electedRepository = electedRepository;
+        _lessonSourceRepository = lessonSourceRepository;
+        _selectedLessonSourceRepository = selectedLessonSourceRepository;
         _userModifiedRepository = userModifiedRepository;
-        _electiveDayRepository = electiveDayRepository;
         _userRepository = userRepository;
         _logger = logger;
     }
@@ -152,5 +132,45 @@ public class ElectiveService : IElectiveService
 
         _userModifiedRepository.Add(user.Id, ProcessedByEnum.ElectiveLessons);
         await _userModifiedRepository.SaveChangesAsync();
+    }
+
+    public async Task<IEnumerable<ElectiveLessonDto>> GetLessons(string lessonName)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<IEnumerable<ElectiveSubgroupsDto>> GetPossibleSubgroups(int lessonSourceId, string lessonType)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<IEnumerable<ElectiveLessonDayDto>> GetPossibleDays(int lessonSourceId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task AddSelectedSource(long telegramId, int lessonSourceId, string lessonType, int subgroupNumber)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task RemoveSelectedSource(long telegramId, int selectedSource)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task AddSelectedEntry(long telegramId, int lessonSourceId, int lessonEntry)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task RemoveSelectedEntry(long telegramId, int selectedEntry)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<IEnumerable<ElectiveLessonDto>> GetUserLessons(long telegramId)
+    {
+        throw new NotImplementedException();
     }
 }

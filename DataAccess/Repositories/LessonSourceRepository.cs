@@ -1,4 +1,5 @@
 using DataAccess.Domain;
+using DataAccess.Enums;
 using DataAccess.Models;
 using DataAccess.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -67,6 +68,11 @@ public class LessonSourceRepository : ILessonSourceRepository
     {
         _context.ExecuteFutureAction();
         _context.SaveChanges();
+    }
+
+    public async Task<LessonSource?> GetByNameAndSourceTypeAsync(string name, LessonSourceType lessonSourceType)
+    {
+        return await _context.LessonSources.FirstOrDefaultAsync(x => x.SourceType == lessonSourceType && x.Name == name);
     }
 
     public async Task<IEnumerable<LessonSource>> GetByIdsAsync(IEnumerable<int> ids)
