@@ -17,34 +17,55 @@ public class ElectiveController : ControllerBase
     }
 
     [HttpGet("days")]
-    public async Task<IActionResult> GetPossibleDays()
+    public async Task<IActionResult> GetPossibleDays([FromQuery] int lessonSourceId)
     {
-        return Ok(await _electiveService.GetPossibleDays());
+        return Ok(await _electiveService.GetPossibleDays(lessonSourceId));
     }
 
     [HttpGet("lessons")]
-    public async Task<IActionResult> GetElectiveLessons([FromQuery] int electiveDayId, [FromQuery] string partialLessonName)
+    public async Task<IActionResult> GetElectiveLessons([FromQuery] string partialLessonName)
     {
-        return Ok(await _electiveService.GetElectiveLessons(electiveDayId, partialLessonName));
+        return Ok(await _electiveService.GetLessons(partialLessonName));
     }
+
+    [HttpGet("subgroups")]
+    public async Task<IActionResult> GetLessonSubgroups([FromQuery] int lessonSourceId, [FromQuery] string lessonType)
+    {
+        return Ok(await _electiveService.GetPossibleSubgroups(lessonSourceId, lessonType));
+    }
+
 
     [HttpGet]
     public async Task<IActionResult> GetCurrentElectedLessons([FromQuery] long telegramId)
     {
-        return Ok(await _electiveService.GetCurrentLessons(telegramId));
+        return Ok(await _electiveService.GetUserLessons(telegramId));
     }
 
-    [HttpPost]
-    public async Task<IActionResult> CreateNewElectedLesson([FromBody] CreateElectiveLessonDto newLesson)
+    [HttpPost("source")]
+    public async Task<IActionResult> CreateNewElectedLessonEntry([FromQuery] long telegramId, [FromQuery] int lessonSourceId, [FromQuery] string lessonType, [FromQuery] int subgroupNumber)
     {
-        await _electiveService.CreateNewElectedLesson(newLesson);
+        await _electiveService.AddSelectedSource(telegramId, lessonSourceId, lessonType, subgroupNumber);
         return Created();
     }
 
-    [HttpDelete]
-    public async Task<IActionResult> RemoveElectedLesson([FromQuery] long telegramId, [FromQuery] int lessonId)
+    [HttpDelete("source")]
+    public async Task<IActionResult> RemoveElectedLessonSource([FromQuery] long telegramId, [FromQuery] int lessonId)
     {
-        await _electiveService.RemoveElectedLesson(telegramId, lessonId);
+        await _electiveService.RemoveSelectedSource(telegramId, lessonId);
+        return Ok(true);
+    }
+
+    [HttpPost("entry")]
+    public async Task<IActionResult> CreateNewElectedLessonEntry([FromQuery] long telegramId, [FromQuery] int lessonSourceId, [FromQuery] int lessonEntry)
+    {
+        await _electiveService.AddSelectedEntry(telegramId, lessonSourceId, lessonEntry);
+        return Created();
+    }
+
+    [HttpDelete("entry")]
+    public async Task<IActionResult> RemoveElectedLessonEntry([FromQuery] long telegramId, [FromQuery] int lessonId)
+    {
+        await _electiveService.RemoveSelectedEntry(telegramId, lessonId);
         return Ok(true);
     }
 }
