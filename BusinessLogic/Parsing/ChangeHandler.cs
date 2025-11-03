@@ -31,16 +31,16 @@ public class ChangeHandler : IChangeHandler
                 oldEntry.Teachers = entry.Teachers;
                 oldEntry.StartTime = entry.StartTime;
                 oldEntry.Length = entry.Length;
-                oldEntry.SubGroupNumber = entry.SubGroupNumber;
 
                 entry.Id = oldEntry.Id;
                 existingLessons.Add(oldEntry);
             }
         }
 
-        foreach (var existing in existingLessons)
+        var idsToRemove = existingLessons.Select(x => x.Id).ToHashSet();
+        foreach (var existingLesson in newLessons.Where(x => idsToRemove.Contains(x.Id)).ToList())
         {
-            newLessons.Remove(existing);
+            newLessons.Remove(existingLesson);
         }
 
         return existingLessons;
