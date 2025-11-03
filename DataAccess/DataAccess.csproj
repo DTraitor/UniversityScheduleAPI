@@ -8,7 +8,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="EFCore.BulkExtensions" Version="9.0.2" />
       <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
       <PackageReference Include="Z.EntityFramework.Extensions.EFCore" Version="9.104.0.1" />
     </ItemGroup>

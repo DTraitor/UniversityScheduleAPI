@@ -1,4 +1,3 @@
-using System.Text.Json;
 using DataAccess.Domain;
 using DataAccess.Models;
 using DataAccess.Repositories.Interfaces;
@@ -35,21 +34,7 @@ public class LessonEntryRepository : ILessonEntryRepository
 
     public void AddRange(IEnumerable<LessonEntry> toAdd)
     {
-        var entities = toAdd.ToList();
-        _context.FutureAction(x =>
-        {
-            foreach (var currentLesson in toAdd.Where(y => y.Id != 0))
-            {
-                _logger.LogError("This should have 0 id: {Error}", JsonSerializer.Serialize(currentLesson));
-            }
-
-            foreach (var currentLesson in entities.Where(y => y.Id != 0))
-            {
-                _logger.LogError("This should have 0 id (sec): {Error}", JsonSerializer.Serialize(currentLesson));
-            }
-
-            x.BulkInsert(entities);
-        });
+        _context.FutureAction(x => x.BulkInsert(toAdd));
     }
 
     public void UpdateRange(IEnumerable<LessonEntry> entity)

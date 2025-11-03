@@ -1,7 +1,6 @@
 ﻿using DataAccess.Domain;
 using DataAccess.Models.Internal;
 using DataAccess.Repositories.Interfaces;
-using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 

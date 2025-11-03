@@ -56,7 +56,6 @@ public class ScheduleParserJob : IHostedService, IDisposable
 
     private async Task ParseSchedule()
     {
-        return;
         using var scope = _services.CreateScope();
 
         var persistentDataRepository = scope.ServiceProvider.GetRequiredService<IPersistentDataRepository>();
