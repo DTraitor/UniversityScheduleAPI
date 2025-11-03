@@ -27,6 +27,20 @@ public class GroupService : IGroupService
         _logger = logger;
     }
 
+    public async Task<IEnumerable<string>> GetUserGroups(long telegramId)
+    {
+        var user = await _userRepository.GetByTelegramIdAsync(telegramId);
+
+        if (user == null)
+            throw new InvalidOperationException("User does not exist");
+
+        var selected = await _selectedLessonSourceRepository.GetByUserIdAndSourceType(user.Id, LessonSourceType.Group);
+
+        var group = await _lessonSourceRepository.GetByIdsAsync(selected.Select(x => x.SourceId));
+
+        return group.Select(x => x.Name);
+    }
+
     public async Task<bool> GroupExists(string groupName)
     {
         return (await _lessonSourceRepository.GetByNameAndSourceTypeAsync(groupName, LessonSourceType.Group)) != null;

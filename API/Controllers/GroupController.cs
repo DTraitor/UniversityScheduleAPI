@@ -15,6 +15,19 @@ public class GroupController : ControllerBase
         _logger = logger;
     }
 
+    [HttpGet("user")]
+    public async Task<IActionResult> GetUserGroups([FromQuery] long telegramId)
+    {
+        try
+        {
+            return Ok(await _groupService.GetUserGroups(telegramId));
+        }
+        catch (InvalidOperationException)
+        {
+            return NotFound();
+        }
+    }
+
     [HttpGet("exists")]
     public async Task<IActionResult> Exists([FromQuery] string groupName)
     {
