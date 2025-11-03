@@ -123,11 +123,11 @@ public class LessonUpdaterService : ILessonUpdaterService
         _selectedLessonEntryRepository.RemoveRange(selectedEntries.Where(x => !existingEntriesIds.Contains(x.EntryId)));
 
         Dictionary<int, List<SelectedLessonSource>> userIdToSelectedSources = selectedSources
-            .Where(x => existingSourceIds.Contains(x.Id))
+            .Where(x => existingSourceIds.Contains(x.SourceId))
             .GroupBy(x => x.UserId)
             .ToDictionary(s => s.Key, s => s.Select(x => x).ToList());
         Dictionary<int, List<SelectedLessonEntry>> userIdToSelectedEntries = selectedEntries
-            .Where(x => existingEntriesIds.Contains(x.Id))
+            .Where(x => existingEntriesIds.Contains(x.EntryId))
             .GroupBy(x => x.UserId)
             .ToDictionary(s => s.Key, s => s.Select(x => x).ToList());
 
