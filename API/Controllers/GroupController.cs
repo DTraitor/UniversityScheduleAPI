@@ -24,6 +24,13 @@ public class GroupController : ControllerBase
     [HttpGet("subgroups")]
     public async Task<IActionResult> GetSubgroups([FromQuery] long telegramId)
     {
-        return Ok(await _groupService.GetSubgroups(telegramId));
+        try
+        {
+            return Ok(await _groupService.GetSubgroups(telegramId));
+        }
+        catch (InvalidOperationException)
+        {
+            return NotFound();
+        }
     }
 }

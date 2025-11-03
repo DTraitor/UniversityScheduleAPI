@@ -119,8 +119,8 @@ public class LessonUpdaterService : ILessonUpdaterService
             });
         }
 
-        _selectedLessonSourceRepository.RemoveRange(selectedSources.Where(x => !existingSourceIds.Contains(x.Id)));
-        _selectedLessonEntryRepository.RemoveRange(selectedEntries.Where(x => !existingEntriesIds.Contains(x.Id)));
+        _selectedLessonSourceRepository.RemoveRange(selectedSources.Where(x => !existingSourceIds.Contains(x.SourceId)));
+        _selectedLessonEntryRepository.RemoveRange(selectedEntries.Where(x => !existingEntriesIds.Contains(x.EntryId)));
 
         Dictionary<int, List<SelectedLessonSource>> userIdToSelectedSources = selectedSources
             .Where(x => existingSourceIds.Contains(x.Id))
