@@ -20,6 +20,7 @@ public class ChangeHandler : IChangeHandler
             x => x);
 
         var existingLessons = new List<LessonEntry>();
+        var toRemove = new List<LessonEntry>();
 
         foreach (var entry in newLessons)
         {
@@ -32,15 +33,14 @@ public class ChangeHandler : IChangeHandler
                 oldEntry.StartTime = entry.StartTime;
                 oldEntry.Length = entry.Length;
 
-                entry.Id = oldEntry.Id;
                 existingLessons.Add(oldEntry);
+                toRemove.Add(entry);
             }
         }
 
-        var idsToRemove = existingLessons.Select(x => x.Id).ToHashSet();
-        foreach (var existingLesson in newLessons.Where(x => idsToRemove.Contains(x.Id)).ToList())
+        foreach (var entry in toRemove)
         {
-            newLessons.Remove(existingLesson);
+            newLessons.Remove(entry);
         }
 
         return existingLessons;
