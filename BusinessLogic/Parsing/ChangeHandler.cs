@@ -38,10 +38,9 @@ public class ChangeHandler : IChangeHandler
             }
         }
 
-        var idsToRemove = existingLessons.Select(x => x.Id).ToHashSet();
-        foreach (var existingLesson in newLessons.Where(x => idsToRemove.Contains(x.Id)).ToList())
+        foreach (var existing in existingLessons)
         {
-            newLessons.Remove(existingLesson);
+            newLessons.Remove(existing);
         }
 
         return existingLessons;
