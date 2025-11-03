@@ -59,13 +59,21 @@ public class UsageMetricRepository : IUsageMetricRepository
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+
         _context.ExecuteFutureAction();
         await _context.SaveChangesAsync(cancellationToken);
+
+        await transaction.CommitAsync(cancellationToken);
     }
 
     public void SaveChanges()
     {
+        using var transaction = _context.Database.BeginTransaction();
+
         _context.SaveChanges();
         _context.ExecuteFutureAction();
+
+        transaction.Commit();
     }
 }

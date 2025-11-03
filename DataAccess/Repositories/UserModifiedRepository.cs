@@ -35,7 +35,11 @@ public class UserModifiedRepository : IUserModifiedRepository
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+
         _context.ExecuteFutureAction();
         await _context.SaveChangesAsync(cancellationToken);
+
+        await transaction.CommitAsync(cancellationToken);
     }
 }

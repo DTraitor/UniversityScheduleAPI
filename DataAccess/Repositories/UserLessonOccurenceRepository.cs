@@ -66,14 +66,22 @@ public class UserLessonOccurenceRepository : IUserLessonOccurenceRepository
 
     public void SaveChanges()
     {
+        using var transaction = _context.Database.BeginTransaction();
+
         _context.ExecuteFutureAction();
         _context.SaveChanges();
+
+        transaction.Commit();
     }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {
+        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+
         _context.ExecuteFutureAction();
         await _context.SaveChangesAsync(cancellationToken);
+
+        await transaction.CommitAsync(cancellationToken);
     }
 
     public async Task<IEnumerable<UserLessonOccurrence>> GetByUserIdAndBetweenDateAsync(int userId, DateTimeOffset beginDate, DateTimeOffset endDate)

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Text.Json;
 using BusinessLogic.Parsing.Interfaces;
 using DataAccess.Models;
 using DataAccess.Repositories.Interfaces;
@@ -144,7 +145,17 @@ public class ScheduleParserJob : IHostedService, IDisposable
         previousLessons = previousLessons.Where(x => updatedSources.Contains(x.SourceId)).ToList();
         var currentLessons = newEntries.ToList();
 
+        foreach (var currentLesson in currentLessons.Where(x => x.Id != 0))
+        {
+            _logger.LogError("This should have 0 id (first): {Error}", JsonSerializer.Serialize(currentLesson));
+        }
+
         var existing = await changeHandler.HandleChanges(previousLessons, currentLessons, _cancellationTokenSource.Token);
+
+        foreach (var currentLesson in currentLessons.Where(x => x.Id != 0))
+        {
+            _logger.LogError("This should have 0 id (second): {Error}", JsonSerializer.Serialize(currentLesson));
+        }
 
         HashSet<int> existingHashset = new HashSet<int>(existing.Select(x => x.Id));
 

@@ -59,14 +59,22 @@ public class LessonEntryRepository : ILessonEntryRepository
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {
+        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+
         _context.ExecuteFutureAction();
         await _context.SaveChangesAsync(cancellationToken);
+
+        await transaction.CommitAsync(cancellationToken);
     }
 
     public void SaveChanges()
     {
+        using var transaction = _context.Database.BeginTransaction();
+
         _context.ExecuteFutureAction();
         _context.SaveChanges();
+
+        transaction.Commit();
     }
 
     public async Task<IEnumerable<LessonEntry>> GetBySourceIdAsync(int sourceId)
