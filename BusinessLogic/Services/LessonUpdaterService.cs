@@ -107,7 +107,7 @@ public class LessonUpdaterService : ILessonUpdaterService
             }
         }
 
-        foreach (var removedEntry in selectedEntries.Where(x => !existingEntriesIds.Contains(x.SourceId)))
+        foreach (var removedEntry in selectedEntries.Where(x => !existingEntriesIds.Contains(x.EntryId)))
         {
             _userAlertService.CreateUserAlert(removedEntry.UserId, UserAlertType.EntryRemoved, new()
             {
