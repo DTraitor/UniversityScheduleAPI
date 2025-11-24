@@ -34,17 +34,17 @@ public class UserLessonOccurenceRepository : IUserLessonOccurenceRepository
 
     public void AddRange(IEnumerable<UserLessonOccurrence> lessonOccurrences)
     {
-        _context.FutureAction(x => x.BulkInsert(lessonOccurrences));
+        _context.FutureAction(x => x.BulkInsert(lessonOccurrences, operation => operation.BatchSize = 1000));
     }
 
     public void UpdateRange(IEnumerable<UserLessonOccurrence> entity)
     {
-        _context.FutureAction(x => x.BulkUpdate(entity));
+        _context.FutureAction(x => x.BulkUpdate(entity, operation => operation.BatchSize = 1000));
     }
 
     public void RemoveRange(IEnumerable<UserLessonOccurrence> entities)
     {
-        _context.FutureAction(x => x.BulkDelete(entities));
+        _context.FutureAction(x => x.BulkDelete(entities, operation => operation.BatchSize = 1000));
     }
 
     public async Task<UserLessonOccurrence?> GetByIdAsync(int id)
@@ -60,7 +60,7 @@ public class UserLessonOccurenceRepository : IUserLessonOccurenceRepository
     public void ClearByLessonIds(IEnumerable<int> toRemove)
     {
         var entriesToRemove = _context.UserLessonOccurrences.Where(y => toRemove.Contains(y.LessonId)).AsEnumerable();
-        _context.FutureAction(x => x.BulkDelete(entriesToRemove));
+        _context.FutureAction(x => x.BulkDelete(entriesToRemove, operation => operation.BatchSize = 1000));
     }
 
     public void SaveChanges()
