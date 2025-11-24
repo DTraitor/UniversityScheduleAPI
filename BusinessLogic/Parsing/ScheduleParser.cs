@@ -1,3 +1,4 @@
+using System.Globalization;
 using BusinessLogic.Helpers;
 using BusinessLogic.Parsing.Interfaces;
 using DataAccess.Models;
@@ -71,7 +72,7 @@ public class ScheduleParser : IScheduleParser
                     var dayText = dayOfWeek.InnerHtml.Split("<br>");
                     if(dayText.Count() <= 1)
                         continue;
-                    oneTimeDates[_dayOfWeekMap[dayText[0]]] = DateTimeOffset.ParseExact(dayText[1], "dd.MM.yyyy", null).ToUniversalTime();
+                    oneTimeDates[_dayOfWeekMap[dayText[0]]] = DateTimeOffset.ParseExact(dayText[1], "dd.MM.yyyy", CultureInfo.InvariantCulture).ToUniversalTime();
                 }
             }
 
