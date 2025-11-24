@@ -32,6 +32,7 @@ public class ChangeHandler : IChangeHandler
                 oldEntry.Teachers = entry.Teachers;
                 oldEntry.StartTime = entry.StartTime;
                 oldEntry.Length = entry.Length;
+                oldEntry.OneTimeOccurence = entry.OneTimeOccurence;
 
                 existingLessons.Add(oldEntry);
                 toRemove.Add(entry);
