@@ -104,8 +104,7 @@ public class UserLessonRepository : IUserLessonRepository
     public async Task<IList<UserLesson>> GetWithOccurrencesCalculatedDateLessThan(DateTimeOffset dateTime)
     {
         return await _context.UserLessons
-            .Where(l => l.OccurrencesCalculatedTill == null || l.OccurrencesCalculatedTill < dateTime)
-            .Where(x => x.OccurrencesCalculatedTill < x.EndTime)
+            .Where(x => x.OccurrencesCalculatedTill == null || x.OccurrencesCalculatedTill < dateTime || x.OccurrencesCalculatedTill < x.EndTime)
             .Where(x => x.RepeatType != RepeatType.Never || x.OccurrencesCalculatedTill == null)
             .ToListAsync();
     }
