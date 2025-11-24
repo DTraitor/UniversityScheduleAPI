@@ -95,14 +95,18 @@ public class UserLessonRepository : IUserLessonRepository
     {
         var lessons = _context.UserLessons.Where(ul =>
             userIds.Contains(ul.UserId) &&
-            ul.SelectedLessonSourceType == sourceType &&
+            (ul.SelectedLessonSourceType & sourceType) == sourceType &&
             sourceIds.Contains(ul.LessonSourceId));
         _context.FutureAction(x => x.BulkDelete(lessons));
         return await lessons.Select(x => x.Id).ToListAsync();
     }
 
-    public IEnumerable<UserLesson> GetWithOccurrencesCalculatedDateLessThan(DateTimeOffset dateTime)
+    public async Task<IList<UserLesson>> GetWithOccurrencesCalculatedDateLessThan(DateTimeOffset dateTime)
     {
-        return _context.UserLessons.Where(l => l.OccurrencesCalculatedTill == null|| l.OccurrencesCalculatedTill < dateTime).ToList();
+        return await _context.UserLessons
+            .Where(l => l.OccurrencesCalculatedTill == null || l.OccurrencesCalculatedTill < dateTime)
+            .Where(x => x.OccurrencesCalculatedTill < x.EndTime)
+            .Where(x => x.RepeatType != RepeatType.Never || x.OccurrencesCalculatedTill == null)
+            .ToListAsync();
     }
 }

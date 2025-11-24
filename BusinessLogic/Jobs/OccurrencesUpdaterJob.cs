@@ -104,8 +104,11 @@ public class OccurrencesUpdaterJob : IHostedService, IDisposable, IAsyncDisposab
         var userLessonRepository = scope.ServiceProvider.GetRequiredService<IUserLessonRepository>();
         var userLessonOccurenceRepository = scope.ServiceProvider.GetRequiredService<IUserLessonOccurenceRepository>();
 
-        var lessonsToUpdate = userLessonRepository.GetWithOccurrencesCalculatedDateLessThan(DateTimeOffset.UtcNow.AddDays(90))
-            .Where(x => x.OccurrencesCalculatedTill == null || x.OccurrencesCalculatedTill < x.EndTime);
+        var lessonsToUpdate = await
+            userLessonRepository.GetWithOccurrencesCalculatedDateLessThan(DateTimeOffset.UtcNow.AddDays(90));
+
+        if(!lessonsToUpdate.Any())
+            return;
 
         List<UserLessonOccurrence> userLessonOccurrences = new List<UserLessonOccurrence>();
 
@@ -122,15 +125,15 @@ public class OccurrencesUpdaterJob : IHostedService, IDisposable, IAsyncDisposab
 
             DateTime? latestOccurrence;
             if (lesson.OccurrencesCalculatedTill == null)
-                latestOccurrence = lesson.RepeatType == RepeatType.Never
-                    ? null
-                    : TimeZoneInfo.ConvertTime(lesson.StartTime, timeZone).DateTime;
+                latestOccurrence = TimeZoneInfo.ConvertTime(lesson.StartTime, timeZone).DateTime;
             else
                 latestOccurrence = lesson.RepeatType.GetNextOccurrence(
                     TimeZoneInfo.ConvertTime(lesson.OccurrencesCalculatedTill.Value, timeZone).DateTime,
                     lesson.RepeatCount);
 
-            while (latestOccurrence != null && latestOccurrence < lesson.EndTime && latestOccurrence < limit)
+            DateTime endTimeWithZone = TimeZoneInfo.ConvertTime(lesson.EndTime, timeZone).DateTime;
+
+            while (latestOccurrence != null && latestOccurrence < endTimeWithZone && latestOccurrence < limit)
             {
                 if (!HandleSaturdays(latestOccurrence.Value, lesson, master, timeZone, out var occurence))
                 {
@@ -146,12 +149,13 @@ public class OccurrencesUpdaterJob : IHostedService, IDisposable, IAsyncDisposab
 
                 userLessonOccurrences.Add(occurence);
 
+                lesson.OccurrencesCalculatedTill = TimeZoneInfo.ConvertTimeToUtc(latestOccurrence.Value, timeZone);
+
                 latestOccurrence = lesson.RepeatType.GetNextOccurrence(latestOccurrence.Value, lesson.RepeatCount);
             }
 
-            lesson.OccurrencesCalculatedTill = latestOccurrence == null
-                ? null
-                : TimeZoneInfo.ConvertTimeToUtc(latestOccurrence.Value, timeZone);
+            if(latestOccurrence != null)
+                lesson.OccurrencesCalculatedTill = TimeZoneInfo.ConvertTimeToUtc(latestOccurrence.Value, timeZone);
         }
 
         if(userLessonOccurrences.Count <= 0)
@@ -195,11 +199,15 @@ public class OccurrencesUpdaterJob : IHostedService, IDisposable, IAsyncDisposab
 
     private bool HandleSaturdays(DateTime occurenceDate, UserLesson lesson, bool master, TimeZoneInfo timeZone, out UserLessonOccurrence? userLessonOccurrence)
     {
+        userLessonOccurrence = null;
+
+        if((lesson.SelectedLessonSourceType & SelectedLessonSourceType.OneTimeOccurence) == SelectedLessonSourceType.OneTimeOccurence)
+            return false;
+
         var saturdayMoveDictionary = _bachelorSaturdayMove;
         if (master)
             saturdayMoveDictionary = _mastersSaturdayMove;
 
-        userLessonOccurrence = null;
         if (!saturdayMoveDictionary.TryGetValue(TimeZoneInfo.ConvertTimeToUtc(occurenceDate, timeZone), out var movedDateTime))
             return false;
 

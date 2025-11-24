@@ -18,6 +18,8 @@ public class LessonEntry : IEntityId
     public TimeSpan StartTime { get; set; }
     public TimeSpan Length { get; set; }
 
+    public DateTimeOffset? OneTimeOccurence { get; set; }
+
     // false - first week
     // true - second week
     public bool Week { get; set; }

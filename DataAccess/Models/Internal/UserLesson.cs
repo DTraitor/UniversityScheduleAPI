@@ -21,7 +21,7 @@ public class UserLesson : IEntityId
     // If RepeatType is set to daily, will repeat each RepeatCount days
     public int RepeatCount { get; set; }
 
-    public SelectedLessonSourceType SelectedLessonSourceType { get; set; } =  SelectedLessonSourceType.None;
+    public SelectedLessonSourceType SelectedLessonSourceType { get; set; } = SelectedLessonSourceType.None;
     public int LessonSourceId { get; set; }
 
     public DateTimeOffset StartTime { get; set; }

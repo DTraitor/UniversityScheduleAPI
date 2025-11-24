@@ -95,7 +95,7 @@ public class UserLessonUpdaterService : IUserLessonUpdaterService
                         ).Select(x =>
                         {
                             x.UserId = user.Id;
-                            x.SelectedLessonSourceType = SelectedLessonSourceType.Source;
+                            x.SelectedLessonSourceType |= SelectedLessonSourceType.Source;
                             x.LessonSourceId = selectedSource.Id;
                             return x;
                         })
@@ -121,7 +121,7 @@ public class UserLessonUpdaterService : IUserLessonUpdaterService
                         ).Select(x =>
                         {
                             x.UserId = user.Id;
-                            x.SelectedLessonSourceType = SelectedLessonSourceType.Entry;
+                            x.SelectedLessonSourceType |= SelectedLessonSourceType.Entry;
                             x.LessonSourceId = selectedEntry.Key;
                             return x;
                         })

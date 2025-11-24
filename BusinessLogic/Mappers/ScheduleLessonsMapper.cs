@@ -19,11 +19,13 @@ public static class ScheduleLessonsMapper
                 Location = lesson.Location,
                 BeginTime = lesson.StartTime,
                 Duration = lesson.Length,
-                RepeatType = RepeatType.Weekly,
+                RepeatType = lesson.OneTimeOccurence == null ? RepeatType.Weekly : RepeatType.Never,
                 RepeatCount = 2,
-                StartTime = begin.GetNextDayOfWeek(lesson.DayOfWeek).AddDays(lesson.Week ? 7 : 0).ToUniversalTime(),
-                EndTime = end.ToUniversalTime(),
+                StartTime = lesson.OneTimeOccurence?.ToUniversalTime()
+                            ?? begin.GetNextDayOfWeek(lesson.DayOfWeek).AddDays(lesson.Week ? 7 : 0).ToUniversalTime(),
+                EndTime = lesson.OneTimeOccurence?.AddDays(1).ToUniversalTime() ?? end.ToUniversalTime(),
                 TimeZoneId = timeZone.Id,
+                SelectedLessonSourceType = lesson.OneTimeOccurence == null ? SelectedLessonSourceType.None : SelectedLessonSourceType.OneTimeOccurence,
             };
         }
     }

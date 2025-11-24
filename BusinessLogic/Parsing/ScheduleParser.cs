@@ -8,6 +8,17 @@ namespace BusinessLogic.Parsing;
 
 public class ScheduleParser : IScheduleParser
 {
+    private readonly Dictionary<string, DayOfWeek> _dayOfWeekMap = new()
+    {
+        {"Понеділок", DayOfWeek.Monday},
+        {"Вівторок", DayOfWeek.Tuesday},
+        {"Середа", DayOfWeek.Wednesday},
+        {"Четвер", DayOfWeek.Thursday},
+        {"П'ятниця", DayOfWeek.Friday},
+        {"Субота", DayOfWeek.Saturday},
+        {"Неділя", DayOfWeek.Sunday},
+    };
+
     private readonly ILogger<ScheduleParser> _logger;
 
     public ScheduleParser(ILogger<ScheduleParser> logger)
@@ -41,15 +52,38 @@ public class ScheduleParser : IScheduleParser
 
             var schedules = wrapper.SelectNodes(".//table[@class='schedule']/tbody/tr");
 
-            for(int j = 0; j < schedules.Count(); j++)
+            Dictionary<DayOfWeek, DateTimeOffset?> oneTimeDates = new()
             {
-                var timeNode = schedules[j].SelectSingleNode(".//th[@class='hour-name']/div[@class='full-name']");
+                { DayOfWeek.Monday, null},
+                { DayOfWeek.Tuesday, null},
+                { DayOfWeek.Wednesday, null},
+                { DayOfWeek.Thursday, null},
+                { DayOfWeek.Friday, null},
+                { DayOfWeek.Saturday, null},
+                { DayOfWeek.Sunday, null},
+            };
+
+            var daysOfWeek = wrapper.SelectNodes(".//table[@class='schedule']/thead/tr/th");
+            if (daysOfWeek != null)
+            {
+                foreach (var dayOfWeek in daysOfWeek)
+                {
+                    var dayText = dayOfWeek.InnerHtml.Split("<br>");
+                    if(dayText.Count() <= 1)
+                        continue;
+                    oneTimeDates[_dayOfWeekMap[dayText[0]]] = DateTimeOffset.ParseExact(dayText[1], "dd.MM.yyyy", null).ToUniversalTime();
+                }
+            }
+
+            foreach (var schedule in schedules)
+            {
+                var timeNode = schedule.SelectSingleNode(".//th[@class='hour-name']/div[@class='full-name']");
                 var parsed = timeNode.InnerText.Split('-');
 
                 var beginTime = TimeSpan.Parse(parsed[0]);
                 var duration = TimeSpan.Parse(parsed[1]) - beginTime;
 
-                var pair = schedules[j].SelectNodes(".//td/div[@class='pairs']");
+                var pair = schedule.SelectNodes(".//td/div[@class='pairs']");
 
                 for (int k = 0; k < pair.Count; k++)
                 {
@@ -90,6 +124,8 @@ public class ScheduleParser : IScheduleParser
                             .ToList();
                         }
 
+                        DayOfWeek lessonDay = k == 7 ? DayOfWeek.Sunday : (DayOfWeek)k + 1;
+
                         scheduleLessons.Add(new LessonEntry
                         {
                             Title = name.Replace("\r", string.Empty).Replace("\n", string.Empty).Trim(),
@@ -101,8 +137,9 @@ public class ScheduleParser : IScheduleParser
                             StartTime = beginTime,
                             Length = duration,
 
+                            OneTimeOccurence = oneTimeDates[lessonDay],
                             Week = weekNumber,
-                            DayOfWeek = k == 7 ? DayOfWeek.Sunday : (DayOfWeek)k+1,
+                            DayOfWeek = lessonDay,
                         });
                     }
                 }

@@ -18,7 +18,7 @@ namespace DataAccess.Migrations.ScheduleDb
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.9")
+                .HasAnnotation("ProductVersion", "9.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "hstore");
@@ -137,6 +137,9 @@ namespace DataAccess.Migrations.ScheduleDb
 
                     b.Property<string>("Location")
                         .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("OneTimeOccurence")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("SourceId")
                         .HasColumnType("integer");
