@@ -52,6 +52,12 @@ public class ScheduleDbContext(DbContextOptions<ScheduleDbContext> options) : Db
         modelBuilder.Entity<UserLessonOccurrence>()
             .HasIndex(e => new { e.LessonId, e.UserId });
 
+        modelBuilder.Entity<UserLesson>()
+            .HasIndex(e => new { e.OccurrencesCalculatedTill });
+
+        modelBuilder.Entity<UserLesson>()
+            .HasIndex(e => new { e.RepeatType });
+
         modelBuilder.Entity<UserLessonOccurrence>()
             .HasIndex(e => e.UserId );
 

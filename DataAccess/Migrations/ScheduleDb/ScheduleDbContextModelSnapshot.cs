@@ -85,6 +85,10 @@ namespace DataAccess.Migrations.ScheduleDb
 
                     b.HasKey("Id");
 
+                    b.HasIndex("OccurrencesCalculatedTill");
+
+                    b.HasIndex("RepeatType");
+
                     b.HasIndex("UserId");
 
                     b.ToTable("UserLessons");
