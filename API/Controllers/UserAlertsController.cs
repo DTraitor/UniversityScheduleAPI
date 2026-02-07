@@ -15,6 +15,9 @@ public class UserAlertsController : ControllerBase
         _logger = logger;
     }
 
+    // endpoint to get alerts
+    // endpoint to remove processed alerts
+
     [HttpGet]
     public async Task<IActionResult> GetScheduleForDate([FromQuery] int batchSize)
     {

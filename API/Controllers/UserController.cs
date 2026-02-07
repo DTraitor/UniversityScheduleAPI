@@ -16,6 +16,11 @@ public class UserController : ControllerBase
         _logger = logger;
     }
 
+    // endpoint to create new user
+    // endpoint to change group
+    // endpoint to select elective lesson
+    // endpoint to remove elective lesson
+
     [HttpGet("exists")]
     public async Task<IActionResult> UserExists([FromQuery] long telegramId)
     {

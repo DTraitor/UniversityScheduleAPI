@@ -1,5 +1,4 @@
-﻿using BusinessLogic.DTO;
-using BusinessLogic.Services.Interfaces;
+﻿using BusinessLogic.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
@@ -15,6 +14,11 @@ public class ElectiveController : ControllerBase
         _electiveService = electiveService;
         _logger = logger;
     }
+
+    // endpoint to get levels (bachelor, masters, etc)
+    // endpoint to get lessons by partial name and level
+    // endpoint to get lesson types by id
+    // endpoint to get lesson subgroups
 
     [HttpGet("days")]
     public async Task<IActionResult> GetPossibleDays([FromQuery] int lessonSourceId)

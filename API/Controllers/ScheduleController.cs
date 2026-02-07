@@ -15,6 +15,8 @@ public class ScheduleController : ControllerBase
         _logger = logger;
     }
 
+    //Endpoint to get schedule for specific date (should return error when out of range)
+
     [HttpGet]
     public async Task<IActionResult> GetScheduleForDate([FromQuery] DateTimeOffset dateTime, [FromQuery] long userTelegramId)
     {

@@ -15,24 +15,17 @@ public class GroupController : ControllerBase
         _logger = logger;
     }
 
-    //Endpoint to get a group
+    //Endpoint to get a group of a user
     //Endpoint to get groups by name
-    //Endpoint to get
+    //Endpoint to get subgroups of a group
 
     [HttpGet("user")]
     public async Task<IActionResult> GetUserGroups([FromQuery] long telegramId)
     {
-        try
-        {
-            return Ok(await _groupService.GetUserGroups(telegramId));
-        }
-        catch (InvalidOperationException)
-        {
-            return NotFound();
-        }
+        return Ok(await _groupService.GetUserGroups(telegramId));
     }
 
-    [HttpGet("exists")]
+    [HttpGet("exist")]
     public async Task<IActionResult> Exists([FromQuery] string groupName)
     {
         return Ok(await _groupService.GroupExists(groupName));
