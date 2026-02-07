@@ -27,6 +27,7 @@ public class PersistentDataRepository : IPersistentDataRepository
         }
         else
         {
+            persistentData.Id = existing.Id;
             _context.Entry(existing).CurrentValues.SetValues(persistentData);
         }
     }

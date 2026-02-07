@@ -1,4 +1,6 @@
-﻿using DataAccess.Enums;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json;
+using DataAccess.Enums;
 using DataAccess.Models.Interface;
 
 namespace DataAccess.Models;
@@ -8,5 +10,17 @@ public class UserAlert : IEntityId
     public int Id { get; set; }
     public int UserId { get; set; }
     public UserAlertType AlertType { get; set; }
-    public Dictionary<string, string> Options { get; set; }
+
+    // Store as JSON string in database
+    public string OptionsJson { get; set; }
+
+    // Not mapped property for easy access
+    [NotMapped]
+    public Dictionary<string, string> Options
+    {
+        get => string.IsNullOrEmpty(OptionsJson)
+            ? new Dictionary<string, string>()
+            : JsonSerializer.Deserialize<Dictionary<string, string>>(OptionsJson);
+        set => OptionsJson = JsonSerializer.Serialize(value);
+    }
 }
