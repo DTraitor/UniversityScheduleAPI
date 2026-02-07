@@ -1,10 +1,16 @@
 ﻿using BusinessLogic.DTO;
+using Common.Models;
+using Common.Result;
 
 namespace BusinessLogic.Services.Interfaces;
 
 public interface IElectiveService
 {
-     Task<IEnumerable<ElectiveLessonDto>> GetLessons(string lessonName);
+     Task<ICollection<LessonSource>> GetPossibleLevelsAsync();
+     Task<Result<ICollection<string>>> GetLessonsByNameAsync(string lessonName, int sourceId);
+     Task<Result<ICollection<string>>> GetLessonTypesAsync(string lessonName, int sourceId);
+     Task<Result<ICollection<int>>> GetLessonSubgroupsAsync(int sourceId, string lessonName, string lessonType);
+
      Task<ElectiveSubgroupsDto> GetPossibleSubgroups(int lessonSourceId, string lessonType);
      Task<ElectiveLessonDayDto> GetPossibleDays(int lessonSourceId);
      Task AddSelectedSource(long telegramId, int lessonSourceId, string lessonType, int subgroupNumber);

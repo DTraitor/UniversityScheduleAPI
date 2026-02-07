@@ -41,7 +41,7 @@ public class ScheduleController : ControllerBase
 
         switch (result.Error)
         {
-            case ErrorType.UserNotFound:
+            case ErrorType.NotFound:
                 return NotFound();
             case ErrorType.TimetableDateOutOfRange:
                 return BadRequest(new OutOfRangeResult

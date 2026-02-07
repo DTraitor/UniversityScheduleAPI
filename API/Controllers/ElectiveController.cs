@@ -1,4 +1,5 @@
 ﻿using BusinessLogic.Services.Interfaces;
+using Common.Enums;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
@@ -15,132 +16,72 @@ public class ElectiveController : ControllerBase
         _logger = logger;
     }
 
-    // endpoint to get levels (bachelor, masters, etc)
-    // endpoint to get lessons by partial name and level
-    // endpoint to get lesson types by id
-    // endpoint to get lesson subgroups
-
-    [HttpGet("days")]
-    public async Task<IActionResult> GetPossibleDays([FromQuery] int lessonSourceId)
+    [HttpGet("levels")]
+    public async Task<IActionResult> GetLevels()
     {
-        try
+        var result = await _electiveService.GetPossibleLevelsAsync();
+
+        return Ok(result.Select(x => new LevelReturn
         {
-            return Ok(await _electiveService.GetPossibleDays(lessonSourceId));
-        }
-        catch (KeyNotFoundException e)
-        {
-            return NotFound(e.Message);
-        }
-        catch (InvalidOperationException e)
-        {
-            return BadRequest(e.Message);
-        }
+            Name = x.Name,
+            Id = x.Id,
+        }));
     }
 
     [HttpGet("lessons")]
-    public async Task<IActionResult> GetElectiveLessons([FromQuery] string partialLessonName)
+    public async Task<IActionResult> GetLessons(string lessonName, int sourceId)
     {
-        try
+        var result = await _electiveService.GetLessonsByNameAsync(lessonName, sourceId);
+
+        if (result.IsSuccess)
+            return Ok(result.Value);
+
+        switch (result.Error)
         {
-            return Ok(await _electiveService.GetLessons(partialLessonName));
+            case ErrorType.TooManyElements:
+                return BadRequest("Too many elements to return. Try more precise name.");
+            default:
+                return BadRequest();
         }
-        catch (InvalidOperationException e)
+    }
+
+    [HttpGet("types")]
+    public async Task<IActionResult> GetLessonTypes(string lessonName, int sourceId)
+    {
+        var result = await _electiveService.GetLessonTypesAsync(lessonName, sourceId);
+
+        if (result.IsSuccess)
+            return Ok(result.Value);
+
+        switch (result.Error)
         {
-            return BadRequest(e.Message);
+            case ErrorType.NotFound:
+                return NotFound();
+            default:
+                return BadRequest();
         }
     }
 
     [HttpGet("subgroups")]
-    public async Task<IActionResult> GetLessonSubgroups([FromQuery] int lessonSourceId, [FromQuery] string lessonType)
+    public async Task<IActionResult> GetSubgroups(int lessonSourceId, string lessonName, string lessonType)
     {
-        try
+        var result = await _electiveService.GetLessonSubgroupsAsync(lessonSourceId, lessonName, lessonType);
+
+        if (result.IsSuccess)
+            return Ok(result.Value);
+
+        switch (result.Error)
         {
-            return Ok(await _electiveService.GetPossibleSubgroups(lessonSourceId, lessonType));
-        }
-        catch (KeyNotFoundException e)
-        {
-            return NotFound(e.Message);
-        }
-        catch (InvalidOperationException e)
-        {
-            return BadRequest(e.Message);
+            case ErrorType.NotFound:
+                return NotFound();
+            default:
+                return BadRequest();
         }
     }
 
-    [HttpGet]
-    public async Task<IActionResult> GetCurrentElectedLessons([FromQuery] long telegramId)
+    private record LevelReturn
     {
-        try
-        {
-            return Ok(await _electiveService.GetUserLessons(telegramId));
-        }
-        catch (KeyNotFoundException e)
-        {
-            return NotFound(e.Message);
-        }
-    }
-
-    [HttpPost("source")]
-    public async Task<IActionResult> CreateNewElectedLessonEntry([FromQuery] long telegramId, [FromQuery] int lessonSourceId, [FromQuery] string lessonType, [FromQuery] int subgroupNumber)
-    {
-        try
-        {
-            await _electiveService.AddSelectedSource(telegramId, lessonSourceId, lessonType, subgroupNumber);
-            return Created();
-        }
-        catch (KeyNotFoundException e)
-        {
-            return NotFound(e.Message);
-        }
-        catch (InvalidOperationException e)
-        {
-            return BadRequest(e.Message);
-        }
-    }
-
-    [HttpDelete("source")]
-    public async Task<IActionResult> RemoveElectedLessonSource([FromQuery] long telegramId, [FromQuery] int lessonId)
-    {
-        try
-        {
-            await _electiveService.RemoveSelectedSource(telegramId, lessonId);
-            return Ok(true);
-        }
-        catch (InvalidOperationException e)
-        {
-            return BadRequest(e.Message);
-        }
-    }
-
-    [HttpPost("entry")]
-    public async Task<IActionResult> CreateNewElectedLessonEntry([FromQuery] long telegramId, [FromQuery] int lessonSourceId, [FromQuery] int lessonEntry)
-    {
-        try
-        {
-            await _electiveService.AddSelectedEntry(telegramId, lessonSourceId, lessonEntry);
-            return Created();
-        }
-        catch (KeyNotFoundException e)
-        {
-            return NotFound(e.Message);
-        }
-        catch (InvalidOperationException e)
-        {
-            return BadRequest(e.Message);
-        }
-    }
-
-    [HttpDelete("entry")]
-    public async Task<IActionResult> RemoveElectedLessonEntry([FromQuery] long telegramId, [FromQuery] int lessonId)
-    {
-        try
-        {
-            await _electiveService.RemoveSelectedEntry(telegramId, lessonId);
-            return Ok(true);
-        }
-        catch (InvalidOperationException e)
-        {
-            return BadRequest(e.Message);
-        }
+        public string Name { get; init; }
+        public int Id { get; init; }
     }
 }

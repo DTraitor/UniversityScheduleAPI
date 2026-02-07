@@ -2,6 +2,7 @@ namespace Common.Enums;
 
 public enum ErrorType
 {
-    UserNotFound,
+    NotFound,
     TimetableDateOutOfRange,
+    TooManyElements,
 }
