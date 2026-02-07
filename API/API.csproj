@@ -17,6 +17,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\BusinessLogic\BusinessLogic.csproj" />
+      <ProjectReference Include="..\ScheduledJobs\ScheduledJobs.csproj" />
     </ItemGroup>
 
 </Project>

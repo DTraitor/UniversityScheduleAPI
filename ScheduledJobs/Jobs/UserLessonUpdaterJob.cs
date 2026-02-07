@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace BusinessLogic.Jobs;
+namespace ScheduledJobs.Jobs;
 
 public class UserLessonUpdaterJob : IHostedService, IDisposable
 {

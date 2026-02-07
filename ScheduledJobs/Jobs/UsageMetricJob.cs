@@ -4,39 +4,42 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace BusinessLogic.Jobs;
+namespace ScheduledJobs.Jobs;
 
-public class LessonUpdaterJob : IHostedService, IDisposable
+public class UserMetricJob : IHostedService, IDisposable
 {
     private IServiceProvider _services;
-    private readonly ILogger<LessonUpdaterJob> _logger;
+    private IUsageMetricService _usageService;
+    private readonly ILogger<UserMetricJob> _logger;
 
     private Timer _timer;
     private CancellationTokenSource _cancellationTokenSource = new();
     private object _executingLock = new();
 
-    public LessonUpdaterJob(
+    public UserMetricJob(
         IServiceProvider services,
-        ILogger<LessonUpdaterJob> logger)
+        IUsageMetricService usageService,
+        ILogger<UserMetricJob> logger)
     {
         _services = services;
+        _usageService = usageService;
         _logger = logger;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("LessonUpdaterJob starting...");
+        _logger.LogInformation("UserMetricJob starting...");
 
         _timer = new Timer(
             ExecuteTimer,
             null,
             TimeSpan.Zero,
-            TimeSpan.FromSeconds(2));
+            TimeSpan.FromSeconds(30));
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("LessonUpdaterJob stopping...");
+        _logger.LogInformation("UserMetricJob stopping...");
 
         _cancellationTokenSource.Cancel();
         _timer?.Change(Timeout.Infinite, 0);
@@ -47,26 +50,19 @@ public class LessonUpdaterJob : IHostedService, IDisposable
     {
         lock (_executingLock)
         {
-            UpdateUserLessons().GetAwaiter().GetResult();
+            PushMetrics().GetAwaiter().GetResult();
         }
     }
 
-    private async Task UpdateUserLessons()
+    private async Task PushMetrics()
     {
         using var scope = _services.CreateScope();
 
-        var modifiedRepository = scope.ServiceProvider.GetRequiredService<ILessonSourceModifiedRepository>();
-        var lessonUpdater = scope.ServiceProvider.GetRequiredService<ILessonUpdaterService>();
+        var metricRepository = scope.ServiceProvider.GetRequiredService<IUsageMetricRepository>();
 
-        var toProcess =
-            (await modifiedRepository.GetAllAsync(_cancellationTokenSource.Token));
+        metricRepository.AddRangeAsync(_usageService.GetUsages());
 
-        await lessonUpdater.ProcessModifiedEntry(toProcess.GroupBy(x => x.SourceId).Select(x => x.First()));
-
-        modifiedRepository.RemoveRangeAsync(toProcess);
-
-        await modifiedRepository.SaveChangesAsync(_cancellationTokenSource.Token);
-
+        await metricRepository.SaveChangesAsync(_cancellationTokenSource.Token);
     }
 
     public void Dispose()

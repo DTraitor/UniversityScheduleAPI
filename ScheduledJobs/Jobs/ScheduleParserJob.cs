@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using System.Text.Json;
 using BusinessLogic.Parsing.Interfaces;
 using Common.Models;
 using DataAccess.Repositories.Interfaces;
@@ -7,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace BusinessLogic.Jobs;
+namespace ScheduledJobs.Jobs;
 
 public class ScheduleParserJob : IHostedService, IDisposable
 {

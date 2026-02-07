@@ -1,5 +1,4 @@
-﻿using BusinessLogic.Helpers;
-using Common.Enums;
+﻿using Common.Enums;
 using Common.Models;
 using Common.Models.Internal;
 using DataAccess.Repositories.Interfaces;
@@ -8,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace BusinessLogic.Jobs;
+namespace ScheduledJobs.Jobs;
 
 public class OccurrencesUpdaterJob : IHostedService, IDisposable, IAsyncDisposable
 {

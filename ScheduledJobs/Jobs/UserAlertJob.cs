@@ -4,42 +4,44 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace BusinessLogic.Jobs;
+namespace ScheduledJobs.Jobs;
 
-public class UserMetricJob : IHostedService, IDisposable
+public class UserAlertJob : IHostedService, IDisposable
 {
-    private IServiceProvider _services;
-    private IUsageMetricService _usageService;
-    private readonly ILogger<UserMetricJob> _logger;
+    private readonly IServiceProvider _services;
+    private readonly IUserAlertService _userAlertService;
+    private readonly ILogger<UserAlertJob> _logger;
 
     private Timer _timer;
     private CancellationTokenSource _cancellationTokenSource = new();
     private object _executingLock = new();
 
-    public UserMetricJob(
+    public UserAlertJob(
         IServiceProvider services,
-        IUsageMetricService usageService,
-        ILogger<UserMetricJob> logger)
+        IUserAlertService userAlertService,
+        ILogger<UserAlertJob> logger)
     {
         _services = services;
-        _usageService = usageService;
+        _userAlertService = userAlertService;
         _logger = logger;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("UserMetricJob starting...");
+        _logger.LogInformation("UserAlertJob starting...");
 
         _timer = new Timer(
             ExecuteTimer,
             null,
             TimeSpan.Zero,
-            TimeSpan.FromSeconds(30));
+            TimeSpan.FromSeconds(5));
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("UserMetricJob stopping...");
+        _logger.LogInformation("UserAlertJob stopping...");
+
+        ExecuteTimer(null);
 
         _cancellationTokenSource.Cancel();
         _timer?.Change(Timeout.Infinite, 0);
@@ -50,19 +52,21 @@ public class UserMetricJob : IHostedService, IDisposable
     {
         lock (_executingLock)
         {
-            PushMetrics().GetAwaiter().GetResult();
+            PushAlerts().GetAwaiter().GetResult();
         }
     }
 
-    private async Task PushMetrics()
+    private async Task PushAlerts()
     {
         using var scope = _services.CreateScope();
 
-        var metricRepository = scope.ServiceProvider.GetRequiredService<IUsageMetricRepository>();
+        var alertRepository = scope.ServiceProvider.GetRequiredService<IUserAlertRepository>();
 
-        metricRepository.AddRangeAsync(_usageService.GetUsages());
+        var alerts = _userAlertService.GetCachedAlerts();
+        alertRepository.AddRangeAsync(alerts);
+        _userAlertService.RemoveCachedAlerts(alerts);
 
-        await metricRepository.SaveChangesAsync(_cancellationTokenSource.Token);
+        await alertRepository.SaveChangesAsync(_cancellationTokenSource.Token);
     }
 
     public void Dispose()

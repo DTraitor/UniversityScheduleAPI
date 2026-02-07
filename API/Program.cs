@@ -1,4 +1,3 @@
-using BusinessLogic.Jobs;
 using BusinessLogic.Services;
 using BusinessLogic.Services.Interfaces;
 using DataAccess.Domain;
@@ -11,6 +10,7 @@ using BusinessLogic.Parsing;
 using BusinessLogic.Parsing.Interfaces;
 using Common.Models;
 using Common.Models.Internal;
+using ScheduledJobs.Jobs;
 
 var builder = WebApplication.CreateBuilder(args);
 

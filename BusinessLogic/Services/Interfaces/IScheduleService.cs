@@ -1,8 +1,9 @@
-﻿using BusinessLogic.DTO;
+﻿using Common.Models.Internal;
+using Common.Result;
 
 namespace BusinessLogic.Services.Interfaces;
 
 public interface IScheduleService
 {
-    Task<IEnumerable<LessonDto>> GetScheduleForDate(DateTimeOffset dateTime, long userTelegramId);
+    Task<Result<ICollection<UserLesson>, (DateTimeOffset, DateTimeOffset)>> GetScheduleForDate(DateTimeOffset dateTime, long userTelegramId);
 }

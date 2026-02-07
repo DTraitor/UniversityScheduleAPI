@@ -4,44 +4,39 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace BusinessLogic.Jobs;
+namespace ScheduledJobs.Jobs;
 
-public class UserAlertJob : IHostedService, IDisposable
+public class LessonUpdaterJob : IHostedService, IDisposable
 {
-    private readonly IServiceProvider _services;
-    private readonly IUserAlertService _userAlertService;
-    private readonly ILogger<UserAlertJob> _logger;
+    private IServiceProvider _services;
+    private readonly ILogger<LessonUpdaterJob> _logger;
 
     private Timer _timer;
     private CancellationTokenSource _cancellationTokenSource = new();
     private object _executingLock = new();
 
-    public UserAlertJob(
+    public LessonUpdaterJob(
         IServiceProvider services,
-        IUserAlertService userAlertService,
-        ILogger<UserAlertJob> logger)
+        ILogger<LessonUpdaterJob> logger)
     {
         _services = services;
-        _userAlertService = userAlertService;
         _logger = logger;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("UserAlertJob starting...");
+        _logger.LogInformation("LessonUpdaterJob starting...");
 
         _timer = new Timer(
             ExecuteTimer,
             null,
             TimeSpan.Zero,
-            TimeSpan.FromSeconds(5));
+            TimeSpan.FromSeconds(2));
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("UserAlertJob stopping...");
-
-        ExecuteTimer(null);
+        _logger.LogInformation("LessonUpdaterJob stopping...");
 
         _cancellationTokenSource.Cancel();
         _timer?.Change(Timeout.Infinite, 0);
@@ -52,21 +47,26 @@ public class UserAlertJob : IHostedService, IDisposable
     {
         lock (_executingLock)
         {
-            PushAlerts().GetAwaiter().GetResult();
+            UpdateUserLessons().GetAwaiter().GetResult();
         }
     }
 
-    private async Task PushAlerts()
+    private async Task UpdateUserLessons()
     {
         using var scope = _services.CreateScope();
 
-        var alertRepository = scope.ServiceProvider.GetRequiredService<IUserAlertRepository>();
+        var modifiedRepository = scope.ServiceProvider.GetRequiredService<ILessonSourceModifiedRepository>();
+        var lessonUpdater = scope.ServiceProvider.GetRequiredService<ILessonUpdaterService>();
 
-        var alerts = _userAlertService.GetCachedAlerts();
-        alertRepository.AddRangeAsync(alerts);
-        _userAlertService.RemoveCachedAlerts(alerts);
+        var toProcess =
+            (await modifiedRepository.GetAllAsync(_cancellationTokenSource.Token));
 
-        await alertRepository.SaveChangesAsync(_cancellationTokenSource.Token);
+        await lessonUpdater.ProcessModifiedEntry(toProcess.GroupBy(x => x.SourceId).Select(x => x.First()));
+
+        modifiedRepository.RemoveRangeAsync(toProcess);
+
+        await modifiedRepository.SaveChangesAsync(_cancellationTokenSource.Token);
+
     }
 
     public void Dispose()
