@@ -67,16 +67,6 @@ public class LessonEntryRepository : ILessonEntryRepository
         await transaction.CommitAsync(cancellationToken);
     }
 
-    public void SaveChanges()
-    {
-        using var transaction = _context.Database.BeginTransaction();
-
-        _context.ExecuteFutureAction();
-        _context.SaveChanges();
-
-        transaction.Commit();
-    }
-
     public async Task<IEnumerable<LessonEntry>> GetBySourceIdAsync(int sourceId)
     {
         return await _context.LessonEntries.Where(x => x.SourceId == sourceId).ToListAsync();

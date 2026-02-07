@@ -63,16 +63,6 @@ public class UserLessonOccurenceRepository : IUserLessonOccurenceRepository
         _context.FutureAction(x => x.BulkDelete(entriesToRemove, operation => operation.BatchSize = 1000));
     }
 
-    public void SaveChanges()
-    {
-        using var transaction = _context.Database.BeginTransaction();
-
-        _context.ExecuteFutureAction();
-        _context.SaveChanges();
-
-        transaction.Commit();
-    }
-
     public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {
         await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);

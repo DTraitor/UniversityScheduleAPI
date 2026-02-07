@@ -14,7 +14,7 @@ public class ElectiveService : IElectiveService
     private readonly ILessonSourceRepository _lessonSourceRepository;
     private readonly ILessonEntryRepository _lessonEntryRepository;
     private readonly ISelectedLessonSourceRepository _selectedLessonSourceRepository;
-    private readonly ISelectedLessonEntryRepository _selectedLessonEntryRepository;
+    private readonly ISelectedElectiveLesson _selectedLessonEntryRepository;
     private readonly ILogger<ElectiveService> _logger;
 
     public ElectiveService(
@@ -22,7 +22,7 @@ public class ElectiveService : IElectiveService
         ISelectedLessonSourceRepository selectedLessonSourceRepository,
         ILessonEntryRepository lessonEntryRepository,
         IUserModifiedRepository userModifiedRepository,
-        ISelectedLessonEntryRepository selectedLessonEntryRepository,
+        ISelectedElectiveLesson selectedLessonEntryRepository,
         IUserRepository userRepository,
         ILogger<ElectiveService> logger)
     {

@@ -66,14 +66,4 @@ public class UsageMetricRepository : IUsageMetricRepository
 
         await transaction.CommitAsync(cancellationToken);
     }
-
-    public void SaveChanges()
-    {
-        using var transaction = _context.Database.BeginTransaction();
-
-        _context.SaveChanges();
-        _context.ExecuteFutureAction();
-
-        transaction.Commit();
-    }
 }

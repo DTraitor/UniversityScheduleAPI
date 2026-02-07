@@ -66,14 +66,4 @@ public class LessonSourceModifiedRepositoryRepository : ILessonSourceModifiedRep
 
         await transaction.CommitAsync(cancellationToken);
     }
-
-    public void SaveChanges()
-    {
-        using var transaction = _context.Database.BeginTransaction();
-
-        _context.ExecuteFutureAction();
-        _context.SaveChanges();
-
-        transaction.Commit();
-    }
 }

@@ -68,16 +68,6 @@ public class SelectedLessonSourceRepository : ISelectedLessonSourceRepository
         await transaction.CommitAsync(cancellationToken);
     }
 
-    public void SaveChanges()
-    {
-        using var transaction = _context.Database.BeginTransaction();
-
-        _context.ExecuteFutureAction();
-        _context.SaveChanges();
-
-        transaction.Commit();
-    }
-
     public async Task<IEnumerable<SelectedLessonSource>> GetByUserId(int userId)
     {
         return await _context.SelectedLessonSources.Where(x => x.UserId == userId).ToListAsync();

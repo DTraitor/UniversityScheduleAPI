@@ -15,7 +15,7 @@ public class LessonUpdaterService : ILessonUpdaterService
     private readonly ILessonSourceRepository _lessonSourceRepository;
     private readonly ILessonEntryRepository  _lessonEntryRepository;
     private readonly ISelectedLessonSourceRepository _selectedLessonSourceRepository;
-    private readonly ISelectedLessonEntryRepository _selectedLessonEntryRepository;
+    private readonly ISelectedElectiveLesson _selectedLessonEntryRepository;
     private readonly IUserRepository _userRepository;
     private readonly IUserLessonRepository _userLessonRepository;
     private readonly IUserLessonOccurenceRepository _userLessonOccurenceRepository;
@@ -27,7 +27,7 @@ public class LessonUpdaterService : ILessonUpdaterService
         ILessonSourceRepository lessonSourceRepository,
         ILessonEntryRepository lessonEntryRepository,
         ISelectedLessonSourceRepository selectedLessonSourceRepository,
-        ISelectedLessonEntryRepository selectedLessonEntryRepository,
+        ISelectedElectiveLesson selectedLessonEntryRepository,
         IUserRepository userRepository,
         IUserLessonRepository userLessonRepository,
         IUserLessonOccurenceRepository userLessonOccurenceRepository,

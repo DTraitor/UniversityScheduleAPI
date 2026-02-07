@@ -68,16 +68,6 @@ public class UserLessonRepository : IUserLessonRepository
         await transaction.CommitAsync(cancellationToken);
     }
 
-    public void SaveChanges()
-    {
-        using var transaction = _context.Database.BeginTransaction();
-
-        _context.ExecuteFutureAction();
-        _context.SaveChanges();
-
-        transaction.Commit();
-    }
-
     public async Task<IEnumerable<UserLesson>> GetByIdsAsync(IEnumerable<int> ids)
     {
         return await _context.UserLessons.Where(ul => ids.Contains(ul.Id)).ToListAsync();

@@ -1,10 +1,11 @@
-﻿using DataAccess.Models;
+﻿using System.Data.Common;
+using DataAccess.Models;
 
 namespace DataAccess.Repositories.Interfaces;
 
 public interface IPersistentDataRepository
 {
-    void SetData(PersistentData persistentData);
+    void SetData(PersistentData persistentData, DbTransaction transaction);
     PersistentData? GetData(string key);
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }

@@ -78,16 +78,6 @@ public class UserRepository : IUserRepository
         await transaction.CommitAsync(cancellationToken);
     }
 
-    public void SaveChanges()
-    {
-        using var transaction = _context.Database.BeginTransaction();
-
-        _context.ExecuteFutureAction();
-        _context.SaveChanges();
-
-        transaction.Commit();
-    }
-
     public async Task<User> AddAsync(User user, CancellationToken cancellationToken = default)
     {
         return (await _context.Users.AddAsync(user, cancellationToken)).Entity;

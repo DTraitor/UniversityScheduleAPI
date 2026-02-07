@@ -39,7 +39,7 @@ builder.Services.AddRepository<ILessonSourceRepository, LessonSourceRepository, 
 builder.Services.AddRepository<ILessonEntryRepository, LessonEntryRepository, LessonEntry>();
 builder.Services.AddRepository<ILessonSourceModifiedRepository, LessonSourceModifiedRepositoryRepository, LessonSourceModified>();
 builder.Services.AddRepository<ISelectedLessonSourceRepository, SelectedLessonSourceRepository, SelectedLessonSource>();
-builder.Services.AddRepository<ISelectedLessonEntryRepository, SelectedLessonEntryRepository, SelectedLessonEntry>();
+builder.Services.AddRepository<ISelectedElectiveLesson, SelectedElectiveLessonRepository, SelectedElectiveLesson>();
 
 builder.Services.AddHttpClient();
 

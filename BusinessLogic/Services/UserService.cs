@@ -78,12 +78,12 @@ public class UserService : IUserService
 
     private async Task UpdateUserGroup(User user, UserDtoInput userData)
     {
-        var group = await _lessonSourceRepository.GetByNameAndSourceTypeAsync(userData.GroupName, LessonSourceType.Group);
+        var group = await _lessonSourceRepository.GetByNameAndLimitAsync(userData.GroupName, 5);
         if (group == null)
             throw new KeyNotFoundException("No group with such name found.");
 
         var selectedGroup
-            = (await _selectedLessonSourceRepository.GetByUserIdAndSourceType(user.Id, LessonSourceType.Group)).FirstOrDefault();
+            = (await _selectedLessonSourceRepository.GetByUserId(user.Id)).FirstOrDefault();
 
         if (selectedGroup == null)
         {

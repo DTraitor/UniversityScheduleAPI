@@ -9,7 +9,6 @@ public class SelectedLessonSource : IEntityId
     public int UserId { get; set; }
     public int SourceId { get; set; }
     public int SubGroupNumber { get; set; }
-    public string? Type { get; set; }
     public LessonSourceType LessonSourceType { get; set; }
 
     //User alert related

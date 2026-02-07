@@ -67,16 +67,6 @@ public class UserAlertRepository : IUserAlertRepository
         await transaction.CommitAsync(cancellationToken);
     }
 
-    public void SaveChanges()
-    {
-        using var transaction = _context.Database.BeginTransaction();
-
-        _context.ExecuteFutureAction();
-        _context.SaveChanges();
-
-        transaction.Commit();
-    }
-
     public async Task<IEnumerable<UserAlert>> GetAllLimitAsync(int batchSize)
     {
         return await _context.UserAlerts.OrderBy(x => x.Id).Take(batchSize).ToListAsync();

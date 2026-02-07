@@ -68,16 +68,6 @@ public class LessonSourceRepository : ILessonSourceRepository
         await transaction.CommitAsync(cancellationToken);
     }
 
-    public void SaveChanges()
-    {
-        using var transaction = _context.Database.BeginTransaction();
-
-        _context.ExecuteFutureAction();
-        _context.SaveChanges();
-
-        transaction.Commit();
-    }
-
     public async Task<LessonSource?> GetByNameAndSourceTypeAsync(string name, LessonSourceType lessonSourceType)
     {
         return await _context.LessonSources.FirstOrDefaultAsync(x => x.SourceType == lessonSourceType && x.Name == name);

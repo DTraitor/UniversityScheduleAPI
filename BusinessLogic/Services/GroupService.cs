@@ -34,7 +34,7 @@ public class GroupService : IGroupService
         if (user == null)
             throw new InvalidOperationException("User does not exist");
 
-        var selected = await _selectedLessonSourceRepository.GetByUserIdAndSourceType(user.Id, LessonSourceType.Group);
+        var selected = await _selectedLessonSourceRepository.GetByUserId(user.Id);
 
         var group = await _lessonSourceRepository.GetByIdsAsync(selected.Select(x => x.SourceId));
 
@@ -43,13 +43,13 @@ public class GroupService : IGroupService
 
     public async Task<bool> GroupExists(string groupName)
     {
-        return (await _lessonSourceRepository.GetByNameAndSourceTypeAsync(groupName, LessonSourceType.Group)) != null;
+        return (await _lessonSourceRepository.GetByNameAndLimitAsync(groupName, 1)) != null;
     }
 
     public async Task<IEnumerable<int>> GetSubgroups(long telegramId)
     {
         var user = await _userRepository.GetByTelegramIdAsync(telegramId);
-        var selected = (await _selectedLessonSourceRepository.GetByUserIdAndSourceType(user.Id, LessonSourceType.Group)).FirstOrDefault();
+        var selected = (await _selectedLessonSourceRepository.GetByUserId(user.Id)).FirstOrDefault();
 
         if (selected == null)
             throw new InvalidOperationException("User has no group");
