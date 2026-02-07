@@ -2,6 +2,7 @@
 using DataAccess.Enums;
 using DataAccess.Models.Internal;
 using DataAccess.Repositories.Interfaces;
+using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -33,19 +34,19 @@ public class UserLessonRepository : IUserLessonRepository
         _context.UserLessons.Remove(entity);
     }
 
-    public void AddRange(IEnumerable<UserLesson> entities)
+    public async Task AddRangeAsync(ICollection<UserLesson> entities)
     {
-        _context.FutureAction(x => x.BulkInsert(entities));
+        await _context.BulkInsertAsync(entities);
     }
 
-    public void UpdateRange(IEnumerable<UserLesson> entity)
+    public async Task UpdateRangeAsync(ICollection<UserLesson> entity)
     {
-        _context.FutureAction(x => x.BulkUpdate(entity));
+        await _context.BulkUpdateAsync(entity);
     }
 
-    public void RemoveRange(IEnumerable<UserLesson> entities)
+    public async Task RemoveRangeAsync(ICollection<UserLesson> entities)
     {
-        _context.FutureAction(x => x.BulkDelete(entities));
+        await _context.BulkDeleteAsync(entities);
     }
 
     public async Task<UserLesson?> GetByIdAsync(int id)
@@ -53,45 +54,40 @@ public class UserLessonRepository : IUserLessonRepository
         return await _context.UserLessons.FirstOrDefaultAsync(x => x.Id == id);
     }
 
-    public async Task<IEnumerable<UserLesson>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<ICollection<UserLesson>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await _context.UserLessons.ToListAsync(cancellationToken);
     }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {
-        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
-
-        _context.ExecuteFutureAction();
         await _context.SaveChangesAsync(cancellationToken);
-
-        await transaction.CommitAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<UserLesson>> GetByIdsAsync(IEnumerable<int> ids)
+    public async Task<ICollection<UserLesson>> GetByIdsAsync(ICollection<int> ids)
     {
         return await _context.UserLessons.Where(ul => ids.Contains(ul.Id)).ToListAsync();
     }
 
-    public IEnumerable<int> RemoveByUserIds(IEnumerable<int> userIds)
+    public async Task<ICollection<int>> RemoveByUserIdsAsync(ICollection<int> userIds)
     {
         var lessons = _context.UserLessons.Where(ul => userIds.Contains(ul.UserId)).ToArray();
-        _context.FutureAction(x => x.BulkDelete(lessons));
-        return lessons.Select(x => x.Id);
+        await _context.BulkDeleteAsync(lessons);
+        return lessons.Select(x => x.Id).ToList();
     }
 
-    public async Task<IEnumerable<int>> RemoveByUserIdsAndLessonSourceTypeAndLessonSourceIds(IEnumerable<int> userIds, SelectedLessonSourceType sourceType,
-        IEnumerable<int> sourceIds)
+    public async Task<ICollection<int>> RemoveByUserIdsAndLessonSourceTypeAndLessonSourceIdsAsync(ICollection<int> userIds, SelectedLessonSourceType sourceType,
+        ICollection<int> sourceIds)
     {
         var lessons = _context.UserLessons.Where(ul =>
             userIds.Contains(ul.UserId) &&
             (ul.SelectedLessonSourceType & sourceType) == sourceType &&
             sourceIds.Contains(ul.LessonSourceId));
-        _context.FutureAction(x => x.BulkDelete(lessons));
+        await _context.BulkDeleteAsync(lessons);
         return await lessons.Select(x => x.Id).ToListAsync();
     }
 
-    public async Task<IList<UserLesson>> GetWithOccurrencesCalculatedDateLessThan(DateTimeOffset dateTime)
+    public async Task<ICollection<UserLesson>> GetWithOccurrencesCalculatedDateLessThanAsync(DateTimeOffset dateTime)
     {
         return await _context.UserLessons
             .Where(l => l.OccurrencesCalculatedTill == null || l.OccurrencesCalculatedTill < dateTime)

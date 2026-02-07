@@ -1,6 +1,7 @@
 using DataAccess.Domain;
 using DataAccess.Models;
 using DataAccess.Repositories.Interfaces;
+using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -32,19 +33,19 @@ public class UsageMetricRepository : IUsageMetricRepository
         _context.UsageMetrics.Remove(entity);
     }
 
-    public void AddRange(IEnumerable<UsageMetric> entities)
+    public async Task AddRangeAsync(ICollection<UsageMetric> entities)
     {
-        _context.FutureAction(x => x.BulkInsert(entities));
+        await _context.BulkInsertAsync(entities);
     }
 
-    public void UpdateRange(IEnumerable<UsageMetric> entities)
+    public async Task UpdateRangeAsync(ICollection<UsageMetric> entities)
     {
-        _context.FutureAction(x => x.BulkUpdate(entities));
+        await _context.BulkUpdateAsync(entities);
     }
 
-    public void RemoveRange(IEnumerable<UsageMetric> entities)
+    public async Task RemoveRangeAsync(ICollection<UsageMetric> entities)
     {
-        _context.FutureAction(x => x.BulkDelete(entities));
+        await _context.BulkDeleteAsync(entities);
     }
 
     public async Task<UsageMetric?> GetByIdAsync(int id)
@@ -52,18 +53,13 @@ public class UsageMetricRepository : IUsageMetricRepository
         return await _context.UsageMetrics.FirstOrDefaultAsync(x => x.Id == id);
     }
 
-    public async Task<IEnumerable<UsageMetric>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<ICollection<UsageMetric>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await _context.UsageMetrics.ToListAsync(cancellationToken);
     }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
-
-        _context.ExecuteFutureAction();
         await _context.SaveChangesAsync(cancellationToken);
-
-        await transaction.CommitAsync(cancellationToken);
     }
 }

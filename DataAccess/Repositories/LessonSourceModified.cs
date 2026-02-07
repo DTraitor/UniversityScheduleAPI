@@ -1,6 +1,7 @@
 using DataAccess.Domain;
 using DataAccess.Models;
 using DataAccess.Repositories.Interfaces;
+using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -32,19 +33,19 @@ public class LessonSourceModifiedRepositoryRepository : ILessonSourceModifiedRep
         _context.LessonSourceModifications.Remove(entity);
     }
 
-    public void AddRange(IEnumerable<LessonSourceModified> toAdd)
+    public async Task AddRangeAsync(ICollection<LessonSourceModified> toAdd)
     {
-        _context.FutureAction(x => x.BulkInsert(toAdd));
+        await _context.BulkInsertAsync(toAdd);
     }
 
-    public void UpdateRange(IEnumerable<LessonSourceModified> entity)
+    public async Task UpdateRangeAsync(ICollection<LessonSourceModified> entity)
     {
-        _context.FutureAction(x => x.BulkUpdate(entity));
+        await _context.BulkUpdateAsync(entity);
     }
 
-    public void RemoveRange(IEnumerable<LessonSourceModified> entities)
+    public async Task RemoveRangeAsync(ICollection<LessonSourceModified> entities)
     {
-        _context.FutureAction(x => x.BulkDelete(entities));
+        await _context.BulkDeleteAsync(entities);
     }
 
     public async Task<LessonSourceModified?> GetByIdAsync(int id)
@@ -52,18 +53,13 @@ public class LessonSourceModifiedRepositoryRepository : ILessonSourceModifiedRep
         return await _context.LessonSourceModifications.FirstOrDefaultAsync(x => x.Id == id);
     }
 
-    public async Task<IEnumerable<LessonSourceModified>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<ICollection<LessonSourceModified>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await _context.LessonSourceModifications.ToListAsync(cancellationToken);
     }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {
-        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
-
-        _context.ExecuteFutureAction();
         await _context.SaveChangesAsync(cancellationToken);
-
-        await transaction.CommitAsync(cancellationToken);
     }
 }

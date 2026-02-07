@@ -65,7 +65,7 @@ public class UserAlertJob : IHostedService, IDisposable
         var alertRepository = scope.ServiceProvider.GetRequiredService<IUserAlertRepository>();
 
         var alerts = _userAlertService.GetCachedAlerts();
-        alertRepository.AddRange(alerts);
+        alertRepository.AddRangeAsync(alerts);
         _userAlertService.RemoveCachedAlerts(alerts);
 
         await alertRepository.SaveChangesAsync(_cancellationTokenSource.Token);

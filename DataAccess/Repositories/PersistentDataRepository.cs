@@ -1,6 +1,7 @@
 ﻿using DataAccess.Domain;
 using DataAccess.Models;
 using DataAccess.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace DataAccess.Repositories;
@@ -30,9 +31,9 @@ public class PersistentDataRepository : IPersistentDataRepository
         }
     }
 
-    public PersistentData? GetData(string key)
+    public async Task<PersistentData?> GetData(string key)
     {
-        return _context.PersistentData.FirstOrDefault(x => x.Key == key);
+        return await _context.PersistentData.FirstOrDefaultAsync(x => x.Key == key);
     }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken)

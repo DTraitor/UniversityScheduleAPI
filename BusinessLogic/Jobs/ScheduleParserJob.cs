@@ -149,11 +149,11 @@ public class ScheduleParserJob : IHostedService, IDisposable
 
         HashSet<int> existingHashset = new HashSet<int>(existing.Select(x => x.Id));
 
-        repository.RemoveRange(previousLessons.Where(x => !existingHashset.Contains(x.Id)));
+        repository.RemoveRangeAsync(previousLessons.Where(x => !existingHashset.Contains(x.Id)));
 
-        repository.AddRange(currentLessons);
-        repository.UpdateRange(existing);
-        modifiedRepository.AddRange(updatedSources.Select(x => new LessonSourceModified{ SourceId = x }));
+        repository.AddRangeAsync(currentLessons);
+        repository.UpdateRangeAsync(existing);
+        modifiedRepository.AddRangeAsync(updatedSources.Select(x => new LessonSourceModified{ SourceId = x }));
 
         await repository.SaveChangesAsync(_cancellationTokenSource.Token);
         await modifiedRepository.SaveChangesAsync(_cancellationTokenSource.Token);

@@ -4,6 +4,6 @@ namespace DataAccess.Repositories.Interfaces;
 
 public interface IUserAlertRepository : IRepository<UserAlert>
 {
-    Task<IEnumerable<UserAlert>> GetAllLimitAsync(int batchSize);
-    void RemoveByIds(IEnumerable<int> alerts);
+    Task<ICollection<UserAlert>> GetAllLimitAsync(int batchSize);
+    Task RemoveByIdsAsync(ICollection<int> alerts);
 }

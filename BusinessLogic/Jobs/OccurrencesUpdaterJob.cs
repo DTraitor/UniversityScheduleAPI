@@ -161,7 +161,7 @@ public class OccurrencesUpdaterJob : IHostedService, IDisposable, IAsyncDisposab
         if(userLessonOccurrences.Count <= 0)
             return;
 
-        userLessonOccurenceRepository.AddRange(userLessonOccurrences);
+        userLessonOccurenceRepository.AddRangeAsync(userLessonOccurrences);
         try
         {
             await userLessonRepository.SaveChangesAsync();
@@ -178,7 +178,7 @@ public class OccurrencesUpdaterJob : IHostedService, IDisposable, IAsyncDisposab
 
                     if (databaseValues == null)
                     {
-                        userLessonOccurenceRepository.RemoveRange(userLessonOccurrences.Where(x => x.LessonId == proposedValues.GetValue<int>("Id")));
+                        userLessonOccurenceRepository.RemoveRangeAsync(userLessonOccurrences.Where(x => x.LessonId == proposedValues.GetValue<int>("Id")));
                     }
                     else
                     {

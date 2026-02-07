@@ -62,7 +62,7 @@ public class UserMetricJob : IHostedService, IDisposable
 
         var metricRepository = scope.ServiceProvider.GetRequiredService<IUsageMetricRepository>();
 
-        metricRepository.AddRange(_usageService.GetUsages());
+        metricRepository.AddRangeAsync(_usageService.GetUsages());
 
         await metricRepository.SaveChangesAsync(_cancellationTokenSource.Token);
     }

@@ -1,6 +1,7 @@
 using DataAccess.Domain;
 using DataAccess.Models;
 using DataAccess.Repositories.Interfaces;
+using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -32,19 +33,19 @@ public class UserAlertRepository : IUserAlertRepository
         _context.UserAlerts.Remove(entity);
     }
 
-    public void AddRange(IEnumerable<UserAlert> entities)
+    public async Task AddRangeAsync(ICollection<UserAlert> entities)
     {
-        _context.FutureAction(x => x.BulkInsert(entities));
+        await _context.BulkInsertAsync(entities);
     }
 
-    public void UpdateRange(IEnumerable<UserAlert> entities)
+    public async Task UpdateRangeAsync(ICollection<UserAlert> entities)
     {
-        _context.FutureAction(x => x.BulkUpdate(entities));
+        await _context.BulkUpdateAsync(entities);
     }
 
-    public void RemoveRange(IEnumerable<UserAlert> entities)
+    public async Task RemoveRangeAsync(ICollection<UserAlert> entities)
     {
-        _context.FutureAction(x => x.BulkDelete(entities));
+        await _context.BulkDeleteAsync(entities);
     }
 
     public async Task<UserAlert?> GetByIdAsync(int id)
@@ -52,29 +53,24 @@ public class UserAlertRepository : IUserAlertRepository
         return await _context.UserAlerts.FirstOrDefaultAsync(x => x.Id == id);
     }
 
-    public async Task<IEnumerable<UserAlert>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<ICollection<UserAlert>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await _context.UserAlerts.ToListAsync(cancellationToken);
     }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
-
-        _context.ExecuteFutureAction();
         await _context.SaveChangesAsync(cancellationToken);
-
-        await transaction.CommitAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<UserAlert>> GetAllLimitAsync(int batchSize)
+    public async Task<ICollection<UserAlert>> GetAllLimitAsync(int batchSize)
     {
         return await _context.UserAlerts.OrderBy(x => x.Id).Take(batchSize).ToListAsync();
     }
 
-    public void RemoveByIds(IEnumerable<int> alerts)
+    public async Task RemoveByIdsAsync(ICollection<int> alerts)
     {
         var toRemove = _context.UserAlerts.Where(x => alerts.Contains(x.Id)).AsEnumerable();
-        _context.FutureAction(x => x.BulkDelete(toRemove));
+        await _context.BulkDeleteAsync(toRemove);
     }
 }

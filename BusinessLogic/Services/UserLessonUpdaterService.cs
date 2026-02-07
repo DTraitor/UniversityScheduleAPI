@@ -130,7 +130,7 @@ public class UserLessonUpdaterService : IUserLessonUpdaterService
             }
         }
 
-        _userLessonRepository.AddRange(userLessons);
+        _userLessonRepository.AddRangeAsync(userLessons);
 
         await _userLessonOccurenceRepository.SaveChangesAsync();
         await _userLessonRepository.SaveChangesAsync();

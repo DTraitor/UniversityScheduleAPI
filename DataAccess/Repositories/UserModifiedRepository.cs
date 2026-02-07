@@ -2,6 +2,7 @@
 using DataAccess.Enums;
 using DataAccess.Models;
 using DataAccess.Repositories.Interfaces;
+using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -18,7 +19,7 @@ public class UserModifiedRepository : IUserModifiedRepository
         _logger = logger;
     }
 
-    public async Task<IEnumerable<UserModified>> GetNotProcessed(CancellationToken cancellationToken = default)
+    public async Task<ICollection<UserModified>> GetNotProcessedAsync(CancellationToken cancellationToken = default)
     {
         return await _context.UserModifications.Take(100).ToListAsync(cancellationToken);
     }
@@ -28,18 +29,13 @@ public class UserModifiedRepository : IUserModifiedRepository
         _context.Add(new UserModified { UserId = userId });
     }
 
-    public void RemoveProcessed(IEnumerable<UserModified> toRemove)
+    public async Task RemoveProcessedAsync(ICollection<UserModified> toRemove)
     {
-        _context.FutureAction(x => x.BulkDelete(toRemove));
+        await _context.BulkDeleteAsync(toRemove);
     }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
-
-        _context.ExecuteFutureAction();
         await _context.SaveChangesAsync(cancellationToken);
-
-        await transaction.CommitAsync(cancellationToken);
     }
 }

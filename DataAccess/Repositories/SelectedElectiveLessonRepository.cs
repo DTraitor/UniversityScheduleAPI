@@ -1,6 +1,7 @@
 using DataAccess.Domain;
 using DataAccess.Models;
 using DataAccess.Repositories.Interfaces;
+using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -32,19 +33,19 @@ public class SelectedElectiveLessonRepository : ISelectedElectiveLesson
         _context.SelectedElectiveLessonEntries.Remove(entity);
     }
 
-    public void AddRange(IEnumerable<SelectedElectiveLesson> toAdd)
+    public async Task AddRangeAsync(ICollection<SelectedElectiveLesson> toAdd)
     {
-        _context.FutureAction(x => x.BulkInsert(toAdd));
+        await _context.BulkInsertAsync(toAdd);
     }
 
-    public void UpdateRange(IEnumerable<SelectedElectiveLesson> entity)
+    public async Task UpdateRangeAsync(ICollection<SelectedElectiveLesson> entity)
     {
-        _context.FutureAction(x => x.BulkUpdate(entity));
+        await _context.BulkUpdateAsync(entity);
     }
 
-    public void RemoveRange(IEnumerable<SelectedElectiveLesson> entities)
+    public async Task RemoveRangeAsync(ICollection<SelectedElectiveLesson> entities)
     {
-        _context.FutureAction(x => x.BulkDelete(entities));
+        await _context.BulkDeleteAsync(entities);
     }
 
     public async Task<SelectedElectiveLesson?> GetByIdAsync(int id)
@@ -52,32 +53,27 @@ public class SelectedElectiveLessonRepository : ISelectedElectiveLesson
         return await _context.SelectedElectiveLessonEntries.FirstOrDefaultAsync(x => x.Id == id);
     }
 
-    public async Task<IEnumerable<SelectedElectiveLesson>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<ICollection<SelectedElectiveLesson>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await _context.SelectedElectiveLessonEntries.ToListAsync(cancellationToken);
     }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {
-        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
-
-        _context.ExecuteFutureAction();
         await _context.SaveChangesAsync(cancellationToken);
-
-        await transaction.CommitAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<SelectedElectiveLesson>> GetBySourceIds(IEnumerable<int> sourceIds)
+    public async Task<ICollection<SelectedElectiveLesson>> GetBySourceIds(ICollection<int> sourceIds)
     {
         return await _context.SelectedElectiveLessonEntries.Where(x => sourceIds.Contains(x.LessonSourceId)).ToListAsync();
     }
 
-    public async Task<IEnumerable<SelectedElectiveLesson>> GetByUserIds(IEnumerable<int> userIds)
+    public async Task<ICollection<SelectedElectiveLesson>> GetByUserIds(ICollection<int> userIds)
     {
         return await _context.SelectedElectiveLessonEntries.Where(x => userIds.Contains(x.UserId)).ToListAsync();
     }
 
-    public async Task<IEnumerable<SelectedElectiveLesson>> GetByUserId(int userId)
+    public async Task<ICollection<SelectedElectiveLesson>> GetByUserId(int userId)
     {
         return await _context.SelectedElectiveLessonEntries.Where(x => x.UserId == userId).ToListAsync();
     }

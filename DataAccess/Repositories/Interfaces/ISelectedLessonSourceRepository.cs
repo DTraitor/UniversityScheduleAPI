@@ -5,9 +5,9 @@ namespace DataAccess.Repositories.Interfaces;
 
 public interface ISelectedLessonSourceRepository : IRepository<SelectedLessonSource>
 {
-    Task<IEnumerable<SelectedLessonSource>> GetByUserId(int userId);
-    Task<IEnumerable<SelectedLessonSource>> GetByUserIds(IEnumerable<int> userIds);
-    Task<IEnumerable<SelectedLessonSource>> GetBySourceIds(IEnumerable<int> sourceIds);
-    Task<IEnumerable<SelectedLessonSource>> GetByUserIdAndSourceType(int userId, LessonSourceType lessonSourceType);
-    Task<IEnumerable<SelectedLessonSource>> GetByUserIdsAndSourceType(IEnumerable<int> userIds, LessonSourceType lessonSourceType);
+    Task<ICollection<SelectedLessonSource>> GetByUserId(int userId);
+    Task<ICollection<SelectedLessonSource>> GetByUserIds(ICollection<int> userIds);
+    Task<ICollection<SelectedLessonSource>> GetBySourceIds(ICollection<int> sourceIds);
+    Task<ICollection<SelectedLessonSource>> GetByUserIdAndSourceType(int userId, LessonSourceType lessonSourceType);
+    Task<ICollection<SelectedLessonSource>> GetByUserIdsAndSourceType(ICollection<int> userIds, LessonSourceType lessonSourceType);
 }

@@ -2,6 +2,7 @@ using DataAccess.Domain;
 using DataAccess.Enums;
 using DataAccess.Models;
 using DataAccess.Repositories.Interfaces;
+using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -33,19 +34,19 @@ public class SelectedLessonSourceRepository : ISelectedLessonSourceRepository
         _context.SelectedLessonSources.Remove(entity);
     }
 
-    public void AddRange(IEnumerable<SelectedLessonSource> toAdd)
+    public async Task AddRangeAsync(ICollection<SelectedLessonSource> toAdd)
     {
-        _context.FutureAction(x => x.BulkInsert(toAdd));
+        await _context.BulkInsertAsync(toAdd);
     }
 
-    public void UpdateRange(IEnumerable<SelectedLessonSource> entity)
+    public async Task UpdateRangeAsync(ICollection<SelectedLessonSource> entity)
     {
-        _context.FutureAction(x => x.BulkUpdate(entity));
+        await _context.BulkUpdateAsync(entity);
     }
 
-    public void RemoveRange(IEnumerable<SelectedLessonSource> entities)
+    public async Task RemoveRangeAsync(ICollection<SelectedLessonSource> entities)
     {
-        _context.FutureAction(x => x.BulkDelete(entities));
+        await _context.BulkDeleteAsync(entities);
     }
 
     public async Task<SelectedLessonSource?> GetByIdAsync(int id)
@@ -53,44 +54,39 @@ public class SelectedLessonSourceRepository : ISelectedLessonSourceRepository
         return await _context.SelectedLessonSources.FirstOrDefaultAsync(x => x.Id == id);
     }
 
-    public async Task<IEnumerable<SelectedLessonSource>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<ICollection<SelectedLessonSource>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await _context.SelectedLessonSources.ToListAsync(cancellationToken);
     }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {
-        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
-
-        _context.ExecuteFutureAction();
         await _context.SaveChangesAsync(cancellationToken);
-
-        await transaction.CommitAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<SelectedLessonSource>> GetByUserId(int userId)
+    public async Task<ICollection<SelectedLessonSource>> GetByUserId(int userId)
     {
         return await _context.SelectedLessonSources.Where(x => x.UserId == userId).ToListAsync();
     }
 
-    public async Task<IEnumerable<SelectedLessonSource>> GetByUserIds(IEnumerable<int> userIds)
+    public async Task<ICollection<SelectedLessonSource>> GetByUserIds(ICollection<int> userIds)
     {
         return await _context.SelectedLessonSources.Where(x => userIds.Contains(x.UserId)).ToListAsync();
     }
 
-    public async Task<IEnumerable<SelectedLessonSource>> GetBySourceIds(IEnumerable<int> sourceIds)
+    public async Task<ICollection<SelectedLessonSource>> GetBySourceIds(ICollection<int> sourceIds)
     {
         return await _context.SelectedLessonSources.Where(x => sourceIds.Contains(x.SourceId)).ToListAsync();
     }
 
-    public async Task<IEnumerable<SelectedLessonSource>> GetByUserIdAndSourceType(int userId, LessonSourceType lessonSourceType)
+    public async Task<ICollection<SelectedLessonSource>> GetByUserIdAndSourceType(int userId, LessonSourceType lessonSourceType)
     {
         return await _context.SelectedLessonSources
             .Where(x => x.UserId == userId && x.LessonSourceType == lessonSourceType)
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<SelectedLessonSource>> GetByUserIdsAndSourceType(IEnumerable<int> userIds, LessonSourceType lessonSourceType)
+    public async Task<ICollection<SelectedLessonSource>> GetByUserIdsAndSourceType(ICollection<int> userIds, LessonSourceType lessonSourceType)
     {
         return await _context.SelectedLessonSources
             .Where(x => userIds.Contains(x.UserId) && x.LessonSourceType == lessonSourceType)

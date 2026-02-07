@@ -3,6 +3,7 @@ using DataAccess.Models;
 using DataAccess.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using EFCore.BulkExtensions;
 
 namespace DataAccess.Repositories;
 
@@ -32,19 +33,19 @@ public class LessonEntryRepository : ILessonEntryRepository
         _context.LessonEntries.Remove(entity);
     }
 
-    public void AddRange(IEnumerable<LessonEntry> toAdd)
+    public async Task AddRangeAsync(ICollection<LessonEntry> entities)
     {
-        _context.FutureAction(x => x.BulkInsert(toAdd));
+        await _context.BulkInsertAsync(entities);
     }
 
-    public void UpdateRange(IEnumerable<LessonEntry> entity)
+    public async Task UpdateRangeAsync(ICollection<LessonEntry> entities)
     {
-        _context.FutureAction(x => x.BulkUpdate(entity));
+        await _context.BulkUpdateAsync(entities);
     }
 
-    public void RemoveRange(IEnumerable<LessonEntry> entities)
+    public async Task RemoveRangeAsync(ICollection<LessonEntry> entities)
     {
-        _context.FutureAction(x => x.BulkDelete(entities));
+        await _context.BulkDeleteAsync(entities);
     }
 
     public async Task<LessonEntry?> GetByIdAsync(int id)
@@ -52,27 +53,22 @@ public class LessonEntryRepository : ILessonEntryRepository
         return await _context.LessonEntries.FirstOrDefaultAsync(x => x.Id == id);
     }
 
-    public async Task<IEnumerable<LessonEntry>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<ICollection<LessonEntry>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await _context.LessonEntries.ToListAsync(cancellationToken);
     }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {
-        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
-
-        _context.ExecuteFutureAction();
         await _context.SaveChangesAsync(cancellationToken);
-
-        await transaction.CommitAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<LessonEntry>> GetBySourceIdAsync(int sourceId)
+    public async Task<ICollection<LessonEntry>> GetBySourceIdAsync(int sourceId)
     {
         return await _context.LessonEntries.Where(x => x.SourceId == sourceId).ToListAsync();
     }
 
-    public async Task<IEnumerable<LessonEntry>> GetBySourceIdsAsync(IEnumerable<int> sourceIds)
+    public async Task<ICollection<LessonEntry>> GetBySourceIdsAsync(ICollection<int> sourceIds)
     {
         return await _context.LessonEntries.Where(x => sourceIds.Contains(x.SourceId)).ToListAsync();
     }

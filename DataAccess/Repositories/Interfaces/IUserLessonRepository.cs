@@ -7,8 +7,8 @@ namespace DataAccess.Repositories.Interfaces;
 
 public interface IUserLessonRepository : IRepository<UserLesson>
 {
-    Task<IEnumerable<UserLesson>> GetByIdsAsync(IEnumerable<int> ids, DbTransaction transaction);
-    IEnumerable<int> RemoveByUserIds(IEnumerable<int> userIds, DbTransaction transaction);
-    Task<IEnumerable<int>> RemoveByUserIdsAndLessonSourceTypeAndLessonSourceIds(IEnumerable<int> userIds, SelectedLessonSourceType sourceType, IEnumerable<int> sourceId, DbTransaction transaction);
-    Task<IList<UserLesson>> GetWithOccurrencesCalculatedDateLessThan(DateTimeOffset dateTime);
+    Task<ICollection<UserLesson>> GetByIdsAsync(ICollection<int> ids);
+    Task<ICollection<int>> RemoveByUserIdsAsync(ICollection<int> userIds);
+    Task<ICollection<int>> RemoveByUserIdsAndLessonSourceTypeAndLessonSourceIdsAsync(ICollection<int> userIds, SelectedLessonSourceType sourceType, ICollection<int> sourceId);
+    Task<ICollection<UserLesson>> GetWithOccurrencesCalculatedDateLessThanAsync(DateTimeOffset dateTime);
 }

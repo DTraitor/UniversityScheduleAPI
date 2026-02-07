@@ -1,6 +1,7 @@
 ﻿using DataAccess.Domain;
 using DataAccess.Models.Internal;
 using DataAccess.Repositories.Interfaces;
+using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -32,19 +33,19 @@ public class UserLessonOccurenceRepository : IUserLessonOccurenceRepository
         _context.UserLessonOccurrences.Remove(entity);
     }
 
-    public void AddRange(IEnumerable<UserLessonOccurrence> lessonOccurrences)
+    public async Task AddRangeAsync(ICollection<UserLessonOccurrence> lessonOccurrences)
     {
-        _context.FutureAction(x => x.BulkInsert(lessonOccurrences, operation => operation.BatchSize = 1000));
+        await _context.BulkInsertAsync(lessonOccurrences);
     }
 
-    public void UpdateRange(IEnumerable<UserLessonOccurrence> entity)
+    public async Task UpdateRangeAsync(ICollection<UserLessonOccurrence> entity)
     {
-        _context.FutureAction(x => x.BulkUpdate(entity, operation => operation.BatchSize = 1000));
+        await _context.BulkUpdateAsync(entity);
     }
 
-    public void RemoveRange(IEnumerable<UserLessonOccurrence> entities)
+    public async Task RemoveRangeAsync(ICollection<UserLessonOccurrence> entities)
     {
-        _context.FutureAction(x => x.BulkDelete(entities, operation => operation.BatchSize = 1000));
+        await _context.BulkDeleteAsync(entities);
     }
 
     public async Task<UserLessonOccurrence?> GetByIdAsync(int id)
@@ -52,28 +53,23 @@ public class UserLessonOccurenceRepository : IUserLessonOccurenceRepository
         return await _context.UserLessonOccurrences.FirstOrDefaultAsync(x => x.Id == id);
     }
 
-    public async Task<IEnumerable<UserLessonOccurrence>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<ICollection<UserLessonOccurrence>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await _context.UserLessonOccurrences.ToListAsync(cancellationToken);
     }
 
-    public void ClearByLessonIds(IEnumerable<int> toRemove)
+    public async Task ClearByLessonIdsAsync(ICollection<int> toRemove)
     {
         var entriesToRemove = _context.UserLessonOccurrences.Where(y => toRemove.Contains(y.LessonId)).AsEnumerable();
-        _context.FutureAction(x => x.BulkDelete(entriesToRemove, operation => operation.BatchSize = 1000));
+        await _context.BulkDeleteAsync(entriesToRemove);
     }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {
-        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
-
-        _context.ExecuteFutureAction();
         await _context.SaveChangesAsync(cancellationToken);
-
-        await transaction.CommitAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<UserLessonOccurrence>> GetByUserIdAndBetweenDateAsync(int userId, DateTimeOffset beginDate, DateTimeOffset endDate)
+    public async Task<ICollection<UserLessonOccurrence>> GetByUserIdAndBetweenDateAsync(int userId, DateTimeOffset beginDate, DateTimeOffset endDate)
     {
         return await _context.UserLessonOccurrences
             .Where(x => x.UserId == userId)
@@ -81,11 +77,11 @@ public class UserLessonOccurenceRepository : IUserLessonOccurenceRepository
             .ToListAsync();
     }
 
-    public UserLessonOccurrence? GetLatestOccurrence(int lessonId)
+    public async Task<UserLessonOccurrence?> GetLatestOccurrenceAsync(int lessonId)
     {
-        return _context.UserLessonOccurrences
+        return await _context.UserLessonOccurrences
             .Where(x => x.LessonId == lessonId)
             .OrderByDescending(x => x.StartTime)
-            .FirstOrDefault();
+            .FirstOrDefaultAsync();
     }
 }

@@ -65,7 +65,7 @@ public class LessonUpdaterJob : IHostedService, IDisposable
 
         await lessonUpdater.ProcessModifiedEntry(toProcess.GroupBy(x => x.SourceId).Select(x => x.First()));
 
-        modifiedRepository.RemoveRange(toProcess);
+        modifiedRepository.RemoveRangeAsync(toProcess);
 
         await modifiedRepository.SaveChangesAsync(_cancellationTokenSource.Token);
 
