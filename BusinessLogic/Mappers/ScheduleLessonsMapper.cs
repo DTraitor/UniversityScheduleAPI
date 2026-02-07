@@ -1,7 +1,7 @@
 ﻿using BusinessLogic.Helpers;
-using DataAccess.Enums;
-using DataAccess.Models;
-using DataAccess.Models.Internal;
+using Common.Enums;
+using Common.Models;
+using Common.Models.Internal;
 
 namespace BusinessLogic.Mappers;
 

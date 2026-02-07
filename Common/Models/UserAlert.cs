@@ -1,9 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
-using DataAccess.Enums;
-using DataAccess.Models.Interface;
+using Common.Enums;
+using Common.Models.Interface;
 
-namespace DataAccess.Models;
+namespace Common.Models;
 
 public class UserAlert : IEntityId
 {

@@ -1,5 +1,5 @@
+using Common.Models.Internal;
 using DataAccess.Domain;
-using DataAccess.Models.Internal;
 using DataAccess.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

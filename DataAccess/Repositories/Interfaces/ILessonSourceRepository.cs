@@ -1,5 +1,5 @@
-using DataAccess.Enums;
-using DataAccess.Models;
+using Common.Enums;
+using Common.Models;
 
 namespace DataAccess.Repositories.Interfaces;
 

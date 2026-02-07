@@ -1,7 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using DataAccess.Models.Interface;
+﻿using Common.Models.Interface;
 
-namespace DataAccess.Models;
+namespace Common.Models;
 
 public class PersistentData : IEntityId
 {

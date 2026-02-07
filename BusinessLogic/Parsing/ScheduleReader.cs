@@ -1,6 +1,6 @@
 using BusinessLogic.Configuration;
 using BusinessLogic.Parsing.Interfaces;
-using DataAccess.Models;
+using Common.Models;
 using HtmlAgilityPack;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

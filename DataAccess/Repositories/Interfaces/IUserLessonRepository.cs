@@ -1,7 +1,5 @@
-﻿using System.Data.Common;
-using DataAccess.Enums;
-using DataAccess.Models;
-using DataAccess.Models.Internal;
+﻿using Common.Enums;
+using Common.Models.Internal;
 
 namespace DataAccess.Repositories.Interfaces;
 

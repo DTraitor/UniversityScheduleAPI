@@ -1,6 +1,4 @@
 ﻿using BusinessLogic.Services.Interfaces;
-using DataAccess.Enums;
-using DataAccess.Models.Interface;
 using DataAccess.Repositories.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

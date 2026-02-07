@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Text.Json;
 using BusinessLogic.Parsing.Interfaces;
-using DataAccess.Models;
+using Common.Models;
 using DataAccess.Repositories.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

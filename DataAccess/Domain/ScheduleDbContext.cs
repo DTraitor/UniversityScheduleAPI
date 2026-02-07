@@ -1,6 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
-using DataAccess.Models;
-using DataAccess.Models.Internal;
+﻿using Common.Models;
+using Common.Models.Internal;
+using Microsoft.EntityFrameworkCore;
 
 namespace DataAccess.Domain;
 

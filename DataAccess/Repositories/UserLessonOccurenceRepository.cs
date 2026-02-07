@@ -1,5 +1,5 @@
-﻿using DataAccess.Domain;
-using DataAccess.Models.Internal;
+﻿using Common.Models.Internal;
+using DataAccess.Domain;
 using DataAccess.Repositories.Interfaces;
 using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;

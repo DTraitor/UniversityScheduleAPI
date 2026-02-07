@@ -1,4 +1,4 @@
-using DataAccess.Models;
+using Common.Models;
 
 namespace BusinessLogic.Parsing.Interfaces;
 

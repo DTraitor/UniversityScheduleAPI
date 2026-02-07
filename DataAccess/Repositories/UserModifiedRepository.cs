@@ -1,6 +1,5 @@
-﻿using DataAccess.Domain;
-using DataAccess.Enums;
-using DataAccess.Models;
+﻿using Common.Models;
+using DataAccess.Domain;
 using DataAccess.Repositories.Interfaces;
 using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;

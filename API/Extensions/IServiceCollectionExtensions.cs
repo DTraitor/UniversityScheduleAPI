@@ -1,7 +1,4 @@
-﻿using BusinessLogic.Jobs;
-using BusinessLogic.Services.Interfaces;
-using DataAccess.Models.Interface;
-using DataAccess.Repositories.Interfaces;
+﻿using DataAccess.Repositories.Interfaces;
 
 namespace API.Extensions;
 

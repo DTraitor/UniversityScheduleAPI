@@ -1,4 +1,4 @@
-﻿using DataAccess.Enums;
+﻿using Common.Enums;
 
 namespace BusinessLogic.Helpers;
 

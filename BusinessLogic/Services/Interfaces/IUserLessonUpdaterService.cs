@@ -1,5 +1,4 @@
-﻿using DataAccess.Enums;
-using DataAccess.Models;
+﻿using Common.Models;
 
 namespace BusinessLogic.Services.Interfaces;
 

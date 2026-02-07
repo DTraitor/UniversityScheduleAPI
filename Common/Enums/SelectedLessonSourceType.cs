@@ -1,4 +1,4 @@
-﻿namespace DataAccess.Enums;
+﻿namespace Common.Enums;
 
 [Flags]
 public enum SelectedLessonSourceType

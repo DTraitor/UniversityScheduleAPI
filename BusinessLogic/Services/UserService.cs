@@ -1,7 +1,7 @@
 ﻿using BusinessLogic.DTO;
 using BusinessLogic.Services.Interfaces;
-using DataAccess.Enums;
-using DataAccess.Models;
+using Common.Enums;
+using Common.Models;
 using DataAccess.Repositories.Interfaces;
 using Microsoft.Extensions.Logging;
 

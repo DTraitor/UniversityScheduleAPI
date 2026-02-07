@@ -1,5 +1,5 @@
+using Common.Models;
 using DataAccess.Domain;
-using DataAccess.Models;
 using DataAccess.Repositories;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;

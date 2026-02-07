@@ -1,4 +1,4 @@
-﻿namespace DataAccess.Enums;
+﻿namespace Common.Enums;
 
 public enum UserAlertType
 {

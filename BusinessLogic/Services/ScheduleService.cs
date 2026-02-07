@@ -1,6 +1,5 @@
 ﻿using BusinessLogic.DTO;
 using BusinessLogic.Services.Interfaces;
-using DataAccess.Models;
 using DataAccess.Repositories.Interfaces;
 using Microsoft.Extensions.Logging;
 

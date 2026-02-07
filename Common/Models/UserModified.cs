@@ -1,7 +1,6 @@
-﻿using DataAccess.Enums;
-using DataAccess.Models.Interface;
+﻿using Common.Models.Interface;
 
-namespace DataAccess.Models;
+namespace Common.Models;
 
 public class UserModified : IEntityId
 {

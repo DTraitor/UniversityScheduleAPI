@@ -1,5 +1,4 @@
-﻿using System.Data.Common;
-using DataAccess.Models;
+﻿using Common.Models;
 
 namespace DataAccess.Repositories.Interfaces;
 

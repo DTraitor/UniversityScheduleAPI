@@ -1,4 +1,4 @@
-using DataAccess.Models;
+using Common.Models;
 using HtmlAgilityPack;
 
 namespace BusinessLogic.Parsing.Interfaces;

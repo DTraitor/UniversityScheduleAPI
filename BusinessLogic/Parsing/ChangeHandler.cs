@@ -1,5 +1,5 @@
 using BusinessLogic.Parsing.Interfaces;
-using DataAccess.Models;
+using Common.Models;
 using Microsoft.Extensions.Logging;
 
 namespace BusinessLogic.Parsing;

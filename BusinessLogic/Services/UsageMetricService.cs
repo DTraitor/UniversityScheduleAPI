@@ -1,5 +1,5 @@
 using BusinessLogic.Services.Interfaces;
-using DataAccess.Models;
+using Common.Models;
 
 namespace BusinessLogic.Services;
 

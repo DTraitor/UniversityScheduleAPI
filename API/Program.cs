@@ -9,8 +9,8 @@ using API.Extensions;
 using BusinessLogic.Configuration;
 using BusinessLogic.Parsing;
 using BusinessLogic.Parsing.Interfaces;
-using DataAccess.Models;
-using DataAccess.Models.Internal;
+using Common.Models;
+using Common.Models.Internal;
 
 var builder = WebApplication.CreateBuilder(args);
 

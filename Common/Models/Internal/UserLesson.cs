@@ -1,7 +1,7 @@
-﻿using DataAccess.Enums;
-using DataAccess.Models.Interface;
+﻿using Common.Enums;
+using Common.Models.Interface;
 
-namespace DataAccess.Models.Internal;
+namespace Common.Models.Internal;
 
 public class UserLesson : IEntityId
 {

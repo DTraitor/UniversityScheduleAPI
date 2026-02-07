@@ -1,6 +1,6 @@
-﻿using DataAccess.Models.Interface;
+﻿using Common.Models.Interface;
 
-namespace DataAccess.Models.Internal;
+namespace Common.Models.Internal;
 
 public class UserLessonOccurrence : IEntityId
 {

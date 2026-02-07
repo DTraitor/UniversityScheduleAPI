@@ -1,7 +1,7 @@
 using System.Globalization;
 using BusinessLogic.Helpers;
 using BusinessLogic.Parsing.Interfaces;
-using DataAccess.Models;
+using Common.Models;
 using HtmlAgilityPack;
 using Microsoft.Extensions.Logging;
 

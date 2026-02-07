@@ -15,6 +15,10 @@ public class GroupController : ControllerBase
         _logger = logger;
     }
 
+    //Endpoint to get a group
+    //Endpoint to get groups by name
+    //Endpoint to get
+
     [HttpGet("user")]
     public async Task<IActionResult> GetUserGroups([FromQuery] long telegramId)
     {

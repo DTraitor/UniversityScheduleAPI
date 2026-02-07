@@ -1,6 +1,6 @@
 using BusinessLogic.DTO;
-using DataAccess.Enums;
-using DataAccess.Models;
+using Common.Enums;
+using Common.Models;
 
 namespace BusinessLogic.Services.Interfaces;
 

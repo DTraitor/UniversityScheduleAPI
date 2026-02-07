@@ -1,6 +1,4 @@
-﻿using System.Data.Common;
-
-namespace DataAccess.Repositories.Interfaces;
+﻿namespace DataAccess.Repositories.Interfaces;
 
 public interface IRepository<T>
 {
