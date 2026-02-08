@@ -52,8 +52,6 @@ builder.Services.AddHostedService<LessonUpdaterJob>();
 builder.Services.AddHostedService<UserLessonUpdaterJob>();
 
 // Configurations
-builder.Services.Configure<ElectiveScheduleParsingOptions>(
-    builder.Configuration.GetSection("ElectiveScheduleParsing"));
 builder.Services.Configure<ScheduleParsingOptions>(
     builder.Configuration.GetSection("GroupScheduleParsing"));
 

@@ -91,7 +91,7 @@ public class PersistentDataRepositoryTests
         await _context.SaveChangesAsync();
 
         // Act
-        var result = await _repository.GetData("test-key");
+        var result = await _repository.GetDataAsync("test-key");
 
         // Assert
         Assert.That(result, Is.Not.Null);
@@ -103,7 +103,7 @@ public class PersistentDataRepositoryTests
     public async Task GetData_ShouldReturnNull_WhenKeyDoesNotExist()
     {
         // Act
-        var result = await _repository.GetData("non-existent-key");
+        var result = await _repository.GetDataAsync("non-existent-key");
 
         // Assert
         Assert.That(result, Is.Null);
