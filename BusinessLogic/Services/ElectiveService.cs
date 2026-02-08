@@ -1,5 +1,4 @@
-﻿using BusinessLogic.DTO;
-using BusinessLogic.Services.Interfaces;
+﻿using BusinessLogic.Services.Interfaces;
 using Common.Enums;
 using Common.Models;
 using DataAccess.Repositories.Interfaces;

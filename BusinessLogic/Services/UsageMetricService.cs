@@ -17,7 +17,7 @@ public class UsageMetricService : IUsageMetricService
         });
     }
 
-    public IEnumerable<UsageMetric> GetUsages()
+    public ICollection<UsageMetric> GetUsages()
     {
         var curr = CurrentUsages.ToList();
         CurrentUsages.Clear();

@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using BusinessLogic.DTO;
 using BusinessLogic.Services.Interfaces;
 using Common.Enums;
 using Common.Models;

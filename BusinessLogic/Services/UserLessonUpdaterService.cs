@@ -1,12 +1,10 @@
-﻿using BusinessLogic.Configuration;
-using BusinessLogic.Mappers;
+﻿using BusinessLogic.Mappers;
 using BusinessLogic.Services.Interfaces;
 using Common.Enums;
 using Common.Models;
 using Common.Models.Internal;
 using DataAccess.Repositories.Interfaces;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace BusinessLogic.Services;
 

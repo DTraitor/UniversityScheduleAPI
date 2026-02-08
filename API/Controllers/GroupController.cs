@@ -38,8 +38,10 @@ public class GroupController : ControllerBase
 
         switch (result.Error)
         {
+            case ErrorType.UserNotFound:
+                return NotFound("User does not exist.");
             case ErrorType.GroupNotFound:
-                return NotFound(result.Value);
+                return NotFound("User has no group.");
             default:
                 return StatusCode(StatusCodes.Status500InternalServerError);
         }

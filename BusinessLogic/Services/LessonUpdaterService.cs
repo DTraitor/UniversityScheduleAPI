@@ -1,5 +1,4 @@
-﻿using BusinessLogic.Configuration;
-using BusinessLogic.Mappers;
+﻿using BusinessLogic.Mappers;
 using BusinessLogic.Services.Interfaces;
 using Common.Enums;
 using Common.Models;

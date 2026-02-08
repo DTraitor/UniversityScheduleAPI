@@ -1,4 +1,6 @@
 ﻿using BusinessLogic.Services.Interfaces;
+using Common.Enums;
+using Common.Result;
 using DataAccess.Repositories.Interfaces;
 using Microsoft.Extensions.Logging;
 
@@ -26,18 +28,16 @@ public class GroupService : IGroupService
         _logger = logger;
     }
 
-    public async Task<IEnumerable<string>> GetUserGroups(long telegramId)
+    public async Task<ICollection<string>> GetUserGroups(long telegramId)
     {
         var user = await _userRepository.GetByTelegramIdAsync(telegramId);
 
         if (user == null)
-            throw new InvalidOperationException("User does not exist");
+            return [];
 
-        var selected = await _selectedLessonSourceRepository.GetByUserId(user.Id);
+        var selectedGroups = await _selectedLessonSourceRepository.GetByUserId(user.Id);
 
-        var group = await _lessonSourceRepository.GetByIdsAsync(selected.Select(x => x.SourceId));
-
-        return group.Select(x => x.Name);
+        return selectedGroups.Select(x => x.SourceName).ToList();
     }
 
     public async Task<bool> GroupExists(string groupName)
@@ -45,13 +45,16 @@ public class GroupService : IGroupService
         return (await _lessonSourceRepository.GetByNameAndLimitAsync(groupName, 1)) != null;
     }
 
-    public async Task<IEnumerable<int>> GetSubgroups(long telegramId)
+    public async Task<Result<ICollection<int>>> GetSubgroups(long telegramId)
     {
         var user = await _userRepository.GetByTelegramIdAsync(telegramId);
+        if (user == null)
+            return ErrorType.UserNotFound;
+
         var selected = (await _selectedLessonSourceRepository.GetByUserId(user.Id)).FirstOrDefault();
 
         if (selected == null)
-            throw new InvalidOperationException("User has no group");
+            return ErrorType.GroupNotFound;
 
         var group = await _lessonSourceRepository.GetByIdAsync(selected.SourceId);
 
