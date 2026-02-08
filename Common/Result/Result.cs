@@ -38,7 +38,7 @@ public record Result<T1, T2> : Result<T1>
 {
     public T2? ErrorValue { get; }
 
-    private Result(T1 value) : base(value) {}
+    public Result(T1 value) : base(value) {}
     private Result(ErrorType error) : base(error) { }
     private Result(ErrorType error, T2 errorValue) : base(error) => ErrorValue = errorValue;
 
