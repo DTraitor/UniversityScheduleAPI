@@ -20,7 +20,7 @@ public class UserAlertService : IUserAlertService
         _logger = logger;
     }
 
-    public async Task<ICollection<UserAlertDto>> GetAlerts(int batchSize)
+    public async Task<ICollection<(UserAlert, User)>> GetAlerts(int batchSize)
     {
         using var scope = _services.CreateScope();
 
@@ -30,19 +30,34 @@ public class UserAlertService : IUserAlertService
         try
         {
             var alerts = await userAlertRepository.GetAllLimitAsync(batchSize);
-            var users = await userRepository.GetByIdsAsync(alerts.Select(x => x.UserId));
-            return alerts.Join(users, x => x.UserId, x => x.Id, (alert, user) => new UserAlertDto
-            {
-                Id = alert.Id,
-                UserTelegramId = user.TelegramId,
-                AlertType = alert.AlertType,
-                Options = alert.Options,
-            });
+            var users = await userRepository.GetByIdsAsync(alerts.Select(x => x.UserId).ToArray());
+            return alerts.Join(users, x => x.UserId, x => x.Id, (alert, user) => (alert, user)).ToList();
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting alerts.");
             return [];
+        }
+    }
+
+    public async Task RemoveProcessedAlerts(ICollection<int> alerts)
+    {
+        using var scope = _services.CreateScope();
+
+        var userAlertRepository = scope.ServiceProvider.GetRequiredService<IUserAlertRepository>();
+
+        try
+        {
+            await using var transaction = await userAlertRepository.BeginTransactionAsync();
+
+            await userAlertRepository.RemoveByIdsAsync(alerts);
+            await userAlertRepository.SaveChangesAsync();
+
+            await transaction.CommitAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error removing alerts.");
         }
     }
 
@@ -56,29 +71,12 @@ public class UserAlertService : IUserAlertService
         });
     }
 
-    public async Task RemoveProcessedAlerts(IEnumerable<int> alerts)
-    {
-        using var scope = _services.CreateScope();
-
-        var userAlertRepository = scope.ServiceProvider.GetRequiredService<IUserAlertRepository>();
-
-        try
-        {
-            userAlertRepository.RemoveByIds(alerts);
-            await userAlertRepository.SaveChangesAsync();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error removing alerts.");
-        }
-    }
-
-    public IEnumerable<UserAlert> GetCachedAlerts()
+    public ICollection<UserAlert> GetCachedAlerts()
     {
         return _userAlerts.ToArray();
     }
 
-    public void RemoveCachedAlerts(IEnumerable<UserAlert> alerts)
+    public void RemoveCachedAlerts(ICollection<UserAlert> alerts)
     {
         foreach (var alert in alerts)
         {
