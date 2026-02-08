@@ -1,4 +1,5 @@
 ﻿using BusinessLogic.Services.Interfaces;
+using Common.Enums;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
@@ -30,13 +31,17 @@ public class GroupController : ControllerBase
     [HttpGet("subgroups")]
     public async Task<IActionResult> GetSubgroups([FromQuery] long telegramId)
     {
-        try
+        var result  = await _groupService.GetSubgroups(telegramId);
+
+        if (result.IsSuccess)
+            return Ok(result.Value);
+
+        switch (result.Error)
         {
-            return Ok(await _groupService.GetSubgroups(telegramId));
-        }
-        catch (InvalidOperationException)
-        {
-            return NotFound();
+            case ErrorType.GroupNotFound:
+                return NotFound(result.Value);
+            default:
+                return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
 }

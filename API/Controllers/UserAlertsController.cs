@@ -1,4 +1,5 @@
 using BusinessLogic.Services.Interfaces;
+using Common.Enums;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
@@ -16,13 +17,33 @@ public class UserAlertsController : ControllerBase
     }
 
     // endpoint to get alerts
-    // endpoint to remove processed alerts
-
     [HttpGet]
-    public async Task<IActionResult> GetScheduleForDate([FromQuery] int batchSize)
+    public async Task<IActionResult> GetAlerts([FromQuery] int batchSize)
     {
         var alerts = await _userAlertService.GetAlerts(batchSize);
-        await _userAlertService.RemoveProcessedAlerts(alerts.Select(a => a.Id));
-        return Ok(alerts);
+
+        return Ok(alerts.Select(x => new UserAlertDto
+        {
+            Id = x.Item1.Id,
+            UserTelegramId = x.Item2.TelegramId,
+            AlertType = x.Item1.AlertType,
+            Options = x.Item1.Options,
+        }));
+    }
+
+    // endpoint to remove processed alerts
+    [HttpDelete]
+    public async Task<IActionResult> DeleteProcessedAlerts([FromBody] ICollection<int> alertIds)
+    {
+        await _userAlertService.RemoveProcessedAlerts(alertIds);
+        return Ok();
+    }
+
+    private record UserAlertDto
+    {
+        public int Id { get; init; }
+        public long UserTelegramId { get; init; }
+        public UserAlertType AlertType { get; init; }
+        public Dictionary<string, string> Options { get; init; }
     }
 }

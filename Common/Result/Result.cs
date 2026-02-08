@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Common.Enums;
 
 namespace Common.Result;
@@ -22,6 +23,9 @@ public record Result
 public record Result<T1> : Result
 {
     public T1? Value { get; }
+
+    [MemberNotNullWhen(true, nameof(Value))]
+    public new bool IsSuccess => base.IsSuccess;
 
     private Result(T1 value) : base(true, null) => Value = value;
     private Result(ErrorType error) : base(false, error) { }

@@ -1,5 +1,6 @@
 ﻿using BusinessLogic.DTO;
 using BusinessLogic.Services.Interfaces;
+using Common.Enums;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
@@ -17,39 +18,100 @@ public class UserController : ControllerBase
     }
 
     // endpoint to create new user
-    // endpoint to change group
-    // endpoint to select elective lesson
-    // endpoint to remove elective lesson
-
-    [HttpGet("exists")]
-    public async Task<IActionResult> UserExists([FromQuery] long telegramId)
-    {
-        return Ok(await _userService.UserExists(telegramId));
-    }
-
     [HttpPost]
-    public async Task<IActionResult> CreateUser([FromBody] UserDtoInput newUser)
+    public async Task<IActionResult> CreateUser([FromQuery] long telegramId)
     {
-        try
+        await _userService.CreateUserAsync(telegramId);
+
+        return Created();
+    }
+
+    // endpoint to change group
+    [HttpPut("group")]
+    public async Task<IActionResult> ChangeGroup([FromQuery] long telegramId, [FromQuery] string groupName)
+    {
+        var result = await _userService.ChangeGroupAsync(telegramId, groupName);
+
+        if (result.IsSuccess)
+            return Ok();
+
+        switch (result.Error)
         {
-            return CreatedAtAction(nameof(UserExists), await _userService.CreateUser(newUser));
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(ex.Message);
+            case ErrorType.UserNotFound:
+                return NotFound("User does not exist.");
+            case ErrorType.GroupNotFound:
+                return NotFound("Group does not exist.");
+            default:
+                return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
 
-    [HttpPatch("group")]
-    public async Task<IActionResult> ChangeGroup([FromBody] UserDtoInput editUser)
+    // endpoint to get users elective lessons
+    [HttpGet("elective")]
+    public async Task<IActionResult> GetUsersElective([FromQuery] long telegramId)
     {
-        try
+        var result = await _userService.GetUserElectiveLessonAsync(telegramId);
+
+        if (result.IsSuccess)
+            return Ok(result.Value.Select(x => new SelectedElectiveLessonInputOutput
+            {
+                Id = x.Id,
+                LessonName = x.LessonName,
+                LessonType = x.LessonType,
+                SubgroupNumber = x.SubgroupNumber
+            }));
+
+        switch (result.Error)
         {
-            return Ok(await _userService.ChangeGroup(editUser));
+            case ErrorType.UserNotFound:
+                return NotFound("User does not exist.");
+            default:
+                return StatusCode(StatusCodes.Status500InternalServerError);
         }
-        catch (KeyNotFoundException ex)
+    }
+
+    // endpoint to select users elective lesson
+    [HttpPost("elective")]
+    public async Task<IActionResult> AddUsersElective([FromQuery] long telegramId, [FromBody] SelectedElectiveLessonInputOutput electiveParams)
+    {
+        var result = await _userService.AddUserElectiveLessonAsync(
+            telegramId,
+            electiveParams.Id,
+            electiveParams.LessonName,
+            electiveParams.LessonType,
+            electiveParams.SubgroupNumber
+            );
+
+        if (result.IsSuccess)
+            return Ok();
+
+        switch (result.Error)
         {
-            return NotFound(ex.Message);
+            case ErrorType.UserNotFound:
+                return NotFound("User does not exist.");
+            case ErrorType.NotFound:
+                return NotFound("Elective lesson does not exist.");
+            case ErrorType.ElectiveLessonExistsAlready:
+                return Conflict("Elective lesson already exists.");
+            default:
+                return StatusCode(StatusCodes.Status500InternalServerError);
         }
+    }
+
+    // endpoint to remove users elective lesson
+    [HttpDelete("elective")]
+    public async Task<IActionResult> RemoveUsersElective([FromQuery] long telegramId, [FromQuery] int electiveId)
+    {
+        await _userService.RemoveUserElectiveLessonAsync(telegramId, electiveId);
+        return Ok();
+    }
+
+    public record SelectedElectiveLessonInputOutput
+    {
+        // LessonId for output, SourceId for input
+        public int Id { get; set; }
+        public string LessonName { get; set; }
+        public string? LessonType { get; set; }
+        public int SubgroupNumber { get; set; }
     }
 }

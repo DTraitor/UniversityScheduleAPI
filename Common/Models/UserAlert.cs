@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Common.Enums;
 using Common.Models.Interface;
 
@@ -16,6 +17,7 @@ public class UserAlert : IEntityId
 
     // Not mapped property for easy access
     [NotMapped]
+    [JsonIgnore]
     public Dictionary<string, string> Options
     {
         get => string.IsNullOrEmpty(OptionsJson)

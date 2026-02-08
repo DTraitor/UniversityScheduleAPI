@@ -41,7 +41,7 @@ public class ElectiveController : ControllerBase
             case ErrorType.TooManyElements:
                 return BadRequest("Too many elements to return. Try more precise name.");
             default:
-                return BadRequest();
+                return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
 
@@ -58,7 +58,7 @@ public class ElectiveController : ControllerBase
             case ErrorType.NotFound:
                 return NotFound();
             default:
-                return BadRequest();
+                return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
 
@@ -75,7 +75,7 @@ public class ElectiveController : ControllerBase
             case ErrorType.NotFound:
                 return NotFound();
             default:
-                return BadRequest();
+                return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
 

@@ -22,7 +22,7 @@ public class UserAlertService : IUserAlertService
         _logger = logger;
     }
 
-    public async Task<IEnumerable<UserAlertDto>> GetAlerts(int batchSize)
+    public async Task<ICollection<UserAlertDto>> GetAlerts(int batchSize)
     {
         using var scope = _services.CreateScope();
 
