@@ -1,4 +1,3 @@
-using BusinessLogic.DTO;
 using Common.Enums;
 using Common.Models;
 
@@ -8,8 +7,8 @@ public interface IUserAlertService
 {
     Task<ICollection<(UserAlert, User)>> GetAlerts(int batchSize);
     Task RemoveProcessedAlerts(ICollection<int> alerts);
-
     void CreateUserAlert(int userId, UserAlertType type, Dictionary<string, string> options);
-    IEnumerable<UserAlert> GetCachedAlerts();
-    void RemoveCachedAlerts(IEnumerable<UserAlert> alerts);
+
+    ICollection<UserAlert> GetCachedAlerts();
+    void RemoveCachedAlerts(ICollection<UserAlert> alerts);
 }

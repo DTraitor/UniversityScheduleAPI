@@ -3,6 +3,7 @@ using DataAccess.Domain;
 using DataAccess.Repositories.Interfaces;
 using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 
 namespace DataAccess.Repositories;
@@ -71,5 +72,10 @@ public class UserRepository : IUserRepository
     public Task<User?> GetByTelegramIdAsync(long telegramId, CancellationToken cancellationToken = default)
     {
         return _context.Users.Where(u => u.TelegramId == telegramId).FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.Database.BeginTransactionAsync(cancellationToken);
     }
 }

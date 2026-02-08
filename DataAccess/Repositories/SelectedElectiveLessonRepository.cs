@@ -3,6 +3,7 @@ using DataAccess.Domain;
 using DataAccess.Repositories.Interfaces;
 using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 
 namespace DataAccess.Repositories;
@@ -76,5 +77,10 @@ public class SelectedElectiveLessonRepository : ISelectedElectiveLesson
     public async Task<ICollection<SelectedElectiveLesson>> GetByUserId(int userId)
     {
         return await _context.SelectedElectiveLessonEntries.Where(x => x.UserId == userId).ToListAsync();
+    }
+
+    public async Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.Database.BeginTransactionAsync(cancellationToken);
     }
 }

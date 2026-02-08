@@ -62,11 +62,16 @@ public class UserAlertJob : IHostedService, IDisposable
 
         var alertRepository = scope.ServiceProvider.GetRequiredService<IUserAlertRepository>();
 
+        await using var transaction = await alertRepository.BeginTransactionAsync();
+
         var alerts = _userAlertService.GetCachedAlerts();
-        alertRepository.AddRangeAsync(alerts);
+
+        await alertRepository.AddRangeAsync(alerts);
         _userAlertService.RemoveCachedAlerts(alerts);
 
         await alertRepository.SaveChangesAsync(_cancellationTokenSource.Token);
+
+        await transaction.CommitAsync();
     }
 
     public void Dispose()

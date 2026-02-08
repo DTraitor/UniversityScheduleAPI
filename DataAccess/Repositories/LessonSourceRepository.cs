@@ -4,6 +4,7 @@ using DataAccess.Domain;
 using DataAccess.Repositories.Interfaces;
 using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 
 namespace DataAccess.Repositories;
@@ -77,5 +78,10 @@ public class LessonSourceRepository : ILessonSourceRepository
     public async Task<ICollection<LessonSource>> GetByIdsAsync(ICollection<int> ids)
     {
         return await _context.LessonSources.Where(x => ids.Contains(x.Id)).ToListAsync();
+    }
+
+    public async Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.Database.BeginTransactionAsync(cancellationToken);
     }
 }

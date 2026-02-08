@@ -58,14 +58,18 @@ public class UserLessonUpdaterJob : IHostedService, IDisposable
         var modifiedRepository = scope.ServiceProvider.GetRequiredService<IUserModifiedRepository>();
         var lessonUpdater = scope.ServiceProvider.GetRequiredService<IUserLessonUpdaterService>();
 
+        await using var transaction = await modifiedRepository.BeginTransactionAsync();
+
         var toProcess =
-            (await modifiedRepository.GetNotProcessed(_cancellationTokenSource.Token));
+            (await modifiedRepository.GetNotProcessedAsync(_cancellationTokenSource.Token));
 
         await lessonUpdater.ProcessModifiedUser(toProcess.GroupBy(x => x.UserId).Select(x => x.First()));
 
-        modifiedRepository.RemoveProcessed(toProcess);
+        await modifiedRepository.RemoveProcessedAsync(toProcess);
 
         await modifiedRepository.SaveChangesAsync(_cancellationTokenSource.Token);
+
+        await transaction.CommitAsync();
     }
 
     public void Dispose()

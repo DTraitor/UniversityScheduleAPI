@@ -60,9 +60,13 @@ public class UserMetricJob : IHostedService, IDisposable
 
         var metricRepository = scope.ServiceProvider.GetRequiredService<IUsageMetricRepository>();
 
-        metricRepository.AddRangeAsync(_usageService.GetUsages());
+        await using var transaction = await metricRepository.BeginTransactionAsync();
+
+        await metricRepository.AddRangeAsync(_usageService.GetUsages());
 
         await metricRepository.SaveChangesAsync(_cancellationTokenSource.Token);
+
+        await transaction.CommitAsync();
     }
 
     public void Dispose()

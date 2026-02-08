@@ -13,7 +13,7 @@ public class ChangeHandler : IChangeHandler
         _logger = logger;
     }
 
-    public async Task<IEnumerable<LessonEntry>> HandleChanges(IEnumerable<LessonEntry> oldLessons, ICollection<LessonEntry> newLessons, CancellationToken token)
+    public async Task<ICollection<LessonEntry>> HandleChanges(IEnumerable<LessonEntry> oldLessons, ICollection<LessonEntry> newLessons, CancellationToken token)
     {
         var oldLessonsDict = oldLessons.ToDictionary(
             x => (x.SourceId, x.Week, x.DayOfWeek, x.StartTime, x.SubGroupNumber, x.Title, x.Type ?? string.Empty),

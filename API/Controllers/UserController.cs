@@ -1,5 +1,4 @@
-﻿using BusinessLogic.DTO;
-using BusinessLogic.Services.Interfaces;
+﻿using BusinessLogic.Services.Interfaces;
 using Common.Enums;
 using Microsoft.AspNetCore.Mvc;
 

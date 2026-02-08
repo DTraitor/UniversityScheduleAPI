@@ -1,4 +1,6 @@
-﻿namespace DataAccess.Repositories.Interfaces;
+﻿using Microsoft.EntityFrameworkCore.Storage;
+
+namespace DataAccess.Repositories.Interfaces;
 
 public interface IRepository<T>
 {
@@ -11,4 +13,6 @@ public interface IRepository<T>
     Task<T?> GetByIdAsync(int id);
     Task<ICollection<T>> GetAllAsync(CancellationToken cancellationToken = default);
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
+
+    Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
 }

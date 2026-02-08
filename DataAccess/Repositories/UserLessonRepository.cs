@@ -4,6 +4,7 @@ using DataAccess.Domain;
 using DataAccess.Repositories.Interfaces;
 using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 
 namespace DataAccess.Repositories;
@@ -94,5 +95,10 @@ public class UserLessonRepository : IUserLessonRepository
             .Where(x => x.OccurrencesCalculatedTill == null || x.OccurrencesCalculatedTill < x.EndTime)
             .Where(x => x.RepeatType != RepeatType.Never || x.OccurrencesCalculatedTill == null)
             .ToListAsync();
+    }
+
+    public async Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.Database.BeginTransactionAsync(cancellationToken);
     }
 }

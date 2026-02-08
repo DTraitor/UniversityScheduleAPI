@@ -58,7 +58,7 @@ public class ScheduleParserJob : IHostedService, IDisposable
         using var scope = _services.CreateScope();
 
         var persistentDataRepository = scope.ServiceProvider.GetRequiredService<IPersistentDataRepository>();
-        var persistentData = persistentDataRepository.GetData(nameof(LessonSource)) ?? new PersistentData
+        var persistentData = await persistentDataRepository.GetDataAsync(nameof(LessonSource)) ?? new PersistentData
         {
             Key = nameof(LessonSource),
             Value = DateTimeOffset.UtcNow.ToString("o"),
@@ -148,14 +148,18 @@ public class ScheduleParserJob : IHostedService, IDisposable
 
         HashSet<int> existingHashset = new HashSet<int>(existing.Select(x => x.Id));
 
-        repository.RemoveRangeAsync(previousLessons.Where(x => !existingHashset.Contains(x.Id)));
+        await using var transaction = await repository.BeginTransactionAsync(_cancellationTokenSource.Token);
 
-        repository.AddRangeAsync(currentLessons);
-        repository.UpdateRangeAsync(existing);
-        modifiedRepository.AddRangeAsync(updatedSources.Select(x => new LessonSourceModified{ SourceId = x }));
+        await repository.RemoveRangeAsync(previousLessons.Where(x => !existingHashset.Contains(x.Id)).ToList());
+        await repository.AddRangeAsync(currentLessons);
+        await repository.UpdateRangeAsync(existing);
+        await modifiedRepository.AddRangeAsync(updatedSources.Select(x => new LessonSourceModified{ SourceId = x }).ToList());
 
+        // Saving only once as DbContext beneath is the same for both repositories
         await repository.SaveChangesAsync(_cancellationTokenSource.Token);
-        await modifiedRepository.SaveChangesAsync(_cancellationTokenSource.Token);
+
+        // Commiting only once as DbContext beneath is the same for both repositories
+        await transaction.CommitAsync(_cancellationTokenSource.Token);
 
         _logger.LogInformation("Finished parsing schedule at {Time}", DateTimeOffset.UtcNow.ToString("o"));
 
