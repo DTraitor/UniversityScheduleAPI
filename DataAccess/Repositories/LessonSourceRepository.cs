@@ -77,7 +77,7 @@ public class LessonSourceRepository : ILessonSourceRepository
 
     public async Task<ICollection<LessonSource>> GetByNameAndLimitAsync(string name, int limit)
     {
-        return await _context.LessonSources.Where(x => x.Name.ToLower().Contains(name.ToLower())).Take(limit).ToListAsync();
+        return await _context.LessonSources.Where(x => x.Name.ToLower().Contains(name)).Take(limit).ToListAsync();
     }
 
     public async Task<ICollection<LessonSource>> GetByIdsAsync(ICollection<int> ids)

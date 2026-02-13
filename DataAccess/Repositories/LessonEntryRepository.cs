@@ -70,6 +70,11 @@ public class LessonEntryRepository : ILessonEntryRepository
         return await _context.LessonEntries.Where(x => x.SourceId == sourceId).ToListAsync();
     }
 
+    public async Task<ICollection<LessonEntry>> GetBySourceIdAndPartialNameAsync(int sourceId, string partialName)
+    {
+        return await _context.LessonEntries.Where(x => x.Title.ToLower().Contains(partialName)).ToListAsync();
+    }
+
     public async Task<ICollection<LessonEntry>> GetBySourceIdsAsync(ICollection<int> sourceIds)
     {
         return await _context.LessonEntries.Where(x => sourceIds.Contains(x.SourceId)).ToListAsync();

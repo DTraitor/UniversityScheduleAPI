@@ -49,7 +49,7 @@ public class UserService : IUserService
         if (user is null)
             return ErrorType.UserNotFound;
 
-        var groups = await _lessonSourceRepository.GetByNameAndLimitAsync(groupName, 2);
+        var groups = await _lessonSourceRepository.GetByNameAndLimitAsync(groupName.ToLower(), 2);
         if (groups.Count != 1 || groups.First().SourceType != LessonSourceType.Group)
             return ErrorType.GroupNotFound;
 

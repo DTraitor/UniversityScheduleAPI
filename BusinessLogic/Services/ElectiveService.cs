@@ -46,7 +46,7 @@ public class ElectiveService : IElectiveService
         if (source == null || source.SourceType != LessonSourceType.Elective)
             return ErrorType.NotFound;
 
-        var matchingLessons = (await _lessonEntryRepository.GetBySourceIdAndPartialNameAsync(sourceId, lessonName)).Select(x => x.Title).Distinct().ToArray();
+        var matchingLessons = (await _lessonEntryRepository.GetBySourceIdAndPartialNameAsync(sourceId, lessonName.ToLower())).Select(x => x.Title).Distinct().ToArray();
 
         if (matchingLessons.Length > 5)
             return ErrorType.TooManyElements;
@@ -60,7 +60,7 @@ public class ElectiveService : IElectiveService
         if (source == null || source.SourceType != LessonSourceType.Elective)
             return ErrorType.NotFound;
 
-        var matchingLessons = await _lessonEntryRepository.GetBySourceIdAndPartialNameAsync(sourceId, lessonName);
+        var matchingLessons = await _lessonEntryRepository.GetBySourceIdAndPartialNameAsync(sourceId, lessonName.ToLower());
 
         if (matchingLessons.Count <= 0 || matchingLessons.Any(x => x.Title != lessonName))
             return ErrorType.NotFound;
@@ -74,7 +74,7 @@ public class ElectiveService : IElectiveService
         if (source == null || source.SourceType != LessonSourceType.Elective)
             return ErrorType.NotFound;
 
-        var matchingLessons = (await _lessonEntryRepository.GetBySourceIdAndPartialNameAsync(sourceId, lessonName)).Where(x => x.Type == lessonType).ToArray();
+        var matchingLessons = (await _lessonEntryRepository.GetBySourceIdAndPartialNameAsync(sourceId, lessonName.ToLower())).Where(x => x.Type == lessonType).ToArray();
 
         if (matchingLessons.Length <= 0 || matchingLessons.Any(x => x.Title != lessonName))
             return ErrorType.NotFound;
