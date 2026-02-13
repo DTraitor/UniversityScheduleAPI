@@ -27,9 +27,9 @@ public class UserController : ControllerBase
 
     // endpoint to change group
     [HttpPut("group")]
-    public async Task<IActionResult> ChangeGroup([FromQuery] long telegramId, [FromQuery] string groupName)
+    public async Task<IActionResult> ChangeGroup([FromQuery] long telegramId, [FromQuery] string groupName, [FromQuery] int subgroupNumber)
     {
-        var result = await _userService.ChangeGroupAsync(telegramId, groupName);
+        var result = await _userService.ChangeGroupAsync(telegramId, groupName, subgroupNumber);
 
         if (result.IsSuccess)
             return Ok();
@@ -90,8 +90,6 @@ public class UserController : ControllerBase
                 return NotFound("User does not exist.");
             case ErrorType.NotFound:
                 return NotFound("Elective lesson does not exist.");
-            case ErrorType.ElectiveLessonExistsAlready:
-                return Conflict("Elective lesson already exists.");
             default:
                 return StatusCode(StatusCodes.Status500InternalServerError);
         }
@@ -101,8 +99,19 @@ public class UserController : ControllerBase
     [HttpDelete("elective")]
     public async Task<IActionResult> RemoveUsersElective([FromQuery] long telegramId, [FromQuery] int electiveId)
     {
-        await _userService.RemoveUserElectiveLessonAsync(telegramId, electiveId);
-        return Ok();
+        var result = await _userService.RemoveUserElectiveLessonAsync(telegramId, electiveId);
+        if (result.IsSuccess)
+            return Ok();
+
+        switch (result.Error)
+        {
+            case ErrorType.UserNotFound:
+                return NotFound("User does not exist.");
+            case ErrorType.NotFound:
+                return NotFound("Elective lesson does not exist for given user.");
+            default:
+                return StatusCode(StatusCodes.Status500InternalServerError);
+        }
     }
 
     public record SelectedElectiveLessonInputOutput

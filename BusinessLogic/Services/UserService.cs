@@ -1,6 +1,7 @@
 ﻿using BusinessLogic.Services.Interfaces;
 using Common.Enums;
 using Common.Models;
+using Common.Result;
 using DataAccess.Repositories.Interfaces;
 using Microsoft.Extensions.Logging;
 
@@ -12,6 +13,7 @@ public class UserService : IUserService
     private readonly IUserRepository _userRepository;
     private readonly ILessonSourceRepository _lessonSourceRepository;
     private readonly ISelectedLessonSourceRepository _selectedLessonSourceRepository;
+    private readonly ISelectedElectiveLesson _selectedElectiveLesson;
     private readonly ILogger<UserService> _logger;
 
     public UserService(
@@ -19,99 +21,118 @@ public class UserService : IUserService
         IUserRepository userRepository,
         ILessonSourceRepository lessonSourceRepository,
         ISelectedLessonSourceRepository selectedLessonSourceRepository,
+        ISelectedElectiveLesson selectedElectiveLesson,
         ILogger<UserService> logger)
     {
         _userModifiedRepository = userModifiedRepository;
         _userRepository = userRepository;
         _lessonSourceRepository = lessonSourceRepository;
         _selectedLessonSourceRepository = selectedLessonSourceRepository;
+        _selectedElectiveLesson = selectedElectiveLesson;
         _logger = logger;
     }
 
-    public async Task<bool> UserExists(long telegramId)
+    public async Task CreateUserAsync(long telegramId)
     {
-        return (await _userRepository.GetByTelegramIdAsync(telegramId)) != null;
-    }
+        await using var transaction = await _userRepository.BeginTransactionAsync();
 
-    public async Task<UserDtoOutput> CreateUser(UserDtoInput userData)
-    {
-        var group = await _lessonSourceRepository.GetByNameAndSourceTypeAsync(userData.GroupName, LessonSourceType.Group);
-        if (group == null)
-            throw new KeyNotFoundException("No group with such name found.");
-
-        var user = await _userRepository.GetByTelegramIdAsync(userData.TelegramId);
-        if (user == null)
-        {
-            user = new User
-            {
-                TelegramId = userData.TelegramId,
-                CreatedAt = DateTimeOffset.UtcNow,
-            };
-
-            _userRepository.Add(user);
-        }
-
-        await UpdateUserGroup(user, userData);
+        _userRepository.Add(new User{ CreatedAt = DateTimeOffset.UtcNow, TelegramId = telegramId });
 
         await _userRepository.SaveChangesAsync();
 
-        return new UserDtoOutput
-        {
-            Id = user.Id,
-        };
+        await transaction.CommitAsync();
     }
 
-    public async Task<UserDtoOutput> ChangeGroup(UserDtoInput userData)
+    public async Task<Result> ChangeGroupAsync(long telegramId, string groupName, int subgroupNumber)
     {
-        var user = await _userRepository.GetByTelegramIdAsync(userData.TelegramId);
-        if (user == null)
-            throw new KeyNotFoundException("No user with such telegram id.");
+        var user = await _userRepository.GetByTelegramIdAsync(telegramId);
+        if (user is null)
+            return ErrorType.UserNotFound;
 
-        await UpdateUserGroup(user, userData);
+        var groups = await _lessonSourceRepository.GetByNameAndLimitAsync(groupName, 2);
+        if (groups.Count != 1 || groups.First().SourceType != LessonSourceType.Group)
+            return ErrorType.GroupNotFound;
 
-        return new UserDtoOutput
+        var selectedGroup = await _selectedLessonSourceRepository.GetByUserId(user.Id);
+
+        await using var transaction = await _selectedLessonSourceRepository.BeginTransactionAsync();
+
+        await _selectedLessonSourceRepository.RemoveRangeAsync(selectedGroup);
+
+        var newGroup = groups.First();
+
+        _selectedLessonSourceRepository.Add(new SelectedLessonSource
         {
-            Id = user.Id,
-        };
-    }
-
-    private async Task UpdateUserGroup(User user, UserDtoInput userData)
-    {
-        var group = await _lessonSourceRepository.GetByNameAndLimitAsync(userData.GroupName, 5);
-        if (group == null)
-            throw new KeyNotFoundException("No group with such name found.");
-
-        var selectedGroup
-            = (await _selectedLessonSourceRepository.GetByUserId(user.Id)).FirstOrDefault();
-
-        if (selectedGroup == null)
-        {
-            selectedGroup = new SelectedLessonSource()
-            {
-                UserId = user.Id,
-                SourceId = group.Id,
-                SubGroupNumber = userData.SubGroup,
-                LessonSourceType = LessonSourceType.Group,
-                SourceName = group.Name,
-            };
-
-            _selectedLessonSourceRepository.Add(selectedGroup);
-            _userModifiedRepository.Add(user.Id);
-
-            await _selectedLessonSourceRepository.SaveChangesAsync();
-            await _userModifiedRepository.SaveChangesAsync();
-
-            return;
-        }
-
-        selectedGroup.SourceId = group.Id;
-        selectedGroup.SubGroupNumber = userData.SubGroup;
-        selectedGroup.SourceName = group.Name;
-
-        _selectedLessonSourceRepository.Update(selectedGroup);
-        _userModifiedRepository.Add(user.Id);
+            LessonSourceType = LessonSourceType.Group,
+            SourceId = newGroup.Id,
+            SourceName = newGroup.Name,
+            SubGroupNumber = subgroupNumber,
+            UserId = user.Id,
+        });
 
         await _selectedLessonSourceRepository.SaveChangesAsync();
-        await _userModifiedRepository.SaveChangesAsync();
+
+        await transaction.CommitAsync();
+
+        return Result.Success();
+    }
+
+    public async Task<Result<ICollection<SelectedElectiveLesson>>> GetUserElectiveLessonAsync(long telegramId)
+    {
+        var user = await _userRepository.GetByTelegramIdAsync(telegramId);
+        if (user is null)
+            return ErrorType.UserNotFound;
+
+        return new(await _selectedElectiveLesson.GetByUserId(user.Id));
+    }
+
+    public async Task<Result> AddUserElectiveLessonAsync(long telegramId, int sourceId, string lessonName,
+        string? lessonType, int subgroupNumber)
+    {
+        var user = await _userRepository.GetByTelegramIdAsync(telegramId);
+        if (user is null)
+            return ErrorType.UserNotFound;
+
+        var group = await _lessonSourceRepository.GetByIdAsync(sourceId);
+        if (group is null || group.SourceType != LessonSourceType.Elective)
+            return ErrorType.GroupNotFound;
+
+        await using var transaction = await _selectedElectiveLesson.BeginTransactionAsync();
+
+        _selectedElectiveLesson.Add(new SelectedElectiveLesson
+        {
+            LessonSourceId = sourceId,
+            LessonName = lessonName,
+            LessonType = lessonType,
+            SubgroupNumber = subgroupNumber,
+            UserId = user.Id,
+        });
+
+        await _selectedElectiveLesson.SaveChangesAsync();
+
+        await transaction.CommitAsync();
+
+        return Result.Success();
+    }
+
+    public async Task<Result> RemoveUserElectiveLessonAsync(long telegramId, int electiveLessonId)
+    {
+        var user = await _userRepository.GetByTelegramIdAsync(telegramId);
+        if (user is null)
+            return ErrorType.UserNotFound;
+
+        var lesson = await _selectedElectiveLesson.GetByIdAsync(electiveLessonId);
+        if (lesson is null || lesson.UserId != user.Id)
+            return ErrorType.NotFound;
+
+        await using var transaction = await _selectedElectiveLesson.BeginTransactionAsync();
+
+        _selectedElectiveLesson.Delete(lesson);
+
+        await _selectedElectiveLesson.SaveChangesAsync();
+
+        await transaction.CommitAsync();
+
+        return Result.Success();
     }
 }

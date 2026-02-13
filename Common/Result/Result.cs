@@ -27,7 +27,7 @@ public record Result<T1> : Result
     [MemberNotNullWhen(true, nameof(Value))]
     public new bool IsSuccess => base.IsSuccess;
 
-    private Result(T1 value) : base(true, null) => Value = value;
+    public Result(T1 value) : base(true, null) => Value = value;
     private Result(ErrorType error) : base(false, error) { }
 
     public static implicit operator Result<T1>(T1 value) => new(value);
