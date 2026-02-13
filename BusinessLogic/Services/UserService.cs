@@ -70,6 +70,8 @@ public class UserService : IUserService
             UserId = user.Id,
         });
 
+        _userModifiedRepository.Add(user.Id);
+
         await _selectedLessonSourceRepository.SaveChangesAsync();
 
         await transaction.CommitAsync();
@@ -108,6 +110,8 @@ public class UserService : IUserService
             UserId = user.Id,
         });
 
+        _userModifiedRepository.Add(user.Id);
+
         await _selectedElectiveLesson.SaveChangesAsync();
 
         await transaction.CommitAsync();
@@ -128,6 +132,8 @@ public class UserService : IUserService
         await using var transaction = await _selectedElectiveLesson.BeginTransactionAsync();
 
         _selectedElectiveLesson.Delete(lesson);
+
+        _userModifiedRepository.Add(user.Id);
 
         await _selectedElectiveLesson.SaveChangesAsync();
 
