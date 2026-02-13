@@ -1,6 +1,7 @@
 ﻿using BusinessLogic.Services.Interfaces;
 using Common.Enums;
 using Common.Models;
+using Common.Result;
 using DataAccess.Repositories.Interfaces;
 using Microsoft.Extensions.Logging;
 
@@ -34,69 +35,51 @@ public class ElectiveService : IElectiveService
         _logger = logger;
     }
 
-    public async Task<IEnumerable<ElectiveLessonDto>> GetLessons(string lessonName)
+    public async Task<ICollection<LessonSource>> GetPossibleLevelsAsync()
     {
-        var lessonSources = await _lessonSourceRepository.GetByNameAndLimitAsync(lessonName, 11);
-        if (lessonSources.Count() >= 11)
-            throw new InvalidOperationException("Should be more specific");
-
-        var entries = (await _lessonEntryRepository.GetBySourceIdsAsync(lessonSources.Select(x => x.Id)))
-            .GroupBy(x => x.SourceId );
-
-        return lessonSources.Select(x => new ElectiveLessonDto
-        {
-            Title = x.Name,
-            SourceId = x.Id,
-            Types = entries
-                .FirstOrDefault(y => y.Key == x.Id)?
-                .Select(y => y.Type)
-                .Distinct()
-                .ToList()
-
-        });
+        return await _lessonSourceRepository.GetBySourceTypeAsync(LessonSourceType.Elective);
     }
 
-    public async Task<ElectiveSubgroupsDto> GetPossibleSubgroups(int lessonSourceId, string lessonType)
+    public async Task<Result<ICollection<string>>> GetLessonsByNameAsync(string lessonName, int sourceId)
     {
-        var lessonSource = await _lessonSourceRepository.GetByIdAsync(lessonSourceId);
-        if (lessonSource == null)
-            throw new KeyNotFoundException("Lesson not found");
-        if (lessonSource.SourceType != LessonSourceType.Elective)
-            throw new InvalidOperationException("Lesson source type is not elective");
+        var source = await _lessonSourceRepository.GetByIdAsync(sourceId);
+        if (source == null || source.SourceType != LessonSourceType.Elective)
+            return ErrorType.NotFound;
 
-        var entries = (await _lessonEntryRepository.GetBySourceIdAsync(lessonSourceId))
-            .Where(x => x.Type == lessonType)
-            .GroupBy(x => x.SubGroupNumber);
+        var matchingLessons = (await _lessonEntryRepository.GetBySourceIdAndPartialNameAsync(sourceId, lessonName)).Select(x => x.Title).Distinct().ToArray();
 
-        return new ElectiveSubgroupsDto()
-        {
-            LessonSourceId = lessonSourceId,
-            PossibleSubgroups = entries.Select(z => z.Key).Distinct().Append(-1)
-        };
+        if (matchingLessons.Length > 5)
+            return ErrorType.TooManyElements;
+
+        return matchingLessons;
     }
 
-    public async Task<ElectiveLessonDayDto> GetPossibleDays(int lessonSourceId)
+    public async Task<Result<ICollection<string?>>> GetLessonTypesAsync(string lessonName, int sourceId)
     {
-        var lessonSource = await _lessonSourceRepository.GetByIdAsync(lessonSourceId);
-        if (lessonSource == null)
-            throw new KeyNotFoundException("Lesson not found");
-        if (lessonSource.SourceType != LessonSourceType.Elective)
-            throw new InvalidOperationException("Lesson source type is not elective");
+        var source = await _lessonSourceRepository.GetByIdAsync(sourceId);
+        if (source == null || source.SourceType != LessonSourceType.Elective)
+            return ErrorType.NotFound;
 
-        var entries = await _lessonEntryRepository.GetBySourceIdAsync(lessonSourceId);
+        var matchingLessons = await _lessonEntryRepository.GetBySourceIdAndPartialNameAsync(sourceId, lessonName);
 
-        return new ElectiveLessonDayDto
-        {
-            SourceId = lessonSourceId,
-            LessonDays = entries.Select(x => new ElectiveLessonDayDto.ElectiveLessonSpecificDto
-            {
-                Id = x.Id,
-                Type = x.Type,
-                DayOfWeek = x.DayOfWeek,
-                StartTime = x.StartTime,
-                WeekNumber = x.Week
-            })
-        };
+        if (matchingLessons.Count <= 0 || matchingLessons.Any(x => x.Title != lessonName))
+            return ErrorType.NotFound;
+
+        return matchingLessons.Select(x => x.Type).Distinct().ToArray();
+    }
+
+    public async Task<Result<ICollection<int>>> GetLessonSubgroupsAsync(int sourceId, string lessonName, string? lessonType)
+    {
+        var source = await _lessonSourceRepository.GetByIdAsync(sourceId);
+        if (source == null || source.SourceType != LessonSourceType.Elective)
+            return ErrorType.NotFound;
+
+        var matchingLessons = (await _lessonEntryRepository.GetBySourceIdAndPartialNameAsync(sourceId, lessonName)).Where(x => x.Type == lessonType).ToArray();
+
+        if (matchingLessons.Length <= 0 || matchingLessons.Any(x => x.Title != lessonName))
+            return ErrorType.NotFound;
+
+        return matchingLessons.Select(x => x.SubGroupNumber).Distinct().ToArray();
     }
 
     public async Task AddSelectedSource(long telegramId, int lessonSourceId, string lessonType, int subgroupNumber)

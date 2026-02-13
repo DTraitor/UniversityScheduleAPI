@@ -70,6 +70,11 @@ public class LessonSourceRepository : ILessonSourceRepository
         return await _context.LessonSources.FirstOrDefaultAsync(x => x.SourceType == lessonSourceType && x.Name == name);
     }
 
+    public async Task<ICollection<LessonSource>> GetBySourceTypeAsync(LessonSourceType lessonSourceType)
+    {
+        return await _context.LessonSources.Where(x => x.SourceType == lessonSourceType).ToListAsync();
+    }
+
     public async Task<ICollection<LessonSource>> GetByNameAndLimitAsync(string name, int limit)
     {
         return await _context.LessonSources.Where(x => x.Name.ToLower().Contains(name.ToLower())).Take(limit).ToListAsync();
