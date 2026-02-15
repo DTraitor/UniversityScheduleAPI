@@ -8,12 +8,12 @@ using Microsoft.Extensions.Logging;
 
 namespace DataAccess.Repositories;
 
-public class SelectedElectiveLessonRepository : ISelectedElectiveLesson
+public class SelectedElectiveLessonRepositoryRepository : ISelectedElectiveLessonRepository
 {
     private readonly ScheduleDbContext _context;
-    private readonly ILogger<SelectedElectiveLessonRepository> _logger;
+    private readonly ILogger<SelectedElectiveLessonRepositoryRepository> _logger;
 
-    public SelectedElectiveLessonRepository(ScheduleDbContext scheduleDbContext, ILogger<SelectedElectiveLessonRepository> logger)
+    public SelectedElectiveLessonRepositoryRepository(ScheduleDbContext scheduleDbContext, ILogger<SelectedElectiveLessonRepositoryRepository> logger)
     {
         _context = scheduleDbContext;
         _logger = logger;

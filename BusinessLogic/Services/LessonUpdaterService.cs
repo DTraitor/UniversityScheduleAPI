@@ -14,7 +14,7 @@ public class LessonUpdaterService : ILessonUpdaterService
     private readonly ILessonSourceRepository _lessonSourceRepository;
     private readonly ILessonEntryRepository  _lessonEntryRepository;
     private readonly ISelectedLessonSourceRepository _selectedLessonSourceRepository;
-    private readonly ISelectedElectiveLesson _selectedElectiveLessons;
+    private readonly ISelectedElectiveLessonRepository selectedElectiveLessonsRepository;
     private readonly IUserRepository _userRepository;
     private readonly IUserLessonRepository _userLessonRepository;
     private readonly IUserLessonOccurenceRepository _userLessonOccurenceRepository;
@@ -25,7 +25,7 @@ public class LessonUpdaterService : ILessonUpdaterService
         ILessonSourceRepository lessonSourceRepository,
         ILessonEntryRepository lessonEntryRepository,
         ISelectedLessonSourceRepository selectedLessonSourceRepository,
-        ISelectedElectiveLesson selectedElectiveLessons,
+        ISelectedElectiveLessonRepository selectedElectiveLessonsRepository,
         IUserRepository userRepository,
         IUserLessonRepository userLessonRepository,
         IUserLessonOccurenceRepository userLessonOccurenceRepository,
@@ -35,7 +35,7 @@ public class LessonUpdaterService : ILessonUpdaterService
         _lessonSourceRepository = lessonSourceRepository;
         _lessonEntryRepository = lessonEntryRepository;
         _selectedLessonSourceRepository = selectedLessonSourceRepository;
-        _selectedElectiveLessons = selectedElectiveLessons;
+        this.selectedElectiveLessonsRepository = selectedElectiveLessonsRepository;
         _userRepository = userRepository;
         _userLessonRepository = userLessonRepository;
         _userLessonOccurenceRepository = userLessonOccurenceRepository;
@@ -72,7 +72,7 @@ public class LessonUpdaterService : ILessonUpdaterService
         // Might've added alert for electives as well, but I don't want to spend time on it
 
         await _selectedLessonSourceRepository.RemoveRangeAsync(selectedSources.Where(x => !existingSourceIds.Contains(x.SourceId)).ToArray());
-        await _selectedElectiveLessons.RemoveRangeAsync(selectedElectiveLessons.Where(x => !existingSourceIds.Contains(x.LessonSourceId)).ToArray());
+        await selectedElectiveLessonsRepository.RemoveRangeAsync(selectedElectiveLessons.Where(x => !existingSourceIds.Contains(x.LessonSourceId)).ToArray());
     }
 
     private ICollection<UserLesson> GetUserGroupLessons(User user, ICollection<SelectedLessonSource> selectedLessonSources,
@@ -147,7 +147,7 @@ public class LessonUpdaterService : ILessonUpdaterService
     {
         HashSet<int> modifiedSourceIds = modifiedEntry.Select(x => x.SourceId).ToHashSet();
         var selectedSources = await _selectedLessonSourceRepository.GetBySourceIds(modifiedSourceIds);
-        var selectedElectiveLessons = await _selectedElectiveLessons.GetBySourceIds(modifiedSourceIds);
+        var selectedElectiveLessons = await selectedElectiveLessonsRepository.GetBySourceIds(modifiedSourceIds);
 
         var users = await _userRepository.GetByIdsAsync(
             selectedSources

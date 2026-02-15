@@ -2,7 +2,7 @@ using Common.Models;
 
 namespace DataAccess.Repositories.Interfaces;
 
-public interface ISelectedElectiveLesson : IRepository<SelectedElectiveLesson>
+public interface ISelectedElectiveLessonRepository : IRepository<SelectedElectiveLesson>
 {
     Task<ICollection<SelectedElectiveLesson>> GetBySourceIds(ICollection<int> sourceIds);
     Task<ICollection<SelectedElectiveLesson>> GetByUserIds(ICollection<int> userIds);

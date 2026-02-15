@@ -13,7 +13,7 @@ public class UserService : IUserService
     private readonly IUserRepository _userRepository;
     private readonly ILessonSourceRepository _lessonSourceRepository;
     private readonly ISelectedLessonSourceRepository _selectedLessonSourceRepository;
-    private readonly ISelectedElectiveLesson _selectedElectiveLesson;
+    private readonly ISelectedElectiveLessonRepository selectedElectiveLessonRepository;
     private readonly ILogger<UserService> _logger;
 
     public UserService(
@@ -21,14 +21,14 @@ public class UserService : IUserService
         IUserRepository userRepository,
         ILessonSourceRepository lessonSourceRepository,
         ISelectedLessonSourceRepository selectedLessonSourceRepository,
-        ISelectedElectiveLesson selectedElectiveLesson,
+        ISelectedElectiveLessonRepository selectedElectiveLessonRepository,
         ILogger<UserService> logger)
     {
         _userModifiedRepository = userModifiedRepository;
         _userRepository = userRepository;
         _lessonSourceRepository = lessonSourceRepository;
         _selectedLessonSourceRepository = selectedLessonSourceRepository;
-        _selectedElectiveLesson = selectedElectiveLesson;
+        this.selectedElectiveLessonRepository = selectedElectiveLessonRepository;
         _logger = logger;
     }
 
@@ -85,7 +85,7 @@ public class UserService : IUserService
         if (user is null)
             return ErrorType.UserNotFound;
 
-        return new(await _selectedElectiveLesson.GetByUserId(user.Id));
+        return new(await selectedElectiveLessonRepository.GetByUserId(user.Id));
     }
 
     public async Task<Result> AddUserElectiveLessonAsync(long telegramId, int sourceId, string lessonName,
@@ -99,9 +99,9 @@ public class UserService : IUserService
         if (group is null || group.SourceType != LessonSourceType.Elective)
             return ErrorType.GroupNotFound;
 
-        await using var transaction = await _selectedElectiveLesson.BeginTransactionAsync();
+        await using var transaction = await selectedElectiveLessonRepository.BeginTransactionAsync();
 
-        _selectedElectiveLesson.Add(new SelectedElectiveLesson
+        selectedElectiveLessonRepository.Add(new SelectedElectiveLesson
         {
             LessonSourceId = sourceId,
             LessonName = lessonName,
@@ -112,7 +112,7 @@ public class UserService : IUserService
 
         _userModifiedRepository.Add(user.Id);
 
-        await _selectedElectiveLesson.SaveChangesAsync();
+        await selectedElectiveLessonRepository.SaveChangesAsync();
 
         await transaction.CommitAsync();
 
@@ -125,17 +125,17 @@ public class UserService : IUserService
         if (user is null)
             return ErrorType.UserNotFound;
 
-        var lesson = await _selectedElectiveLesson.GetByIdAsync(electiveLessonId);
+        var lesson = await selectedElectiveLessonRepository.GetByIdAsync(electiveLessonId);
         if (lesson is null || lesson.UserId != user.Id)
             return ErrorType.NotFound;
 
-        await using var transaction = await _selectedElectiveLesson.BeginTransactionAsync();
+        await using var transaction = await selectedElectiveLessonRepository.BeginTransactionAsync();
 
-        _selectedElectiveLesson.Delete(lesson);
+        selectedElectiveLessonRepository.Delete(lesson);
 
         _userModifiedRepository.Add(user.Id);
 
-        await _selectedElectiveLesson.SaveChangesAsync();
+        await selectedElectiveLessonRepository.SaveChangesAsync();
 
         await transaction.CommitAsync();
 

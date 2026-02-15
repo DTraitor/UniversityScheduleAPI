@@ -4,5 +4,5 @@ namespace BusinessLogic.Services.Interfaces;
 
 public interface IUserLessonUpdaterService
 {
-    public Task ProcessModifiedUser(IEnumerable<UserModified> modifiedUser);
+    public Task ProcessModifiedUser(ICollection<UserModified> modifiedUser);
 }

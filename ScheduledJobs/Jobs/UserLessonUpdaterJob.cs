@@ -63,7 +63,7 @@ public class UserLessonUpdaterJob : IHostedService, IDisposable
         var toProcess =
             (await modifiedRepository.GetNotProcessedAsync(_cancellationTokenSource.Token));
 
-        await lessonUpdater.ProcessModifiedUser(toProcess.GroupBy(x => x.UserId).Select(x => x.First()));
+        await lessonUpdater.ProcessModifiedUser(toProcess.GroupBy(x => x.UserId).Select(x => x.First()).ToArray());
 
         await modifiedRepository.RemoveProcessedAsync(toProcess);
 

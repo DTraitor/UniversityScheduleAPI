@@ -9,11 +9,11 @@ using Moq;
 namespace DataAccessTests.Repositories;
 
 [TestFixture]
-public class SelectedElectiveLessonRepositoryTests
+public class SelectedElectiveLessonRepositoryRepositoryTests
 {
     private ScheduleDbContext _context;
-    private Mock<ILogger<SelectedElectiveLessonRepository>> _loggerMock;
-    private SelectedElectiveLessonRepository _repository;
+    private Mock<ILogger<SelectedElectiveLessonRepositoryRepository>> _loggerMock;
+    private SelectedElectiveLessonRepositoryRepository repositoryRepository;
     private SqliteConnection _connection;
 
     [SetUp]
@@ -29,8 +29,8 @@ public class SelectedElectiveLessonRepositoryTests
         _context = new ScheduleDbContext(options);
         _context.Database.EnsureCreated();
 
-        _loggerMock = new Mock<ILogger<SelectedElectiveLessonRepository>>();
-        _repository = new SelectedElectiveLessonRepository(_context, _loggerMock.Object);
+        _loggerMock = new Mock<ILogger<SelectedElectiveLessonRepositoryRepository>>();
+        repositoryRepository = new SelectedElectiveLessonRepositoryRepository(_context, _loggerMock.Object);
     }
 
     [TearDown]
@@ -54,7 +54,7 @@ public class SelectedElectiveLessonRepositoryTests
         };
 
         // Act
-        _repository.Add(lesson);
+        repositoryRepository.Add(lesson);
         _context.SaveChanges();
 
         // Assert
@@ -79,7 +79,7 @@ public class SelectedElectiveLessonRepositoryTests
         var sourceIds = new List<int> { 1 };
 
         // Act
-        var result = await _repository.GetBySourceIds(sourceIds);
+        var result = await repositoryRepository.GetBySourceIds(sourceIds);
 
         // Assert
         Assert.That(result.Count, Is.EqualTo(2));
@@ -102,7 +102,7 @@ public class SelectedElectiveLessonRepositoryTests
         var userIds = new List<int> { 1 };
 
         // Act
-        var result = await _repository.GetByUserIds(userIds);
+        var result = await repositoryRepository.GetByUserIds(userIds);
 
         // Assert
         Assert.That(result.Count, Is.EqualTo(2));
@@ -123,7 +123,7 @@ public class SelectedElectiveLessonRepositoryTests
         await _context.SaveChangesAsync();
 
         // Act
-        var result = await _repository.GetByUserId(1);
+        var result = await repositoryRepository.GetByUserId(1);
 
         // Assert
         Assert.That(result.Count, Is.EqualTo(2));
