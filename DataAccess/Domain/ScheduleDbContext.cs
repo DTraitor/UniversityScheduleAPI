@@ -12,7 +12,7 @@ public class ScheduleDbContext(DbContextOptions<ScheduleDbContext> options) : Db
 
     //Selected
     public DbSet<SelectedLessonSource> SelectedLessonSources { get; set; }
-    public DbSet<SelectedElectiveLesson> SelectedElectiveLessonEntries { get; set; }
+    public DbSet<SelectedElectiveLesson> SelectedElectiveLessons { get; set; }
 
     //Modifications
     public DbSet<UserModified> UserModifications { get; set; }

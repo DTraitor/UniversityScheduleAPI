@@ -42,7 +42,8 @@ public class GroupService : IGroupService
 
     public async Task<bool> GroupExists(string groupName)
     {
-        return (await _lessonSourceRepository.GetByNameAndLimitAsync(groupName.ToLower(), 1)) != null;
+        var groups = await _lessonSourceRepository.GetByNameAndLimitAsync(groupName.ToLower(), 2);
+        return groups.Count == 1;
     }
 
     public async Task<Result<ICollection<int>>> GetSubgroups(long telegramId)

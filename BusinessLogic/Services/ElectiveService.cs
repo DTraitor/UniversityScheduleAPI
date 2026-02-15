@@ -48,7 +48,7 @@ public class ElectiveService : IElectiveService
 
         var matchingLessons = (await _lessonEntryRepository.GetBySourceIdAndPartialNameAsync(sourceId, lessonName.ToLower())).Select(x => x.Title).Distinct().ToArray();
 
-        if (matchingLessons.Length > 5)
+        if (matchingLessons.Length > 9)
             return ErrorType.TooManyElements;
 
         return matchingLessons;

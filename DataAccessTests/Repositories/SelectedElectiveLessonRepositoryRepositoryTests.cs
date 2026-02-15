@@ -58,7 +58,7 @@ public class SelectedElectiveLessonRepositoryRepositoryTests
         _context.SaveChanges();
 
         // Assert
-        var result = _context.SelectedElectiveLessonEntries.Find(1);
+        var result = _context.SelectedElectiveLessons.Find(1);
         Assert.That(result, Is.Not.Null);
         Assert.That(result.UserId, Is.EqualTo(1));
     }
@@ -73,7 +73,7 @@ public class SelectedElectiveLessonRepositoryRepositoryTests
             new SelectedElectiveLesson { Id = 2, UserId = 2, LessonSourceId = 2, LessonName = "Lesson 2" },
             new SelectedElectiveLesson { Id = 3, UserId = 3, LessonSourceId = 1, LessonName = "Lesson 3" }
         };
-        _context.SelectedElectiveLessonEntries.AddRange(lessons);
+        _context.SelectedElectiveLessons.AddRange(lessons);
         await _context.SaveChangesAsync();
 
         var sourceIds = new List<int> { 1 };
@@ -96,7 +96,7 @@ public class SelectedElectiveLessonRepositoryRepositoryTests
             new SelectedElectiveLesson { Id = 2, UserId = 2, LessonSourceId = 2, LessonName = "Lesson 2" },
             new SelectedElectiveLesson { Id = 3, UserId = 1, LessonSourceId = 3, LessonName = "Lesson 3" }
         };
-        _context.SelectedElectiveLessonEntries.AddRange(lessons);
+        _context.SelectedElectiveLessons.AddRange(lessons);
         await _context.SaveChangesAsync();
 
         var userIds = new List<int> { 1 };
@@ -119,7 +119,7 @@ public class SelectedElectiveLessonRepositoryRepositoryTests
             new SelectedElectiveLesson { Id = 2, UserId = 2, LessonSourceId = 2, LessonName = "Lesson 2" },
             new SelectedElectiveLesson { Id = 3, UserId = 1, LessonSourceId = 3, LessonName = "Lesson 3" }
         };
-        _context.SelectedElectiveLessonEntries.AddRange(lessons);
+        _context.SelectedElectiveLessons.AddRange(lessons);
         await _context.SaveChangesAsync();
 
         // Act
