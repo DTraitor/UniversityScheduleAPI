@@ -61,9 +61,9 @@ public class LessonUpdaterJob : IHostedService, IDisposable
         var toProcess =
             (await modifiedRepository.GetAllAsync(_cancellationTokenSource.Token));
 
-        await lessonUpdater.ProcessModifiedEntry(toProcess.GroupBy(x => x.SourceId).Select(x => x.First()));
+        await lessonUpdater.ProcessModifiedEntry(toProcess.GroupBy(x => x.SourceId).Select(x => x.First()).ToArray());
 
-        modifiedRepository.RemoveRangeAsync(toProcess);
+        await modifiedRepository.RemoveRangeAsync(toProcess);
 
         await modifiedRepository.SaveChangesAsync(_cancellationTokenSource.Token);
 

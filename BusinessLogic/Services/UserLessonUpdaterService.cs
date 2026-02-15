@@ -93,7 +93,7 @@ public class UserLessonUpdaterService : IUserLessonUpdaterService
                         ).Select(x =>
                         {
                             x.UserId = user.Id;
-                            x.SelectedLessonSourceType |= SelectedLessonSourceType.Source;
+                            x.SelectedLessonSourceType |= SelectedLessonSourceType.Group;
                             x.LessonSourceId = selectedSource.Id;
                             return x;
                         })

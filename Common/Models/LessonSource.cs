@@ -10,8 +10,8 @@ public class LessonSource : IEntityId
     public string HrefId { get; set; }
     public LessonSourceType SourceType { get; set; }
 
-    public DateTime StartDate { get; set; }
-    public DateTime EndDate { get; set; }
+    public DateTimeOffset StartDate { get; set; }
+    public DateTimeOffset EndDate { get; set; }
     public string TimeZone { get; set; }
 
     public string PageHash { get; set; }

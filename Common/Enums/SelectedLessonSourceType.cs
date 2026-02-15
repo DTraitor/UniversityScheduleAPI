@@ -4,7 +4,7 @@
 public enum SelectedLessonSourceType
 {
     None = 0,
-    Source = 1,
-    Entry = 2,
+    Group = 1,
+    Elective = 2,
     OneTimeOccurence = 4,
 }
