@@ -71,7 +71,10 @@ public class UserAlertRepository : IUserAlertRepository
 
     public async Task RemoveByIdsAsync(ICollection<int> alerts)
     {
-        var toRemove = _context.UserAlerts.Where(x => alerts.Contains(x.Id)).AsEnumerable();
+        var toRemove = await _context.UserAlerts.Where(x => alerts.Contains(x.Id)).ToListAsync();
+        if (toRemove.Count == 0)
+            return;
+
         await _context.BulkDeleteAsync(toRemove);
     }
 
