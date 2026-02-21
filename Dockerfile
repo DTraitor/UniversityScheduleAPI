@@ -7,6 +7,10 @@ COPY *.sln .
 COPY API/*.csproj ./API/
 COPY BusinessLogic/*.csproj ./BusinessLogic/
 COPY DataAccess/*.csproj ./DataAccess/
+COPY Common/*.csproj ./Common/
+COPY APITests/*.csproj ./APITests/
+COPY BusinessLogicTests/*.csproj ./BusinessLogicTests/
+COPY DataAccessTests/*.csproj ./DataAccessTests/
 
 # Restore all dependencies
 RUN dotnet restore
