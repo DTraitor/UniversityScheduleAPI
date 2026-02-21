@@ -11,6 +11,7 @@ COPY Common/*.csproj ./Common/
 COPY APITests/*.csproj ./APITests/
 COPY BusinessLogicTests/*.csproj ./BusinessLogicTests/
 COPY DataAccessTests/*.csproj ./DataAccessTests/
+COPY ScheduledJobs/*.csproj ./ScheduledJobs/
 
 # Restore all dependencies
 RUN dotnet restore
