@@ -23,7 +23,7 @@ COPY . .
 RUN dotnet publish API/API.csproj -c Release -o /app
 
 # Runtime stage
-FROM mcr.microsoft.com/dotnet/aspnet:10.0
+FROM mcr.microsoft.com/dotnet/aspnet:9.0
 WORKDIR /app
 COPY --from=build /app .
 ENTRYPOINT ["dotnet", "API.dll"]
