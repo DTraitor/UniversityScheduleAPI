@@ -15,8 +15,8 @@ public class ScheduleService : IScheduleService
     private readonly IUsageMetricService _usageMetricService;
     private readonly ILogger<ScheduleService> _logger;
 
-    private readonly DateTimeOffset ScheduleLimitStart = DateTimeOffset.Parse("2026-02-02T00:00:00+02:00");
-    private readonly DateTimeOffset ScheduleLimitEnd = DateTimeOffset.Parse("2026-06-30T23:59:59+03:00");
+    private readonly DateTimeOffset ScheduleLimitStart = DateTimeOffset.Parse("2026-01-19T00:00:00+02:00");
+    private readonly DateTimeOffset ScheduleLimitEnd = DateTimeOffset.Parse("2026-05-30T23:59:59+03:00");
 
     public ScheduleService(
         IUserRepository userRepository,

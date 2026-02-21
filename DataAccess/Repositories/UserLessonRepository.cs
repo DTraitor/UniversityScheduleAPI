@@ -80,12 +80,13 @@ public class UserLessonRepository : IUserLessonRepository
     public async Task<ICollection<int>> RemoveByUserIdsAndLessonSourceTypeAndLessonSourceIdsAsync(ICollection<int> userIds, SelectedLessonSourceType sourceType,
         ICollection<int> sourceIds)
     {
-        var lessons = _context.UserLessons.Where(ul =>
+        var lessons = await _context.UserLessons.Where(ul =>
             userIds.Contains(ul.UserId) &&
             (ul.SelectedLessonSourceType & sourceType) == sourceType &&
-            sourceIds.Contains(ul.LessonSourceId));
+            sourceIds.Contains(ul.LessonSourceId)).ToListAsync();
+        var lessonIds = lessons.Select(x => x.Id).ToList();
         await _context.BulkDeleteAsync(lessons);
-        return await lessons.Select(x => x.Id).ToListAsync();
+        return lessonIds;
     }
 
     public async Task<ICollection<UserLesson>> GetWithOccurrencesCalculatedDateLessThanAsync(DateTimeOffset dateTime)

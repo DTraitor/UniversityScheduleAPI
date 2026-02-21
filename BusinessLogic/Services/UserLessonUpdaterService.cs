@@ -94,7 +94,7 @@ public class UserLessonUpdaterService : IUserLessonUpdaterService
                 .Where(x => x.SubGroupNumber == selectedElectiveLesson.SubgroupNumber);
 
             if (selectedElectiveLesson.LessonType is not null)
-                entriesToMap.Where(x => x.Type == selectedElectiveLesson.LessonType);
+                entriesToMap = entriesToMap.Where(x => x.Type == selectedElectiveLesson.LessonType);
 
             userLessons.AddRange(
                 ScheduleLessonsMapper.Map(

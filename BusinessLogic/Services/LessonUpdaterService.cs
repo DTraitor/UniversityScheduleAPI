@@ -122,7 +122,7 @@ public class LessonUpdaterService : ILessonUpdaterService
                 .Where(x => x.SubGroupNumber == selectedElectiveLesson.SubgroupNumber);
 
             if (selectedElectiveLesson.LessonType is not null)
-                entriesToMap.Where(x => x.Type == selectedElectiveLesson.LessonType);
+                entriesToMap = entriesToMap.Where(x => x.Type == selectedElectiveLesson.LessonType);
 
             userLessons.AddRange(
                 ScheduleLessonsMapper.Map(
@@ -165,8 +165,8 @@ public class LessonUpdaterService : ILessonUpdaterService
 
         await RemoveOldLessons(
             userIds,
-            selectedSources.Select(x => x.SourceId).ToArray(),
-            selectedElectiveLessons.Select(x => x.LessonSourceId).ToArray());
+            selectedSources.Select(x => x.Id).ToArray(),
+            selectedElectiveLessons.Select(x => x.Id).ToArray());
 
         var sources = await _lessonSourceRepository.GetByIdsAsync(modifiedSourceIds);
         var entries = await _lessonEntryRepository.GetBySourceIdsAsync(modifiedSourceIds);

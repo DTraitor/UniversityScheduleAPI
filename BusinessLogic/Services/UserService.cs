@@ -36,6 +36,10 @@ public class UserService : IUserService
     {
         await using var transaction = await _userRepository.BeginTransactionAsync();
 
+        var user = await _userRepository.GetByTelegramIdAsync(telegramId);
+        if (user is not null)
+            return;
+
         _userRepository.Add(new User{ CreatedAt = DateTimeOffset.UtcNow, TelegramId = telegramId });
 
         await _userRepository.SaveChangesAsync();

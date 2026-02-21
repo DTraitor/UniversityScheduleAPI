@@ -29,19 +29,17 @@ public class GroupController : ControllerBase
     }
 
     [HttpGet("subgroups")]
-    public async Task<IActionResult> GetSubgroups([FromQuery] long telegramId)
+    public async Task<IActionResult> GetSubgroups([FromQuery] string groupName)
     {
-        var result  = await _groupService.GetSubgroups(telegramId);
+        var result  = await _groupService.GetSubgroups(groupName);
 
         if (result.IsSuccess)
             return Ok(result.Value);
 
         switch (result.Error)
         {
-            case ErrorType.UserNotFound:
-                return NotFound("User does not exist.");
             case ErrorType.GroupNotFound:
-                return NotFound("User has no group.");
+                return NotFound("Group with such name does not exist.");
             default:
                 return StatusCode(StatusCodes.Status500InternalServerError);
         }

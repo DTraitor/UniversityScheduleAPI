@@ -61,7 +61,7 @@ public class UserLessonOccurenceRepository : IUserLessonOccurenceRepository
 
     public async Task ClearByLessonIdsAsync(ICollection<int> toRemove)
     {
-        var entriesToRemove = _context.UserLessonOccurrences.Where(y => toRemove.Contains(y.LessonId)).AsEnumerable();
+        var entriesToRemove = await  _context.UserLessonOccurrences.Where(y => toRemove.Contains(y.LessonId)).ToListAsync();
         await _context.BulkDeleteAsync(entriesToRemove);
     }
 

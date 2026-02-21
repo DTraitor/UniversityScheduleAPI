@@ -46,18 +46,14 @@ public class GroupService : IGroupService
         return groups.Count == 1;
     }
 
-    public async Task<Result<ICollection<int>>> GetSubgroups(long telegramId)
+    public async Task<Result<ICollection<int>>> GetSubgroups(string groupName)
     {
-        var user = await _userRepository.GetByTelegramIdAsync(telegramId);
-        if (user == null)
-            return ErrorType.UserNotFound;
-
-        var selected = (await _selectedLessonSourceRepository.GetByUserId(user.Id)).FirstOrDefault();
-
-        if (selected == null)
+        var groups = await _lessonSourceRepository.GetByNameAndLimitAsync(groupName.ToLower(), 2);
+        if (groups.Count != 1)
             return ErrorType.GroupNotFound;
-
-        var group = await _lessonSourceRepository.GetByIdAsync(selected.SourceId);
+        var group = groups.First();
+        if (group.SourceType != LessonSourceType.Group)
+            return ErrorType.GroupNotFound;
 
         var entries = await _lessonEntryRepository.GetBySourceIdAsync(group.Id);
 
